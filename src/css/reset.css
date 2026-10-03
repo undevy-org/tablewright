@@ -1,0 +1,164 @@
+/* Scoped element reset.
+ *
+ * Tailwind's own preflight is a global reset: it rewrites margins, list styles,
+ * heading sizes and form-control appearance for every element on the page. That
+ * is correct for a standalone app and wrong for a library dropped into a host
+ * that already has its own reset, so the package ships this instead — the same
+ * normalisation, confined to a `.tablewright` subtree.
+ *
+ * Specificity here is exact, and both halves of it are load-bearing.
+ *
+ *   - The scope class is a REAL class, not `:where(.tablewright)`. A host reset
+ *     addresses elements directly — code_admin's has
+ *     `button, input, optgroup, select, textarea { border: none }` at (0,0,1) —
+ *     and a zero-specificity reset loses to it. That is not theoretical: with
+ *     the scope wrapped in `:where()`, every input, button and select in the kit
+ *     rendered with no border at all inside that app, silently, with all build
+ *     checks green.
+ *   - The element half stays inside `:where()`, so each selector lands at
+ *     exactly (0,1,0) — the same specificity as a single utility class. Since
+ *     this file is concatenated ahead of the utilities, a utility always wins on
+ *     source order, and a host rule that only names elements always loses.
+ *
+ * Keep every selector at one class plus a `:where()` element list. Adding a
+ * second class, or naming an element outside `:where()`, would start beating the
+ * utilities; dropping the class would start losing to the host.
+ *
+ * The border block is not cosmetic. Tailwind's `border` / `border-b` utilities
+ * set border-WIDTH only; `border-style: solid` comes from preflight alone, and
+ * the CSS initial value is `none`. Without these four lines every border in the
+ * library renders invisible.
+ *
+ * Radix portals (dropdown, popover, dialog, select) mount outside the React
+ * tree, so pass a container that lives inside the `.tablewright` element via
+ * `PortalContainerContext` — otherwise portalled content lands on document.body
+ * and is not covered by anything below.
+ */
+
+.tablewright,
+.tablewright :where(*),
+.tablewright :where(*)::before,
+.tablewright :where(*)::after {
+  box-sizing: border-box;
+  border-width: 0;
+  border-style: solid;
+  border-color: var(--border-subtle, #e5e7eb);
+}
+
+/* Typographic base for the subtree. The library sizes most text explicitly, but
+ * unsized text and line-height must not inherit the host's body rules — a host
+ * `line-height: 1` collapses every control in the kit. */
+.tablewright {
+  font-family: var(--font-stack, ui-sans-serif, system-ui, sans-serif);
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--text-primary, #111827);
+  -webkit-font-smoothing: antialiased;
+  -webkit-text-size-adjust: 100%;
+  tab-size: 4;
+}
+
+.tablewright :where(h1, h2, h3, h4, h5, h6) {
+  font-size: inherit;
+  font-weight: inherit;
+  margin: 0;
+}
+
+.tablewright :where(p, figure, blockquote, dl, dd, hr, pre) {
+  margin: 0;
+}
+
+.tablewright :where(ul, ol) {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.tablewright :where(hr) {
+  height: 0;
+  color: inherit;
+  border-top-width: 1px;
+}
+
+.tablewright :where(a) {
+  color: inherit;
+  text-decoration: inherit;
+}
+
+.tablewright :where(b, strong) {
+  font-weight: bolder;
+}
+
+.tablewright :where(code, kbd, samp, pre) {
+  font-family: var(--font-mono, ui-monospace, monospace);
+  font-size: 1em;
+}
+
+.tablewright :where(small) {
+  font-size: 80%;
+}
+
+.tablewright :where(button, input, optgroup, select, textarea) {
+  font-family: inherit;
+  font-feature-settings: inherit;
+  font-variation-settings: inherit;
+  font-size: 100%;
+  font-weight: inherit;
+  line-height: inherit;
+  letter-spacing: inherit;
+  color: inherit;
+  margin: 0;
+  padding: 0;
+}
+
+.tablewright :where(button, [type="button"], [type="reset"], [type="submit"]) {
+  -webkit-appearance: button;
+  background-color: transparent;
+  background-image: none;
+}
+
+.tablewright :where(button, [role="button"]) {
+  cursor: pointer;
+}
+
+.tablewright :where(:disabled) {
+  cursor: default;
+}
+
+.tablewright :where(input::placeholder, textarea::placeholder) {
+  opacity: 1;
+  color: var(--text-tertiary, #9ca3af);
+}
+
+.tablewright :where(::-webkit-search-decoration) {
+  -webkit-appearance: none;
+}
+
+.tablewright :where(fieldset, legend) {
+  margin: 0;
+  padding: 0;
+}
+
+.tablewright :where(table) {
+  text-indent: 0;
+  border-color: inherit;
+  border-collapse: collapse;
+}
+
+.tablewright :where(img, svg, video, canvas, audio, iframe, embed, object) {
+  display: block;
+  vertical-align: middle;
+}
+
+.tablewright :where(img, video) {
+  max-width: 100%;
+  height: auto;
+}
+
+.tablewright :where(textarea) {
+  resize: vertical;
+}
+
+.tablewright :where([hidden]) {
+  display: none;
+}

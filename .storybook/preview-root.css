@@ -1,0 +1,21 @@
+/*
+ * Give the Storybook mount root a definite height on fullscreen stories.
+ *
+ * Storybook's `sb-main-fullscreen` body class sizes <html>/<body> to the
+ * viewport, but #storybook-root itself stays `display:block` with no height
+ * rule of its own — so it falls back to content height. Full-page layouts
+ * built with Tailwind's `h-full` (AppShell and anything nested inside it)
+ * need a definite ancestor height to resolve that percentage against; without
+ * one, `h-full` resolves to `auto` all the way down, and a scrollable region
+ * sized with `flex-1 overflow-y-auto` never gets a height to overflow against
+ * — it just grows with its content instead of scrolling internally. On a
+ * sidebar with enough nav items to exceed the viewport, that pushes
+ * whatever comes after the scroll region (e.g. the collapse toggle in the
+ * footer) below the fold instead of keeping it pinned in view.
+ *
+ * Scoped to `.sb-main-fullscreen` so padded/default-layout stories, whose
+ * root has no reason to fill the viewport, are unaffected.
+ */
+body.sb-main-fullscreen #storybook-root {
+  height: 100%;
+}

@@ -1,0 +1,37 @@
+/* Page-local overrides for the Merchants/Transactions stories.
+   Global reset/tokens/utilities live in ../../styles.css — this file adds
+   nothing that duplicates it, only the rules below. */
+
+/* ── DataTableShell overrides ──────────────────────────────────── */
+
+/* 1. border-separate so box-shadow renders on sticky cells */
+table.w-full {
+  border-collapse: separate !important;
+  border-spacing: 0 !important;
+}
+
+/* 2. thead above body sticky cells (which have z-index: 20) */
+thead.sticky {
+  z-index: 30 !important;
+}
+
+/* 3. Lighter border on pinned columns (override ui-kit default) */
+.\[box-shadow\:1px_0_0_0_var\(--border-subtle\)\] {
+  box-shadow: 1px 0 0 0 rgba(0, 0, 0, 0.06) !important;
+}
+.\[box-shadow\:-1px_0_0_0_var\(--border-subtle\)\] {
+  box-shadow: -1px 0 0 0 rgba(0, 0, 0, 0.06) !important;
+}
+
+/* 4. Center actions column content (three-dots menu) */
+td.text-right[style*="right"] {
+  text-align: center !important;
+}
+
+/* ── Gap indicator column ─────────────────────────────────────── */
+
+/* Gap indicator column — seamless gray bar for hidden columns */
+td:has(> [data-gap-cell]) {
+  background-color: rgba(128, 128, 128, 0.03) !important;
+  border-bottom: 1px solid rgba(128, 128, 128, 0.03) !important;
+}

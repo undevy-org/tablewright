@@ -1,0 +1,34 @@
+/* Class names the library's own components reference directly, rather than
+ * through a Tailwind utility. Scoped to .tablewright like the reset: without the
+ * scope they would be bare global class names in the shipped stylesheet, free to
+ * collide with a host's own `.scrollbar-auto-hide`, and the build's scoping guard
+ * would pass them only because they happen to start with a dot.
+ * Ships inside @undevy-org/tablewright/tablewright.css. */
+
+.tablewright .scrollbar-auto-hide {
+  scrollbar-gutter: stable;
+  scrollbar-width: thin;
+  scrollbar-color: transparent transparent;
+}
+
+.tablewright .scrollbar-auto-hide::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+.tablewright .scrollbar-auto-hide::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.tablewright .scrollbar-auto-hide::-webkit-scrollbar-thumb {
+  background: transparent;
+  border-radius: var(--radius-full);
+}
+
+.tablewright .scrollbar-auto-hide[data-scrolling="true"] {
+  scrollbar-color: var(--border-subtle) transparent;
+}
+
+.tablewright .scrollbar-auto-hide[data-scrolling="true"]::-webkit-scrollbar-thumb {
+  background: var(--border-subtle);
+}
