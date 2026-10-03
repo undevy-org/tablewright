@@ -1,5 +1,11 @@
 # @undevy-org/tablewright
 
+## 0.2.1
+
+### Patch Changes
+
+- [#22](https://github.com/undevy-org/tablewright/pull/22) [`9c55218`](https://github.com/undevy-org/tablewright/commit/9c55218e35ca3e460947ee1fcf3b407999bb8d6a) Thanks [@undevy](https://github.com/undevy)! - Deprecate the demo-only refresh API: `useTableOrchestration`'s `isRefreshing` / `handleRefresh` and the store's `isRefreshing` / `startRefresh` only spin for 700 ms without refetching anything. Keep refresh state in your data layer instead (e.g. your query's `isFetching`). They will be removed in a future minor release.
+
 ## 0.2.0
 
 ### Minor Changes
