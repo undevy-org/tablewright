@@ -22,6 +22,7 @@ import { FilterFormPanel } from "../../../components/data-table/FilterFormPanel"
 import { FilterFormToggle, useFilterFormOpen } from "../../../components/data-table/FilterFormToggle";
 import { applyManagedChanges, clearManagedFilters, hasActiveManagedFilters, type ManagedFilterChange } from "../../../components/data-table/managed-filters";
 import { useTableOrchestration } from "../../../hooks/useTableOrchestration";
+import { useDemoRefresh } from "../../useDemoRefresh";
 import { useRowDragOverride } from "../../../hooks/useRowDragOverride";
 
 import {
@@ -91,6 +92,8 @@ export function MerchantsLiveRefactoredScreen() {
   // ── Orchestration ─────────────────────────────────────────────────────
   const getRowId = useCallback((row: LiveMerchantViewModel) => row.id, []);
   const getSearchText = useCallback((row: LiveMerchantViewModel) => row.searchText, []);
+
+  const [isRefreshing, handleRefresh] = useDemoRefresh();
 
   const orch = useTableOrchestration<LiveMerchantViewModel, MerchantViewKey>({
     rows: merchants,
@@ -340,9 +343,9 @@ export function MerchantsLiveRefactoredScreen() {
                     variant="secondary"
                     size="icon"
                     title="Refresh"
-                    onClick={orch.handleRefresh}
+                    onClick={handleRefresh}
                   >
-                    <RefreshCw className={`h-4 w-4${orch.isRefreshing ? " animate-spin" : ""}`} />
+                    <RefreshCw className={`h-4 w-4${isRefreshing ? " animate-spin" : ""}`} />
                   </Button>
                   <Button
                     type="button"
