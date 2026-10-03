@@ -20,6 +20,7 @@ import { FilterFormPanel } from "../../../components/data-table/FilterFormPanel"
 import { FilterFormToggle, useFilterFormOpen } from "../../../components/data-table/FilterFormToggle";
 import { applyManagedChanges, clearManagedFilters, hasActiveManagedFilters, type ManagedFilterChange } from "../../../components/data-table/managed-filters";
 import { useTableOrchestration } from "../../../hooks/useTableOrchestration";
+import { useDemoRefresh } from "../../useDemoRefresh";
 import { useRowDragOverride } from "../../../hooks/useRowDragOverride";
 import { DRAWER_SIZE } from "../../../constants/drawer";
 
@@ -72,6 +73,8 @@ export function TransactionsScreen() {
   // ── Orchestration ─────────────────────────────────────────────────────
   const getRowId = useCallback((row: TransactionViewModel) => row.txId, []);
   const getSearchText = useCallback((row: TransactionViewModel) => row.searchText, []);
+
+  const [isRefreshing, handleRefresh] = useDemoRefresh();
 
   const orch = useTableOrchestration<TransactionViewModel, TransactionViewKey>({
     rows: transactions,
@@ -305,9 +308,9 @@ export function TransactionsScreen() {
                     variant="secondary"
                     size="icon"
                     title="Refresh"
-                    onClick={orch.handleRefresh}
+                    onClick={handleRefresh}
                   >
-                    <RefreshCw className={`h-4 w-4${orch.isRefreshing ? " animate-spin" : ""}`} />
+                    <RefreshCw className={`h-4 w-4${isRefreshing ? " animate-spin" : ""}`} />
                   </Button>
                   <Button
                     type="button"

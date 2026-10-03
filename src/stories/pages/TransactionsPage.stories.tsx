@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useDemoTheme } from "../../hooks/useDemoTheme";
+import { useDemoTheme } from "../useDemoTheme";
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import {
   Activity,

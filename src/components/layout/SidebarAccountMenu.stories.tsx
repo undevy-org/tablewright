@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useDemoTheme } from '../../hooks/useDemoTheme';
+import { useDemoTheme } from '../../stories/useDemoTheme';
 import { PortalContainerContext } from '../../context/portal-container-context';
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { CreditCard, Settings, Trash2, Users } from 'lucide-react';

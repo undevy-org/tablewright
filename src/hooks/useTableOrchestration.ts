@@ -77,6 +77,7 @@ export interface TableOrchestrationReturn<TRow extends object, TViewKey extends 
   rowsPerPage: number;
   density: "normal" | "dense";
   setDensity: (v: "normal" | "dense") => void;
+  /** @deprecated Demo-only: it only spins for a fixed time (700 ms by default) and refetches nothing. Keep refresh state in your data layer (e.g. your query's `isFetching`). Will be removed in a future minor release. */
   isRefreshing: boolean;
   selectedIds: Set<string>;
   setSelectedIds: React.Dispatch<React.SetStateAction<Set<string>>>;
@@ -130,6 +131,7 @@ export interface TableOrchestrationReturn<TRow extends object, TViewKey extends 
   handleRemoveSort: () => void;
   handleRemoveCustomFilter: () => void;
   handleClearAll: () => void;
+  /** @deprecated Demo-only: it only spins for a fixed time (700 ms by default) and refetches nothing. Keep refresh state in your data layer (e.g. your query's `isFetching`). Will be removed in a future minor release. */
   handleRefresh: () => void;
   handleToggleRowSelection: (id: string) => void;
   handleToggleHeaderCheck: () => void;
