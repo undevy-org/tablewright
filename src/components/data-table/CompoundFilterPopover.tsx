@@ -143,11 +143,20 @@ export function CompoundFilterPopover({
   useEffect(() => {
     onRequestOpenHandledRef.current = onRequestOpenHandled;
   });
-  const [drafts, setDrafts] = useState<Record<string, SubFilterDraft>>(() => {
+  const initDrafts = () => {
     const d: Record<string, SubFilterDraft> = {};
     for (const sub of subFilters) d[sub.key] = initDraft(sub, compound);
     return d;
-  });
+  };
+  const [drafts, setDrafts] = useState<Record<string, SubFilterDraft>>(initDrafts);
+
+  // The committed value can change from outside (filter form, preset, clear
+  // all) while the popover is closed — re-seed the drafts so it opens on it.
+  const [draftSource, setDraftSource] = useState(filter.value);
+  if (!isOpen && draftSource !== filter.value) {
+    setDraftSource(filter.value);
+    setDrafts(initDrafts());
+  }
 
   // Auto-open on initial mount
   useEffect(() => {
@@ -173,9 +182,7 @@ export function CompoundFilterPopover({
         return;
       }
       // Reset drafts to committed value
-      const d: Record<string, SubFilterDraft> = {};
-      for (const sub of subFilters) d[sub.key] = initDraft(sub, compound);
-      setDrafts(d);
+      setDrafts(initDrafts());
     }
     setIsOpen(nextOpen);
   };

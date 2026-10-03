@@ -1,10 +1,12 @@
 export type ColumnFilterType = "text" | "enum" | "date" | "number-range" | "compound";
 
 export interface CompoundSubFilter {
+  /** Sub-filter id: the key of its value inside the compound filter value. */
   key: string;
   type: "text" | "number-range" | "enum";
   label: string;
   badge?: string;
+  /** Row field the sub-filter reads (used for column stats). */
   field: string;
   options?: { label: string; value: string }[];
 }
