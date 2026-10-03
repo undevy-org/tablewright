@@ -9,3 +9,7 @@ updates:
     directory: /
     schedule:
       interval: weekly
+    ignore:
+      # action v2 needs Changesets CLI v3; we are on v2
+      - dependency-name: changesets/action
+        update-types: [version-update:semver-major]
