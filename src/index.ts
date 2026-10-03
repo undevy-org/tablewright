@@ -113,6 +113,9 @@ export type {
   CompoundSubFilter,
   ColumnFilterConfig,
   ActiveFilterValue,
+  DateRangeValue,
+  NumberRangeValue,
+  CompoundFilterValue,
   ActiveFilter,
   FilterColumnStats,
   FilterStatsSlice,
@@ -149,6 +152,13 @@ export {
   hasActiveManagedFilters,
 } from "./components/data-table/managed-filters";
 export type { ManagedFilterChange } from "./components/data-table/managed-filters";
+export {
+  getCompoundValue,
+  getDateRange,
+  getNumberRange,
+  getStringArray,
+  isFilterValueEmpty,
+} from "./components/data-table/filter-values";
 
 // Hook
 export { useTableOrchestration } from "./hooks/useTableOrchestration";

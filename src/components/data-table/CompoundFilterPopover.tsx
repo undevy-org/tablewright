@@ -11,6 +11,12 @@ import type {
   CompoundSubFilter,
   FilterStatsSlice,
 } from "./filter-types";
+import {
+  getCompoundValue,
+  getNumberRange,
+  getStringArray,
+  isFilterValueEmpty,
+} from "./filter-values";
 
 const DEFAULT_LABELS = {
   searchPlaceholder: "Search...",
@@ -31,22 +37,7 @@ type SubFilterDraft = NumberRangeDraft | TextDraft | EnumDraft;
 
 // ── Helpers ──────────────────────────────────────────────────────────────
 
-function isCompoundEmpty(value: ActiveFilterValue): boolean {
-  if (typeof value !== "object" || Array.isArray(value) || value === null) return true;
-  const obj = value as Record<string, ActiveFilterValue>;
-  return Object.keys(obj).every((k) => isSubValueEmpty(obj[k]));
-}
 
-function isSubValueEmpty(value: ActiveFilterValue | undefined): boolean {
-  if (value === undefined || value === null) return true;
-  if (Array.isArray(value)) return value.length === 0;
-  if (typeof value === "string") return value.length === 0;
-  if (typeof value === "object") {
-    const obj = value as Record<string, unknown>;
-    return obj.from === undefined && obj.to === undefined;
-  }
-  return true;
-}
 
 function initDraft(
   sub: CompoundSubFilter,
@@ -54,10 +45,7 @@ function initDraft(
 ): SubFilterDraft {
   const val = compound[sub.key];
   if (sub.type === "number-range") {
-    const range = (typeof val === "object" && !Array.isArray(val) ? val : {}) as {
-      from?: number;
-      to?: number;
-    };
+    const range = getNumberRange(val);
     return {
       type: "number-range",
       from: range.from !== undefined ? String(range.from) : "",
@@ -65,11 +53,11 @@ function initDraft(
     };
   }
   if (sub.type === "enum") {
-    return { type: "enum", selected: Array.isArray(val) ? val : [] };
+    return { type: "enum", selected: getStringArray(val) };
   }
   return {
     type: "text",
-    tags: Array.isArray(val) ? val : [],
+    tags: getStringArray(val),
     input: "",
   };
 }
@@ -95,9 +83,9 @@ function draftToValue(draft: SubFilterDraft): ActiveFilterValue | undefined {
 // ── Sub-filter display for chip ──────────────────────────────────────────
 
 function formatSubDisplay(sub: CompoundSubFilter, val: ActiveFilterValue): string | null {
-  if (isSubValueEmpty(val)) return null;
-  if (sub.type === "number-range" && typeof val === "object" && !Array.isArray(val)) {
-    const { from, to } = val as { from?: number; to?: number };
+  if (isFilterValueEmpty(val)) return null;
+  if (sub.type === "number-range") {
+    const { from, to } = getNumberRange(val);
     const label = sub.label.replace(/\s+/g, " ").split(" ").pop() ?? sub.label;
     if (from !== undefined && to !== undefined) return `${label}: ${from}–${to}`;
     if (from !== undefined) return `${label}: ≥${from}`;
@@ -148,9 +136,7 @@ export function CompoundFilterPopover({
   onRequestOpenHandled,
 }: CompoundFilterPopoverProps) {
   const subFilters = config.subFilters ?? [];
-  const compound = (
-    typeof filter.value === "object" && !Array.isArray(filter.value) ? filter.value : {}
-  ) as Record<string, ActiveFilterValue>;
+  const compound = getCompoundValue(filter.value);
 
   const [isOpen, setIsOpen] = useState(false);
   const onRequestOpenHandledRef = useRef(onRequestOpenHandled);
@@ -182,7 +168,7 @@ export function CompoundFilterPopover({
 
   const handleOpenChange = (nextOpen: boolean) => {
     if (!nextOpen) {
-      if (isCompoundEmpty(filter.value)) {
+      if (isFilterValueEmpty(compound)) {
         onRemove();
         return;
       }
@@ -240,7 +226,7 @@ export function CompoundFilterPopover({
   // ── Chip display ─────────────────────────────────────────────────────
 
   const getDisplayValue = (): string | undefined => {
-    if (isCompoundEmpty(filter.value)) return undefined;
+    if (isFilterValueEmpty(compound)) return undefined;
     const parts: string[] = [];
     for (const sub of subFilters) {
       const display = formatSubDisplay(sub, compound[sub.key]);

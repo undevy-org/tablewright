@@ -7,7 +7,20 @@ import { ButtonFooter } from "../ui/button-footer";
 import { Input } from "../ui/input";
 import { Combobox } from "../ui/combobox";
 
-import type { ActiveFilter, ActiveFilterValue, ColumnFilterConfig } from "./filter-types";
+import type {
+  ActiveFilter,
+  ActiveFilterValue,
+  ColumnFilterConfig,
+  CompoundFilterValue,
+  DateRangeValue,
+  NumberRangeValue,
+} from "./filter-types";
+import {
+  getCompoundValue,
+  getDateRange,
+  getNumberRange,
+  isFilterValueEmpty,
+} from "./filter-values";
 import { hasActiveManagedFilters, type ManagedFilterChange } from "./managed-filters";
 
 export interface FilterFormPanelProps {
@@ -44,15 +57,6 @@ export interface FilterFormPanelProps {
 
 type FormState = Record<string, ActiveFilterValue | undefined>;
 
-function isValueEmpty(v: ActiveFilterValue | undefined): boolean {
-  if (v === undefined) return true;
-  if (Array.isArray(v)) return v.length === 0 || v.every((x) => x === "" || x == null);
-  if (typeof v === "string") return v.length === 0;
-  if (typeof v === "object" && v !== null) {
-    return Object.values(v).every((x) => isValueEmpty(x as ActiveFilterValue));
-  }
-  return false;
-}
 
 function deriveInitialState(fields: readonly string[], filters: ActiveFilter[]): FormState {
   const byId = new Map(filters.map((f) => [f.columnId, f.value] as const));
@@ -117,10 +121,10 @@ export function FilterFormPanel({
     const changes: ManagedFilterChange[] = [];
     for (const id of renderableFields) {
       const value = state[id];
-      if (isValueEmpty(value)) {
+      if (value === undefined || isFilterValueEmpty(value)) {
         if (activeIds.has(id)) changes.push({ columnId: id, action: "remove" });
       } else {
-        changes.push({ columnId: id, action: "set", value: value as ActiveFilterValue });
+        changes.push({ columnId: id, action: "set", value });
       }
     }
     onApply(changes);
@@ -135,7 +139,7 @@ export function FilterFormPanel({
 
   const isClearDisabled =
     !hasActiveManagedFilters(filters, renderableFields) &&
-    renderableFields.every((fieldId) => isValueEmpty(state[fieldId]));
+    renderableFields.every((fieldId) => isFilterValueEmpty(state[fieldId]));
 
   return (
     <form
@@ -253,16 +257,11 @@ function Field({ config, value, onChange, fieldId, hiddenSubSet }: FieldProps) {
   }
 
   if (config.type === "date") {
-    const range = (
-      value && !Array.isArray(value) && typeof value === "object"
-        ? (value as { from?: string; to?: string })
-        : {}
-    ) as { from?: string; to?: string };
+    const range = getDateRange(value);
     const update = (key: "from" | "to") => (e: ChangeEvent<HTMLInputElement>) => {
       const v = e.target.value;
-      const next = { ...range, [key]: v || undefined };
-      const cleaned = next.from || next.to ? next : undefined;
-      onChange(cleaned as ActiveFilterValue | undefined);
+      const next: DateRangeValue = { ...range, [key]: v || undefined };
+      onChange(next.from || next.to ? next : undefined);
     };
     return (
       <div className="flex min-w-0 flex-col gap-1.5 [grid-column:span_2]">
@@ -288,17 +287,12 @@ function Field({ config, value, onChange, fieldId, hiddenSubSet }: FieldProps) {
   }
 
   if (config.type === "number-range") {
-    const range = (
-      value && !Array.isArray(value) && typeof value === "object"
-        ? (value as { from?: number; to?: number })
-        : {}
-    ) as { from?: number; to?: number };
+    const range = getNumberRange(value);
     const update = (key: "from" | "to") => (e: ChangeEvent<HTMLInputElement>) => {
       const raw = e.target.value;
       const parsed = raw === "" ? undefined : Number(raw);
-      const next = { ...range, [key]: Number.isFinite(parsed) ? parsed : undefined };
-      const cleaned = next.from !== undefined || next.to !== undefined ? next : undefined;
-      onChange(cleaned as ActiveFilterValue | undefined);
+      const next: NumberRangeValue = { ...range, [key]: Number.isFinite(parsed) ? parsed : undefined };
+      onChange(next.from !== undefined || next.to !== undefined ? next : undefined);
     };
     return (
       <div className="flex min-w-0 flex-col gap-1.5 [grid-column:span_2]">
@@ -326,16 +320,13 @@ function Field({ config, value, onChange, fieldId, hiddenSubSet }: FieldProps) {
   }
 
   if (config.type === "compound") {
-    const compound =
-      value && !Array.isArray(value) && typeof value === "object"
-        ? (value as Record<string, ActiveFilterValue>)
-        : {};
+    const compound = getCompoundValue(value);
 
     const updateSub = (subField: string, next: ActiveFilterValue | undefined) => {
       const rest = { ...compound };
       delete rest[subField];
-      const merged: Record<string, ActiveFilterValue> =
-        next === undefined || isValueEmpty(next) ? rest : { ...rest, [subField]: next };
+      const merged: CompoundFilterValue =
+        next === undefined || isFilterValueEmpty(next) ? rest : { ...rest, [subField]: next };
       onChange(Object.keys(merged).length === 0 ? undefined : merged);
     };
 
@@ -384,17 +375,18 @@ function Field({ config, value, onChange, fieldId, hiddenSubSet }: FieldProps) {
               );
             }
             if (sub.type === "number-range") {
-              const range = (
-                subValue && !Array.isArray(subValue) && typeof subValue === "object"
-                  ? (subValue as { from?: number; to?: number })
-                  : {}
-              ) as { from?: number; to?: number };
+              const range = getNumberRange(subValue);
               const updateRange = (key: "from" | "to") => (e: ChangeEvent<HTMLInputElement>) => {
                 const raw = e.target.value;
                 const parsed = raw === "" ? undefined : Number(raw);
-                const next = { ...range, [key]: Number.isFinite(parsed) ? parsed : undefined };
-                const cleaned = next.from !== undefined || next.to !== undefined ? next : undefined;
-                updateSub(sub.field, cleaned as ActiveFilterValue | undefined);
+                const next: NumberRangeValue = {
+                  ...range,
+                  [key]: Number.isFinite(parsed) ? parsed : undefined,
+                };
+                updateSub(
+                  sub.field,
+                  next.from !== undefined || next.to !== undefined ? next : undefined,
+                );
               };
               return (
                 <div key={sub.key} className="flex min-w-0 gap-2">

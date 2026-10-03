@@ -1,4 +1,5 @@
 import type { ActiveFilter, ActiveFilterValue } from "./filter-types";
+import { isFilterValueEmpty } from "./filter-values";
 
 export type ManagedFilterChange =
   | { columnId: string; action: "set"; value: ActiveFilterValue }
@@ -28,15 +29,6 @@ export function clearManagedFilters(orch: OrchSlice, managedColumnIds: string[])
   }
 }
 
-function isFilterValueEmpty(v: ActiveFilterValue | undefined): boolean {
-  if (v === undefined) return true;
-  if (Array.isArray(v)) return v.length === 0 || v.every((x) => x === "" || x == null);
-  if (typeof v === "string") return v.length === 0;
-  if (typeof v === "object" && v !== null) {
-    return Object.values(v).every((x) => isFilterValueEmpty(x as ActiveFilterValue));
-  }
-  return false;
-}
 
 export function hasActiveManagedFilters(
   filters: ActiveFilter[],
