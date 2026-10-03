@@ -1,5 +1,11 @@
 # @undevy-org/tablewright
 
+## 0.2.2
+
+### Patch Changes
+
+- [#24](https://github.com/undevy-org/tablewright/pull/24) [`4ec6765`](https://github.com/undevy-org/tablewright/commit/4ec6765ef7119bc9f0d4f0c3a8544ae53e1f7403) Thanks [@undevy](https://github.com/undevy)! - Internal: `useTableOrchestration` is split into focused internal hooks (responsive columns, filtered rows, filter stats, column gaps, bound actions). No API or behavior change.
+
 ## 0.2.1
 
 ### Patch Changes
