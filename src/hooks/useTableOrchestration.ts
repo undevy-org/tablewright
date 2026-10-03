@@ -11,17 +11,18 @@ import type {
   ColumnFilterConfig,
   ColumnGap,
   ColumnGroup,
-  FilterColumnStats,
   FilterStatsSlice,
   ViewPreset,
 } from "../components/data-table/filter-types";
-import { computeColumnGaps } from "../lib/column-gaps";
-import { computeColumnStats } from "../lib/filter-stats";
 import {
   createTableOrchestrationStore,
-  defaultValueForFilter,
   type TableOrchestrationStoreApi,
 } from "./table-orchestration-store";
+import { useColumnFilterStats } from "./table-orchestration/use-column-filter-stats";
+import { useColumnGaps } from "./table-orchestration/use-column-gaps";
+import { useFilteredRows } from "./table-orchestration/use-filtered-rows";
+import { useOrchestrationActions } from "./table-orchestration/use-orchestration-actions";
+import { useResponsiveColumns } from "./table-orchestration/use-responsive-columns";
 
 // ── Config ──────────────────────────────────────────────────────────────
 
@@ -152,8 +153,6 @@ export interface TableOrchestrationReturn<TRow extends object, TViewKey extends 
 
 // ── Hook ────────────────────────────────────────────────────────────────
 
-const EMPTY_ID_SET: ReadonlySet<string> = new Set<string>();
-
 // useLayoutEffect warns during SSR on React 18; fall back to useEffect there.
 const useIsomorphicLayoutEffect = typeof window !== "undefined" ? useLayoutEffect : useEffect;
 
@@ -211,42 +210,11 @@ export function useTableOrchestration<TRow extends object, TViewKey extends stri
   const storedSelectedRowId = useStore(store, (s) => s.selectedRowId);
 
   // ── Responsive column collapse (P1/P2/P3) ────────────────────────────
-  // Initialize to `true` (all columns shown) so the first client render
-  // matches the server HTML — no hydration mismatch. The real width is
-  // read in the effect below (after commit) and only collapses then.
-  const hasPriorities = Boolean(columnPriorities && Object.keys(columnPriorities).length > 0);
-  const [isWide, setIsWide] = useState(true);
-  // Compact tier (spec 07): below `compactBreakpoint` P2 columns also collapse
-  // and `isCompact` flips so consumers can switch to a card layout. Initialize
-  // `false` so the first client render matches server HTML (no hydration jump).
-  const [isCompact, setIsCompact] = useState(false);
-  useEffect(() => {
-    if (!hasPriorities || typeof window === "undefined") return;
-    const mql = window.matchMedia(`(min-width: ${wideBreakpoint}px)`);
-    const onChange = (e: MediaQueryListEvent) => setIsWide(e.matches);
-    setIsWide(mql.matches);
-    mql.addEventListener("change", onChange);
-    return () => mql.removeEventListener("change", onChange);
-  }, [hasPriorities, wideBreakpoint]);
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    const mql = window.matchMedia(`(max-width: ${compactBreakpoint - 1}px)`);
-    const onChange = (e: MediaQueryListEvent) => setIsCompact(e.matches);
-    setIsCompact(mql.matches);
-    mql.addEventListener("change", onChange);
-    return () => mql.removeEventListener("change", onChange);
-  }, [compactBreakpoint]);
-  const responsiveHiddenColumnIds = useMemo<ReadonlySet<string>>(() => {
-    if (isWide || !columnPriorities) return EMPTY_ID_SET;
-    const hidden = new Set<string>();
-    for (const [id, priority] of Object.entries(columnPriorities)) {
-      // Only P3 (детали) collapse below Wide. P2 is intentionally NOT auto-hidden:
-      // without a Compact card layout, hiding it would strand data on tables that
-      // have no row drawer. Consumers react to `isCompact` to build a card view.
-      if (priority === 3) hidden.add(id);
-    }
-    return hidden;
-  }, [isWide, columnPriorities]);
+  const { responsiveHiddenColumnIds, isCompact } = useResponsiveColumns(
+    columnPriorities,
+    wideBreakpoint,
+    compactBreakpoint,
+  );
 
   // ── Refs for stable closures ──────────────────────────────────────────
   const selectedIdsRef = useRef(storedSelectedIds);
@@ -275,96 +243,25 @@ export function useTableOrchestration<TRow extends object, TViewKey extends stri
     return viewPresets.find((v) => v.key === activeView) ?? viewPresets[0];
   }, [activeView, viewPresets]);
 
-  // ── Filter stats (all rows) ───────────────────────────────────────────
-  const allColumnFilterStats = useMemo(() => {
-    const result: Record<string, FilterColumnStats> = {};
-    for (const [columnId, cfg] of Object.entries(filterConfigs)) {
-      if (cfg.type === "compound" && cfg.subFilters) {
-        for (const sub of cfg.subFilters) {
-          const s = computeColumnStats(rows, sub.field, {
-            type: sub.type,
-            label: sub.label,
-            options: sub.options,
-          });
-          if (s) result[`${columnId}:${sub.key}`] = s;
-        }
-      } else {
-        const s = computeColumnStats(rows, cfg.fieldName ?? columnId, cfg);
-        if (s) result[columnId] = s;
-      }
-    }
-    return result;
-  }, [rows, filterConfigs]);
-
   // ── Filtered + sorted rows ────────────────────────────────────────────
-  const filteredRows = useMemo(() => {
-    const search = searchQuery.trim().toLowerCase();
-    const filtered = rows.filter((row) => {
-      if (activePreset.customFilter && !activePreset.customFilter(row)) return false;
-      if (search.length > 0 && !getSearchText(row).includes(search)) return false;
-      return columnFilters.every((filter) => filterRow(row, filter));
-    });
-    if (!currentSort) return filtered;
-    const { columnId, direction } = currentSort;
-    return [...filtered].sort((a, b) => {
-      const aVal = getSortValue(a, columnId);
-      const bVal = getSortValue(b, columnId);
-      if (aVal < bVal) return direction === "asc" ? -1 : 1;
-      if (aVal > bVal) return direction === "asc" ? 1 : -1;
-      return 0;
-    });
-  }, [
+  const filteredRows = useFilteredRows({
     rows,
+    activePreset,
     searchQuery,
     columnFilters,
     currentSort,
-    activePreset,
-    getSearchText,
     filterRow,
+    getSearchText,
     getSortValue,
-  ]);
+  });
 
-  // ── Filter stats (filtered rows) ─────────────────────────────────────
-  const filteredColumnFilterStats = useMemo(() => {
-    if (columnFilters.length === 0 && searchQuery.trim().length === 0) return null;
-    const result: Record<string, FilterColumnStats> = {};
-    for (const [columnId, cfg] of Object.entries(filterConfigs)) {
-      if (cfg.type === "compound" && cfg.subFilters) {
-        for (const sub of cfg.subFilters) {
-          const s = computeColumnStats(filteredRows, sub.field, {
-            type: sub.type,
-            label: sub.label,
-            options: sub.options,
-          });
-          if (s) result[`${columnId}:${sub.key}`] = s;
-        }
-      } else {
-        const s = computeColumnStats(filteredRows, cfg.fieldName ?? columnId, cfg);
-        if (s) result[columnId] = s;
-      }
-    }
-    return result;
-  }, [filteredRows, filterConfigs, columnFilters, searchQuery]);
-
-  // ── Combined filter stats ─────────────────────────────────────────────
-  const columnFilterStats = useMemo(() => {
-    const result: Record<string, FilterStatsSlice> = {};
-    for (const [columnId, cfg] of Object.entries(filterConfigs)) {
-      if (cfg.type === "compound" && cfg.subFilters) {
-        for (const sub of cfg.subFilters) {
-          const key = `${columnId}:${sub.key}`;
-          const all = allColumnFilterStats[key];
-          if (!all) continue;
-          result[key] = { all, filtered: filteredColumnFilterStats?.[key] ?? null };
-        }
-      } else {
-        const all = allColumnFilterStats[columnId];
-        if (!all) continue;
-        result[columnId] = { all, filtered: filteredColumnFilterStats?.[columnId] ?? null };
-      }
-    }
-    return result;
-  }, [allColumnFilterStats, filteredColumnFilterStats, filterConfigs]);
+  // ── Filter stats ──────────────────────────────────────────────────────
+  const columnFilterStats = useColumnFilterStats(
+    rows,
+    filteredRows,
+    filterConfigs,
+    columnFilters.length > 0 || searchQuery.trim().length > 0,
+  );
 
   // ── Pagination ────────────────────────────────────────────────────────
   const totalPages = Math.max(1, Math.ceil(filteredRows.length / rowsPerPage));
@@ -422,28 +319,13 @@ export function useTableOrchestration<TRow extends object, TViewKey extends stri
       : false;
 
   // ── Gap indicators ────────────────────────────────────────────────────
-  const columnGaps = useMemo(
-    () => (columnGroups ? computeColumnGaps(toggleableColumnIds, columnVisibility) : []),
-    [columnGroups, toggleableColumnIds, columnVisibility],
-  );
-
-  const extendedColumnMeta = useMemo(() => {
-    if (columnGaps.length === 0) return columnMeta;
-    const meta: Record<string, ColumnMetaDef> = { ...columnMeta };
-    for (const gap of columnGaps) {
-      meta[`__gap_after_${gap.afterColumnId ?? "start"}`] = { minW: 32 };
-    }
-    return meta;
-  }, [columnGaps, columnMeta]);
-
-  const extendedWidths = useMemo(() => {
-    if (columnGaps.length === 0) return widths;
-    const merged: Record<string, number> = { ...widths };
-    for (const gap of columnGaps) {
-      merged[`__gap_after_${gap.afterColumnId ?? "start"}`] = 32;
-    }
-    return merged;
-  }, [widths, columnGaps]);
+  const { columnGaps, extendedColumnMeta, extendedWidths } = useColumnGaps({
+    columnGroups,
+    toggleableColumnIds,
+    columnVisibility,
+    columnMeta,
+    widths,
+  });
 
   const hiddenColumnsCount = useMemo(() => {
     return toggleableColumnIds.filter((id) => columnVisibility[id] === false).length;
@@ -458,172 +340,47 @@ export function useTableOrchestration<TRow extends object, TViewKey extends stri
   // eslint-disable-next-line react-hooks/refs
   headerCheckStateRef.current = headerCheckState;
 
-  // ── Bound action wrappers (preserve old hook signatures) ──────────────
-  const handleSearchSubmit = useCallback(
-    (e: React.FormEvent) => {
-      e.preventDefault();
-      store.getState().submitSearch();
-    },
-    [store],
-  );
-
-  const handleHeaderSort = useCallback(
-    (columnId: string, direction: "asc" | "desc") => {
-      store.getState().toggleSort(columnId, direction);
-    },
-    [store],
-  );
-
-  const handleViewChange = useCallback(
-    (key: TViewKey) => {
-      if (key === ("custom" as TViewKey)) return;
-      const preset = viewPresets.find((v) => v.key === key);
-      if (!preset) return;
-      store.getState().applyPreset({
-        key,
-        filters: preset.filters,
-        sort: preset.sort,
-        columnVisibility: preset.columnVisibility,
-      });
-    },
-    [viewPresets, store],
-  );
-
-  const handleAddColumnFilter = useCallback(
-    (columnId: string) => {
-      const cfg = filterConfigs[columnId];
-      if (!cfg) return;
-      store.getState().addColumnFilter(columnId, defaultValueForFilter(cfg));
-    },
-    [filterConfigs, store],
-  );
-
-  const handleOpenExistingFilter = useCallback(
-    (columnId: string) => store.getState().setRequestOpenFilterId(columnId),
-    [store],
-  );
-
-  const handleRequestOpenHandled = useCallback(
-    () => store.getState().setRequestOpenFilterId(null),
-    [store],
-  );
-
-  const handleRemoveColumnFilter = useCallback(
-    (columnId: string) => store.getState().removeColumnFilter(columnId),
-    [store],
-  );
-
-  const handleChangeColumnFilter = useCallback(
-    (columnId: string, value: ActiveFilterValue) =>
-      store.getState().changeColumnFilter(columnId, value),
-    [store],
-  );
-
-  const handleSetColumnFilter = useCallback(
-    (columnId: string, value: ActiveFilterValue) =>
-      store.getState().setColumnFilter(columnId, value),
-    [store],
-  );
-
-  const handleHeaderFilterClick = useCallback(
-    (columnId: string) => {
-      const state = store.getState();
-      const isActive = state.columnFilters.some((f) => f.columnId === columnId);
-      if (!isActive) {
-        const cfg = filterConfigs[columnId];
-        if (cfg) state.addColumnFilter(columnId, defaultValueForFilter(cfg));
-      }
-      state.setRequestOpenFilterId(columnId);
-    },
-    [filterConfigs, store],
-  );
-
-  const handleHideColumn = useCallback(
-    (columnId: string) => store.getState().hideColumn(columnId),
-    [store],
-  );
-
-  const handleResetColumns = useCallback(() => {
-    store.getState().resetColumns();
-    setWidths(() => {
-      const w: Record<string, number> = {};
-      for (const [id, m] of Object.entries(columnMeta)) w[id] = m.minW;
-      return w;
-    });
-  }, [store, setWidths, columnMeta]);
-
-  const handleRemoveSort = useCallback(() => store.getState().removeSort(), [store]);
-
-  const handleRemoveCustomFilter = useCallback(() => {
-    store.getState().goCustom();
-    store.getState().setPage(1);
-  }, [store]);
-
-  const handleClearAll = useCallback(
-    () => store.getState().clearAll(defaultViewKey),
-    [defaultViewKey, store],
-  );
-
-  const handleRefresh = useCallback(() => store.getState().startRefresh(), [store]);
-
-  const handleToggleRowSelection = useCallback(
-    (id: string) => store.getState().toggleRowSelection(id),
-    [store],
-  );
-
-  const handleToggleHeaderCheck = useCallback(() => {
-    const ids = paginatedRows.map(getRowId);
-    store.getState().toggleHeaderCheck(ids, allOnPageSelected);
-  }, [paginatedRows, allOnPageSelected, getRowId, store]);
-
-  const handleExpandRow = useCallback(
-    (row: TRow, e: React.MouseEvent) => {
-      e.stopPropagation();
-      const id = getRowId(row);
-      store.getState().toggleSelectedRowId(id);
-    },
-    [getRowId, store],
-  );
-
-  const handleExpandGap = useCallback(
-    (hiddenIds: string[]) => store.getState().showColumns(hiddenIds),
-    [store],
-  );
-
-  const handlePageChange = useCallback((p: number) => store.getState().setPage(p), [store]);
-
-  const handleRowsPerPageChange = useCallback(
-    (value: number) => store.getState().setRowsPerPage(value),
-    [store],
-  );
-
-  // ── Stable setters with React-style signatures ───────────────────────
-  const setSearchInput = useCallback((v: string) => store.getState().setSearchInput(v), [store]);
-
-  const setColumnVisibility = useCallback<React.Dispatch<React.SetStateAction<VisibilityState>>>(
-    (next) => store.getState().setColumnVisibility(next),
-    [store],
-  );
-
-  const setDensity = useCallback(
-    (v: "normal" | "dense") => store.getState().setDensity(v),
-    [store],
-  );
-
-  const setSelectedIds = useCallback<React.Dispatch<React.SetStateAction<Set<string>>>>(
-    (next) => store.getState().setSelectedIds(next),
-    [store],
-  );
-
-  const setColumnsMenuOpen = useCallback(
-    (v: boolean) => store.getState().setColumnsMenuOpen(v),
-    [store],
-  );
-
-  const setSelectedRowId = useCallback(
-    (v: string | null) => store.getState().setSelectedRowId(v),
-    [store],
-  );
+  // ── Actions ───────────────────────────────────────────────────────────
+  const {
+    handleSearchSubmit,
+    handleHeaderSort,
+    handleViewChange,
+    handleAddColumnFilter,
+    handleOpenExistingFilter,
+    handleRequestOpenHandled,
+    handleRemoveColumnFilter,
+    handleChangeColumnFilter,
+    handleSetColumnFilter,
+    handleHeaderFilterClick,
+    handleHideColumn,
+    handleResetColumns,
+    handleRemoveSort,
+    handleRemoveCustomFilter,
+    handleClearAll,
+    handleRefresh,
+    handleToggleRowSelection,
+    handleToggleHeaderCheck,
+    handleExpandRow,
+    handleExpandGap,
+    handlePageChange,
+    handleRowsPerPageChange,
+    setSearchInput,
+    setColumnVisibility,
+    setDensity,
+    setSelectedIds,
+    setColumnsMenuOpen,
+    setSelectedRowId,
+  } = useOrchestrationActions({
+    store,
+    viewPresets,
+    filterConfigs,
+    columnMeta,
+    setWidths,
+    defaultViewKey,
+    paginatedRows,
+    allOnPageSelected,
+    getRowId,
+  });
 
   // ── Ref-stable getters ────────────────────────────────────────────────
   const getSelectedIds = useCallback(() => selectedIdsRef.current, []);
