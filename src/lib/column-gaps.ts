@@ -2,6 +2,15 @@ import type { VisibilityState } from "@tanstack/react-table";
 
 import type { ColumnGap } from "../components/data-table/filter-types";
 
+/**
+ * Column id of the gap indicator column placed after `afterColumnId` (`null` =
+ * at the start). `useTableOrchestration` keys `extendedColumnMeta` /
+ * `extendedWidths` by it, so gap columns you define must use the same id.
+ */
+export function gapColumnId(afterColumnId: string | null): string {
+  return `__gap_after_${afterColumnId ?? "start"}`;
+}
+
 export function computeColumnGaps(
   orderedColumnIds: readonly string[],
   columnVisibility: VisibilityState,

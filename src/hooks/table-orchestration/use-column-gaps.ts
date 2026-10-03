@@ -2,14 +2,9 @@ import { useMemo } from "react";
 import type { VisibilityState } from "@tanstack/react-table";
 import type { ColumnGap, ColumnGroup } from "../../components/data-table/filter-types";
 import type { ColumnMetaDef } from "../../components/data-table/types";
-import { computeColumnGaps } from "../../lib/column-gaps";
+import { computeColumnGaps, gapColumnId } from "../../lib/column-gaps";
 
 const GAP_WIDTH = 32;
-
-/** Column id of the gap indicator column placed after `afterColumnId` (`null` = at the start). */
-export function gapColumnId(afterColumnId: string | null): string {
-  return `__gap_after_${afterColumnId ?? "start"}`;
-}
 
 /** Gap indicators for hidden columns, plus column meta/widths extended with the gap columns. */
 export function useColumnGaps({

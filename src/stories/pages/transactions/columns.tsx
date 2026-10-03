@@ -15,6 +15,7 @@ import { formatEnumLabel } from "../../../lib/format-enum";
 
 import { ColumnHeaderMenu } from "../../../components/data-table/ColumnHeaderMenu";
 import { GapCell, GapIndicator } from "../../../components/data-table/GapIndicator";
+import { gapColumnId } from "../../../lib/column-gaps";
 import { TimestampCell } from "../../../components/data-table/TimestampCell";
 import { ExpiryTimestampCell } from "../../../components/data-table/ExpiryTimestampCell";
 import { buildRowActionSections } from "./action-model";
@@ -832,7 +833,7 @@ export function createColumns({
   for (let i = columnGaps.length - 1; i >= 0; i--) {
     const gap = columnGaps[i];
     const gapColumn: ColumnDef<TransactionViewModel> = {
-      id: `__gap_after_${gap.afterColumnId ?? "start"}`,
+      id: gapColumnId(gap.afterColumnId),
       header: () => <GapIndicator onClick={() => onExpandGap(gap.hiddenIds)} />,
       cell: () => <GapCell />,
       size: 10,
