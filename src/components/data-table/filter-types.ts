@@ -19,7 +19,7 @@ export interface ColumnFilterConfig {
 
 export type DateRangeValue = { from?: string; to?: string };
 export type NumberRangeValue = { from?: number; to?: number };
-/** Compound filter value: sub-filter `field` → that sub-filter's value. */
+/** Compound filter value: sub-filter `key` → that sub-filter's value. */
 export type CompoundFilterValue = { [key: string]: ActiveFilterValue };
 
 export type ActiveFilterValue =

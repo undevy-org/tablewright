@@ -12,7 +12,7 @@ import type {
 function isObjectValue(
   value: ActiveFilterValue | undefined,
 ): value is DateRangeValue | NumberRangeValue | CompoundFilterValue {
-  return typeof value === "object" && !Array.isArray(value);
+  return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
 /** Read a text/enum filter value. Non-array values read as `[]`. */
@@ -38,7 +38,7 @@ export function getNumberRange(value: ActiveFilterValue | undefined): NumberRang
   return range;
 }
 
-/** Read a compound filter value (sub-filter field → value). Non-objects read as `{}`. */
+/** Read a compound filter value (sub-filter key → value). Non-objects read as `{}`. */
 export function getCompoundValue(value: ActiveFilterValue | undefined): CompoundFilterValue {
   // A range object is indistinguishable from a compound one at runtime; callers
   // only use this for `compound` filters.
@@ -46,13 +46,15 @@ export function getCompoundValue(value: ActiveFilterValue | undefined): Compound
 }
 
 /**
- * True when a filter value constrains nothing: `undefined`, `""`, an array of
- * only empty strings, or an object whose every entry is itself empty (so
- * `{}`, `{ from: undefined }` and `{ sub: [] }` are empty; `{ from: 0 }` is not).
+ * True when a filter value constrains nothing: `undefined`, `""`, `[]`, or an
+ * object whose every entry is itself empty (so `{}`, `{ from: undefined }` and
+ * `{ sub: [] }` are empty; `{ from: 0 }` is not). `[""]` is not empty — `""`
+ * can be a real enum option value.
  */
 export function isFilterValueEmpty(value: ActiveFilterValue | undefined): boolean {
-  if (value === undefined) return true;
+  // `null` is outside the type but can arrive from deserialized state.
+  if (value === undefined || value === null) return true;
   if (typeof value === "string") return value.length === 0;
-  if (Array.isArray(value)) return value.every((x) => x === "" || x == null);
+  if (Array.isArray(value)) return value.length === 0;
   return Object.values(value).every((x) => typeof x !== "number" && isFilterValueEmpty(x));
 }
