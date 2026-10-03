@@ -1,0 +1,54 @@
+/*
+ * Make the Docs canvas follow the project's theme tokens.
+ *
+ * Storybook's Docs blocks paint their own chrome — the page wrapper and the
+ * card around each live preview — with a hardcoded white from the addon's own
+ * theme. Those elements sit inside html[data-theme], but their CSS ignores our
+ * custom properties, so in dark mode the component's tokens flipped while the
+ * surface under them stayed white. Components that paint an opaque background
+ * of their own masked it; transparent ones (Button ghost, checkbox labels, tab
+ * body copy) sat directly on white and became unreadable.
+ *
+ * parameters.docs.theme is the documented knob, but it is static — it cannot
+ * follow the toolbar toggle, so picking dark there would break light mode.
+ * Driving these surfaces from the same custom properties as everything else
+ * makes them track whichever theme is active, with no second source of truth.
+ */
+
+.sbdocs.sbdocs-wrapper,
+.sbdocs.sbdocs-content {
+  background-color: var(--bg-body) !important;
+  color: var(--text-primary) !important;
+}
+
+.sbdocs .docs-story,
+.sbdocs.sbdocs-preview,
+.sbdocs .sbdocs-preview {
+  background-color: var(--bg-body) !important;
+  border-color: var(--border-subtle) !important;
+}
+
+/* Typography and rules inside the docs page */
+.sbdocs.sbdocs-h1,
+.sbdocs.sbdocs-h2,
+.sbdocs.sbdocs-h3,
+.sbdocs.sbdocs-h4,
+.sbdocs.sbdocs-p,
+.sbdocs.sbdocs-li,
+.sbdocs.sbdocs-title,
+.sbdocs.sbdocs-subtitle {
+  color: var(--text-primary) !important;
+}
+
+.sbdocs.sbdocs-hr,
+.sbdocs.sbdocs-h2 {
+  border-bottom-color: var(--border-subtle) !important;
+}
+
+/* Args table */
+.sbdocs table th,
+.sbdocs table td {
+  background-color: var(--bg-surface) !important;
+  color: var(--text-primary) !important;
+  border-bottom-color: var(--border-subtle) !important;
+}

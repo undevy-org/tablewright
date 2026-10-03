@@ -1,0 +1,15 @@
+/* Development / Storybook entry.
+ *
+ * This is the full-screen-app stylesheet: it loads the web fonts, Tailwind's
+ * global preflight and the host-level globals, none of which the package ships
+ * to consumers. The shipped artifacts are built from the same sources by
+ * `pnpm build:css` — see scripts/build-css.mjs and the CSS section of README.
+ *
+ * Layer order below is load-bearing and matches what the package emits:
+ * reset first, then tokens and globals, then utilities last so they win. */
+
+@import "./css/fonts.css";
+@import "./css/tailwind.css";
+@import "./css/tokens.css";
+@import "./css/dev-globals.css";
+@import "./css/scrollbar.css";

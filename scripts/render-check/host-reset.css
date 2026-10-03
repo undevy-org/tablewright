@@ -1,0 +1,45 @@
+/* A synthetic hostile host stylesheet.
+ *
+ * This is not decoration — it is the adversary the scoped reset exists to
+ * survive. The first two rules are the shape that actually broke the package:
+ * a host reset that addresses bare elements sits at specificity (0,0,1) and
+ * beats any zero-specificity reset, so every control in the kit rendered
+ * borderless while all build checks stayed green.
+ *
+ * Loaded BEFORE the package stylesheets in the fixture, and the assertions also
+ * cover the reverse direction: rules here must keep governing the host's own
+ * elements, because a library that wins everywhere has simply become a global
+ * reset with extra steps.
+ */
+
+button,
+input,
+optgroup,
+select,
+textarea {
+  padding: 0;
+  margin: 0;
+  border: none;
+  border-radius: 0;
+  box-shadow: none;
+  background-color: transparent;
+  font: inherit;
+  color: inherit;
+}
+
+body {
+  line-height: 1;
+  font-size: 16px;
+  font-family: Georgia, serif;
+  margin: 0;
+}
+
+/* Host-owned rules that must survive: if the package's reset leaks, these lose. */
+ul {
+  list-style: square;
+  padding-left: 40px;
+}
+
+p {
+  margin-top: 17px;
+}

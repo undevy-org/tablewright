@@ -1,0 +1,1024 @@
+{
+  "meta": {
+    "name": "Tablewright Design Tokens",
+    "source": "design-tokens/manifest.json",
+    "description": "Canonical token manifest for CSS variables, showcase token inventory, and Figma bridge artifacts."
+  },
+  "collections": [
+    {
+      "id": "colors",
+      "name": "Colors",
+      "tokens": [
+        {
+          "name": "bg-body",
+          "cssVar": "--bg-body",
+          "kind": "color",
+          "group": "surface",
+          "value": "#ffffff",
+          "modes": {
+            "dark": "#0f172a"
+          },
+          "label": "Body"
+        },
+        {
+          "name": "bg-surface",
+          "cssVar": "--bg-surface",
+          "kind": "color",
+          "group": "surface",
+          "value": "#ffffff",
+          "modes": {
+            "dark": "#111827"
+          },
+          "label": "Surface"
+        },
+        {
+          "name": "bg-surface-muted",
+          "cssVar": "--bg-surface-muted",
+          "kind": "color",
+          "group": "surface",
+          "value": "#fcfcfd",
+          "modes": {
+            "dark": "#172033"
+          },
+          "label": "Surface Muted"
+        },
+        {
+          "name": "bg-surface-sunken",
+          "cssVar": "--bg-surface-sunken",
+          "kind": "color",
+          "group": "surface",
+          "value": "#fbfbfb",
+          "modes": {
+            "dark": "#0b1220"
+          },
+          "label": "Surface Sunken"
+        },
+        {
+          "name": "bg-hover",
+          "cssVar": "--bg-hover",
+          "kind": "color",
+          "group": "surface",
+          "value": "#f9fafb",
+          "modes": {
+            "dark": "#1b2537"
+          },
+          "label": "Hover"
+        },
+        {
+          "name": "bg-secondary",
+          "cssVar": "--bg-secondary",
+          "kind": "color",
+          "group": "surface",
+          "value": "#f3f4f6",
+          "modes": {
+            "dark": "#1e293b"
+          },
+          "label": "Secondary"
+        },
+        {
+          "name": "bg-tertiary",
+          "cssVar": "--bg-tertiary",
+          "kind": "color",
+          "group": "surface",
+          "value": "#eef2f6",
+          "modes": {
+            "dark": "#334155"
+          },
+          "label": "Tertiary"
+        },
+        {
+          "name": "bg-surface-glass",
+          "cssVar": "--bg-surface-glass",
+          "kind": "color",
+          "group": "surface",
+          "value": "rgba(255, 255, 255, 0.95)",
+          "modes": {
+            "dark": "rgba(15, 23, 42, 0.92)"
+          },
+          "label": "Surface Glass"
+        },
+        {
+          "name": "bg-surface-glass-soft",
+          "cssVar": "--bg-surface-glass-soft",
+          "kind": "color",
+          "group": "surface",
+          "value": "rgba(255, 255, 255, 0.9)",
+          "modes": {
+            "dark": "rgba(15, 23, 42, 0.82)"
+          },
+          "label": "Surface Glass Soft"
+        },
+        {
+          "name": "bg-nav-item-active",
+          "cssVar": "--bg-nav-item-active",
+          "kind": "color",
+          "group": "surface",
+          "value": "rgba(17, 24, 39, 0.06)",
+          "modes": {
+            "dark": "rgba(248, 250, 252, 0.08)"
+          },
+          "label": "Nav Item Active"
+        },
+        {
+          "name": "overlay-scrim",
+          "cssVar": "--overlay-scrim",
+          "kind": "color",
+          "group": "surface",
+          "value": "rgba(0, 0, 0, 0.3)",
+          "modes": {
+            "dark": "rgba(2, 6, 23, 0.72)"
+          },
+          "label": "Overlay Scrim"
+        },
+        {
+          "name": "accent-primary",
+          "cssVar": "--accent-primary",
+          "kind": "color",
+          "group": "accent",
+          "value": "#111827",
+          "modes": {
+            "dark": "#e2e8f0"
+          },
+          "label": "Accent Primary"
+        },
+        {
+          "name": "text-on-accent",
+          "cssVar": "--text-on-accent",
+          "kind": "color",
+          "group": "accent",
+          "value": "#ffffff",
+          "modes": {
+            "dark": "#111827"
+          },
+          "label": "Text On Accent"
+        },
+        {
+          "name": "text-primary",
+          "cssVar": "--text-primary",
+          "kind": "color",
+          "group": "text",
+          "value": "#111827",
+          "modes": {
+            "dark": "#f8fafc"
+          },
+          "label": "Text Primary"
+        },
+        {
+          "name": "text-secondary",
+          "cssVar": "--text-secondary",
+          "kind": "color",
+          "group": "text",
+          "value": "#6b7280",
+          "modes": {
+            "dark": "#cbd5e1"
+          },
+          "label": "Text Secondary"
+        },
+        {
+          "name": "text-tertiary",
+          "cssVar": "--text-tertiary",
+          "kind": "color",
+          "group": "text",
+          "value": "#9ca3af",
+          "modes": {
+            "dark": "#94a3b8"
+          },
+          "label": "Text Tertiary"
+        },
+        {
+          "name": "text-muted-strong",
+          "cssVar": "--text-muted-strong",
+          "kind": "color",
+          "group": "text",
+          "value": "#374151",
+          "modes": {
+            "dark": "#e2e8f0"
+          },
+          "label": "Text Muted Strong"
+        },
+        {
+          "name": "text-utility",
+          "cssVar": "--text-utility",
+          "kind": "color",
+          "group": "text",
+          "value": "#667085",
+          "modes": {
+            "dark": "#b0bccd"
+          },
+          "label": "Text Utility"
+        },
+        {
+          "name": "bg-brand-subtle",
+          "cssVar": "--bg-brand-subtle",
+          "kind": "color",
+          "group": "accent",
+          "value": "#e0f2fe",
+          "modes": {
+            "dark": "#112e44"
+          },
+          "label": "Brand Subtle Background"
+        },
+        {
+          "name": "border-brand",
+          "cssVar": "--border-brand",
+          "kind": "color",
+          "group": "border",
+          "value": "#93c5fd",
+          "modes": {
+            "dark": "#1e40af"
+          },
+          "label": "Brand Border"
+        },
+        {
+          "name": "text-brand",
+          "cssVar": "--text-brand",
+          "kind": "color",
+          "group": "text",
+          "value": "#0369a1",
+          "modes": {
+            "dark": "#7dd3fc"
+          },
+          "label": "Brand Text"
+        },
+        {
+          "name": "border-subtle",
+          "cssVar": "--border-subtle",
+          "kind": "color",
+          "group": "border",
+          "value": "#e5e7eb",
+          "modes": {
+            "dark": "#334155"
+          },
+          "label": "Border Subtle"
+        },
+        {
+          "name": "border-focus",
+          "cssVar": "--border-focus",
+          "kind": "color",
+          "group": "border",
+          "value": "#d1d5db",
+          "modes": {
+            "dark": "#475569"
+          },
+          "label": "Border Focus"
+        },
+        {
+          "name": "border-danger",
+          "cssVar": "--border-danger",
+          "kind": "color",
+          "group": "border",
+          "value": "#f87171",
+          "modes": {
+            "dark": "#f87171"
+          },
+          "label": "Border Danger"
+        },
+        {
+          "name": "tag-pink-bg",
+          "cssVar": "--tag-pink-bg",
+          "kind": "color",
+          "group": "status",
+          "pair": "pink",
+          "role": "background",
+          "value": "#fce7f3",
+          "modes": {
+            "dark": "#3f1d34"
+          },
+          "label": "Pink Background"
+        },
+        {
+          "name": "tag-pink-text",
+          "cssVar": "--tag-pink-text",
+          "kind": "color",
+          "group": "status",
+          "pair": "pink",
+          "role": "foreground",
+          "value": "#be185d",
+          "modes": {
+            "dark": "#f9a8d4"
+          },
+          "label": "Pink Foreground"
+        },
+        {
+          "name": "tag-purple-bg",
+          "cssVar": "--tag-purple-bg",
+          "kind": "color",
+          "group": "status",
+          "pair": "purple",
+          "role": "background",
+          "value": "#f3e8ff",
+          "modes": {
+            "dark": "#31224a"
+          },
+          "label": "Purple Background"
+        },
+        {
+          "name": "tag-purple-text",
+          "cssVar": "--tag-purple-text",
+          "kind": "color",
+          "group": "status",
+          "pair": "purple",
+          "role": "foreground",
+          "value": "#7e22ce",
+          "modes": {
+            "dark": "#d8b4fe"
+          },
+          "label": "Purple Foreground"
+        },
+        {
+          "name": "tag-blue-bg",
+          "cssVar": "--tag-blue-bg",
+          "kind": "color",
+          "group": "status",
+          "pair": "blue",
+          "role": "background",
+          "value": "#e0f2fe",
+          "modes": {
+            "dark": "#112e44"
+          },
+          "label": "Blue Background"
+        },
+        {
+          "name": "tag-blue-text",
+          "cssVar": "--tag-blue-text",
+          "kind": "color",
+          "group": "status",
+          "pair": "blue",
+          "role": "foreground",
+          "value": "#0369a1",
+          "modes": {
+            "dark": "#7dd3fc"
+          },
+          "label": "Blue Foreground"
+        },
+        {
+          "name": "tag-green-bg",
+          "cssVar": "--tag-green-bg",
+          "kind": "color",
+          "group": "status",
+          "pair": "green",
+          "role": "background",
+          "value": "#dcfce7",
+          "modes": {
+            "dark": "#123628"
+          },
+          "label": "Green Background"
+        },
+        {
+          "name": "tag-green-text",
+          "cssVar": "--tag-green-text",
+          "kind": "color",
+          "group": "status",
+          "pair": "green",
+          "role": "foreground",
+          "value": "#15803d",
+          "modes": {
+            "dark": "#86efac"
+          },
+          "label": "Green Foreground"
+        },
+        {
+          "name": "tag-orange-bg",
+          "cssVar": "--tag-orange-bg",
+          "kind": "color",
+          "group": "status",
+          "pair": "orange",
+          "role": "background",
+          "value": "#ffedd5",
+          "modes": {
+            "dark": "#4b2a17"
+          },
+          "label": "Orange Background"
+        },
+        {
+          "name": "tag-orange-text",
+          "cssVar": "--tag-orange-text",
+          "kind": "color",
+          "group": "status",
+          "pair": "orange",
+          "role": "foreground",
+          "value": "#c2410c",
+          "modes": {
+            "dark": "#fdba74"
+          },
+          "label": "Orange Foreground"
+        },
+        {
+          "name": "tag-gray-bg",
+          "cssVar": "--tag-gray-bg",
+          "kind": "color",
+          "group": "status",
+          "pair": "gray",
+          "role": "background",
+          "value": "#f3f4f6",
+          "modes": {
+            "dark": "#1f2937"
+          },
+          "label": "Gray Background"
+        },
+        {
+          "name": "tag-gray-text",
+          "cssVar": "--tag-gray-text",
+          "kind": "color",
+          "group": "status",
+          "pair": "gray",
+          "role": "foreground",
+          "value": "#4b5563",
+          "modes": {
+            "dark": "#e5e7eb"
+          },
+          "label": "Gray Foreground"
+        },
+        {
+          "name": "tag-amber-bg",
+          "cssVar": "--tag-amber-bg",
+          "kind": "color",
+          "group": "status",
+          "pair": "amber",
+          "role": "background",
+          "value": "#fef3c7",
+          "modes": {
+            "dark": "#493316"
+          },
+          "label": "Amber Background"
+        },
+        {
+          "name": "tag-amber-text",
+          "cssVar": "--tag-amber-text",
+          "kind": "color",
+          "group": "status",
+          "pair": "amber",
+          "role": "foreground",
+          "value": "#92400e",
+          "modes": {
+            "dark": "#fcd34d"
+          },
+          "label": "Amber Foreground"
+        }
+      ]
+    },
+    {
+      "id": "fonts",
+      "name": "Fonts",
+      "tokens": [
+        {
+          "name": "font-stack",
+          "cssVar": "--font-stack",
+          "kind": "string",
+          "group": "font",
+          "value": "\"Inter\", -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, Helvetica, Arial, sans-serif",
+          "label": "UI Sans"
+        },
+        {
+          "name": "font-mono",
+          "cssVar": "--font-mono",
+          "kind": "string",
+          "group": "font",
+          "value": "\"JetBrains Mono\", \"Fira Code\", monospace",
+          "label": "Utility Mono"
+        }
+      ]
+    },
+    {
+      "id": "radii",
+      "name": "Radii",
+      "tokens": [
+        {
+          "name": "radius-sm",
+          "cssVar": "--radius-sm",
+          "kind": "number",
+          "group": "radius",
+          "unit": "px",
+          "value": 4,
+          "label": "Small"
+        },
+        {
+          "name": "radius-md",
+          "cssVar": "--radius-md",
+          "kind": "number",
+          "group": "radius",
+          "unit": "px",
+          "value": 6,
+          "label": "Medium"
+        },
+        {
+          "name": "radius-lg",
+          "cssVar": "--radius-lg",
+          "kind": "number",
+          "group": "radius",
+          "unit": "px",
+          "value": 8,
+          "label": "Large"
+        },
+        {
+          "name": "radius-xl",
+          "cssVar": "--radius-xl",
+          "kind": "number",
+          "group": "radius",
+          "unit": "px",
+          "value": 12,
+          "label": "XL"
+        },
+        {
+          "name": "radius-2xl",
+          "cssVar": "--radius-2xl",
+          "kind": "number",
+          "group": "radius",
+          "unit": "px",
+          "value": 16,
+          "label": "2XL"
+        },
+        {
+          "name": "radius-display",
+          "cssVar": "--radius-display",
+          "kind": "number",
+          "group": "radius",
+          "unit": "px",
+          "value": 28,
+          "label": "Display"
+        },
+        {
+          "name": "radius-full",
+          "cssVar": "--radius-full",
+          "kind": "number",
+          "group": "radius",
+          "unit": "px",
+          "value": 9999,
+          "label": "Full"
+        }
+      ]
+    },
+    {
+      "id": "spacing",
+      "name": "Spacing",
+      "tokens": [
+        {
+          "name": "space-1",
+          "cssVar": "--space-1",
+          "kind": "number",
+          "group": "spacing",
+          "unit": "px",
+          "value": 4,
+          "label": "1"
+        },
+        {
+          "name": "space-1-5",
+          "cssVar": "--space-1-5",
+          "kind": "number",
+          "group": "spacing",
+          "unit": "px",
+          "value": 6,
+          "label": "1.5"
+        },
+        {
+          "name": "space-2",
+          "cssVar": "--space-2",
+          "kind": "number",
+          "group": "spacing",
+          "unit": "px",
+          "value": 8,
+          "label": "2"
+        },
+        {
+          "name": "space-2-5",
+          "cssVar": "--space-2-5",
+          "kind": "number",
+          "group": "spacing",
+          "unit": "px",
+          "value": 10,
+          "label": "2.5"
+        },
+        {
+          "name": "space-3",
+          "cssVar": "--space-3",
+          "kind": "number",
+          "group": "spacing",
+          "unit": "px",
+          "value": 12,
+          "label": "3"
+        },
+        {
+          "name": "space-4",
+          "cssVar": "--space-4",
+          "kind": "number",
+          "group": "spacing",
+          "unit": "px",
+          "value": 16,
+          "label": "4"
+        },
+        {
+          "name": "space-5",
+          "cssVar": "--space-5",
+          "kind": "number",
+          "group": "spacing",
+          "unit": "px",
+          "value": 20,
+          "label": "5"
+        },
+        {
+          "name": "space-6",
+          "cssVar": "--space-6",
+          "kind": "number",
+          "group": "spacing",
+          "unit": "px",
+          "value": 24,
+          "label": "6"
+        },
+        {
+          "name": "space-8",
+          "cssVar": "--space-8",
+          "kind": "number",
+          "group": "spacing",
+          "unit": "px",
+          "value": 32,
+          "label": "8"
+        },
+        {
+          "name": "space-10",
+          "cssVar": "--space-10",
+          "kind": "number",
+          "group": "spacing",
+          "unit": "px",
+          "value": 40,
+          "label": "10"
+        }
+      ]
+    },
+    {
+      "id": "sizes",
+      "name": "Sizes",
+      "tokens": [
+        {
+          "name": "size-control-sm",
+          "cssVar": "--size-control-sm",
+          "kind": "number",
+          "group": "size",
+          "unit": "px",
+          "value": 32,
+          "label": "Control Small"
+        },
+        {
+          "name": "size-control-md",
+          "cssVar": "--size-control-md",
+          "kind": "number",
+          "group": "size",
+          "unit": "px",
+          "value": 36,
+          "label": "Control Medium"
+        },
+        {
+          "name": "size-dialog-md",
+          "cssVar": "--size-dialog-md",
+          "kind": "number",
+          "group": "size",
+          "unit": "px",
+          "value": 420,
+          "label": "Dialog Medium"
+        },
+        {
+          "name": "size-dialog-lg",
+          "cssVar": "--size-dialog-lg",
+          "kind": "number",
+          "group": "size",
+          "unit": "px",
+          "value": 560,
+          "label": "Dialog Large"
+        },
+        {
+          "name": "size-drawer",
+          "cssVar": "--size-drawer",
+          "kind": "number",
+          "group": "size",
+          "unit": "px",
+          "value": 400,
+          "label": "Drawer"
+        },
+        {
+          "name": "size-row-control",
+          "cssVar": "--size-row-control",
+          "kind": "number",
+          "group": "size",
+          "unit": "px",
+          "value": 80,
+          "label": "Row Control"
+        },
+        {
+          "name": "size-select-compact",
+          "cssVar": "--size-select-compact",
+          "kind": "number",
+          "group": "size",
+          "unit": "px",
+          "value": 84,
+          "label": "Select Compact"
+        },
+        {
+          "name": "size-showcase-card-min-height",
+          "cssVar": "--size-showcase-card-min-height",
+          "kind": "number",
+          "group": "size",
+          "unit": "px",
+          "value": 148,
+          "label": "Showcase Card Min Height"
+        },
+        {
+          "name": "size-showcase-max-width",
+          "cssVar": "--size-showcase-max-width",
+          "kind": "number",
+          "group": "size",
+          "unit": "px",
+          "value": 1440,
+          "label": "Showcase Max Width"
+        },
+        {
+          "name": "size-export-mobile",
+          "cssVar": "--size-export-mobile",
+          "kind": "number",
+          "group": "size",
+          "unit": "px",
+          "value": 390,
+          "label": "Export Mobile"
+        },
+        {
+          "name": "size-sidebar-expanded",
+          "cssVar": "--size-sidebar-expanded",
+          "kind": "number",
+          "group": "size",
+          "unit": "px",
+          "value": 240,
+          "label": "Sidebar Expanded"
+        },
+        {
+          "name": "size-sidebar-collapsed",
+          "cssVar": "--size-sidebar-collapsed",
+          "kind": "number",
+          "group": "size",
+          "unit": "px",
+          "value": 56,
+          "label": "Sidebar Collapsed"
+        },
+        {
+          "name": "size-topbar-height",
+          "cssVar": "--size-topbar-height",
+          "kind": "number",
+          "group": "size",
+          "unit": "px",
+          "value": 52,
+          "label": "TopBar Height"
+        }
+      ]
+    },
+    {
+      "id": "duration",
+      "name": "Duration",
+      "tokens": [
+        {
+          "name": "duration-sidebar",
+          "cssVar": "--duration-sidebar",
+          "kind": "string",
+          "group": "duration",
+          "value": "200ms",
+          "label": "Sidebar Transition"
+        }
+      ]
+    },
+    {
+      "id": "opacity",
+      "name": "Opacity",
+      "tokens": [
+        {
+          "name": "opacity-disabled",
+          "cssVar": "--opacity-disabled",
+          "kind": "number",
+          "group": "opacity",
+          "value": 0.5,
+          "label": "Disabled"
+        },
+        {
+          "name": "opacity-hovered",
+          "cssVar": "--opacity-hovered",
+          "kind": "number",
+          "group": "opacity",
+          "value": 0.9,
+          "label": "Hovered"
+        },
+        {
+          "name": "opacity-resize-rest",
+          "cssVar": "--opacity-resize-rest",
+          "kind": "number",
+          "group": "opacity",
+          "value": 0.3,
+          "label": "Resize Rest"
+        },
+        {
+          "name": "opacity-resize-hover",
+          "cssVar": "--opacity-resize-hover",
+          "kind": "number",
+          "group": "opacity",
+          "value": 0.5,
+          "label": "Resize Hover"
+        }
+      ]
+    },
+    {
+      "id": "effects",
+      "name": "Effects",
+      "tokens": [
+        {
+          "name": "shadow-card",
+          "cssVar": "--shadow-card",
+          "kind": "effect",
+          "group": "shadow",
+          "value": "0 8px 24px rgba(15, 23, 42, 0.04)",
+          "modes": {
+            "dark": "0 18px 40px rgba(2, 6, 23, 0.35)"
+          },
+          "label": "Card Shadow"
+        },
+        {
+          "name": "shadow-dialog",
+          "cssVar": "--shadow-dialog",
+          "kind": "effect",
+          "group": "shadow",
+          "value": "0 20px 60px rgba(0, 0, 0, 0.15)",
+          "modes": {
+            "dark": "0 24px 80px rgba(2, 6, 23, 0.55)"
+          },
+          "label": "Dialog Shadow"
+        },
+        {
+          "name": "shadow-drawer",
+          "cssVar": "--shadow-drawer",
+          "kind": "effect",
+          "group": "shadow",
+          "value": "-4px 0 24px rgba(0, 0, 0, 0.05)",
+          "modes": {
+            "dark": "-12px 0 40px rgba(2, 6, 23, 0.38)"
+          },
+          "label": "Drawer Shadow"
+        },
+        {
+          "name": "shadow-menu",
+          "cssVar": "--shadow-menu",
+          "kind": "effect",
+          "group": "shadow",
+          "value": "0 4px 12px rgba(15, 23, 42, 0.1)",
+          "modes": {
+            "dark": "0 12px 32px rgba(2, 6, 23, 0.42)"
+          },
+          "label": "Menu Shadow"
+        },
+        {
+          "name": "shadow-tab-active",
+          "cssVar": "--shadow-tab-active",
+          "kind": "effect",
+          "group": "shadow",
+          "value": "0 1px 2px rgba(0, 0, 0, 0.05)",
+          "modes": {
+            "dark": "0 4px 14px rgba(2, 6, 23, 0.28)"
+          },
+          "label": "Tab Active Shadow"
+        },
+        {
+          "name": "shadow-sidebar-overlay",
+          "cssVar": "--shadow-sidebar-overlay",
+          "kind": "effect",
+          "group": "shadow",
+          "value": "4px 0 24px rgba(0, 0, 0, 0.08)",
+          "modes": {
+            "dark": "4px 0 24px rgba(2, 6, 23, 0.4)"
+          },
+          "label": "Sidebar Overlay Shadow"
+        }
+      ]
+    },
+    {
+      "id": "paint",
+      "name": "Paint",
+      "tokens": [
+        {
+          "name": "gradient-showcase-hero",
+          "cssVar": "--gradient-showcase-hero",
+          "kind": "paint",
+          "group": "gradient",
+          "value": "linear-gradient(135deg, rgba(17, 24, 39, 0.03), rgba(255, 255, 255, 1) 45%, rgba(243, 244, 246, 0.9))",
+          "modes": {
+            "dark": "linear-gradient(135deg, rgba(148, 163, 184, 0.14), rgba(15, 23, 42, 1) 42%, rgba(17, 24, 39, 0.94))"
+          },
+          "label": "Showcase Hero"
+        },
+        {
+          "name": "gradient-dialog-canvas",
+          "cssVar": "--gradient-dialog-canvas",
+          "kind": "paint",
+          "group": "gradient",
+          "value": "radial-gradient(circle at top, rgba(243, 244, 246, 0.9), rgba(255, 255, 255, 1) 65%)",
+          "modes": {
+            "dark": "radial-gradient(circle at top, rgba(51, 65, 85, 0.7), rgba(17, 24, 39, 1) 68%)"
+          },
+          "label": "Dialog Canvas"
+        }
+      ]
+    }
+  ],
+  "typography": [
+    {
+      "name": "section-kicker",
+      "label": "Section Kicker",
+      "fontToken": "font-stack",
+      "fontSize": 11,
+      "lineHeight": 16,
+      "fontWeight": 600,
+      "letterSpacingEm": 0.12,
+      "textTransform": "uppercase",
+      "sample": "Component Section"
+    },
+    {
+      "name": "body-sm",
+      "label": "Body Small",
+      "fontToken": "font-stack",
+      "fontSize": 13,
+      "lineHeight": 20,
+      "fontWeight": 400,
+      "sample": "Operational dashboards need clarity before decoration."
+    },
+    {
+      "name": "label-sm",
+      "label": "Label Small",
+      "fontToken": "font-stack",
+      "fontSize": 12,
+      "lineHeight": 16,
+      "fontWeight": 500,
+      "sample": "Action labels stay compact and readable in dense tables."
+    },
+    {
+      "name": "title-md",
+      "label": "Title Medium",
+      "fontToken": "font-stack",
+      "fontSize": 16,
+      "lineHeight": 24,
+      "fontWeight": 600,
+      "sample": "Workspace configuration"
+    },
+    {
+      "name": "heading-lg",
+      "label": "Heading Large",
+      "fontToken": "font-stack",
+      "fontSize": 26,
+      "lineHeight": 32,
+      "fontWeight": 600,
+      "letterSpacingEm": -0.03,
+      "sample": "Design Tokens"
+    },
+    {
+      "name": "display-xl",
+      "label": "Display XL",
+      "fontToken": "font-stack",
+      "fontSize": 34,
+      "lineHeight": 40,
+      "fontWeight": 600,
+      "letterSpacingEm": -0.04,
+      "sample": "Shared UI showcase"
+    },
+    {
+      "name": "utility-mono",
+      "label": "Utility Mono",
+      "fontToken": "font-mono",
+      "fontSize": 12,
+      "lineHeight": 16,
+      "fontWeight": 500,
+      "sample": "TX-9F10 / 12.12.2024 23:45 / BTC-ETH"
+    }
+  ],
+  "effectStyles": [
+    {
+      "name": "Card",
+      "token": "shadow-card"
+    },
+    {
+      "name": "Dialog",
+      "token": "shadow-dialog"
+    },
+    {
+      "name": "Drawer",
+      "token": "shadow-drawer"
+    },
+    {
+      "name": "Menu",
+      "token": "shadow-menu"
+    },
+    {
+      "name": "Tab Active",
+      "token": "shadow-tab-active"
+    }
+  ],
+  "paintStyles": [
+    {
+      "name": "Showcase Hero",
+      "token": "gradient-showcase-hero"
+    },
+    {
+      "name": "Dialog Canvas",
+      "token": "gradient-dialog-canvas"
+    }
+  ]
+}

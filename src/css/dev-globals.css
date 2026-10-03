@@ -1,0 +1,33 @@
+/* Full-screen app globals — NOT shipped in the package.
+ * They reset every element on the page and lock body scrolling, which is
+ * correct for a standalone shell and wrong inside a host application.
+ * Storybook and the demo pages load these; consumers do not. */
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  font-family: var(--font-stack);
+  background-color: var(--bg-body);
+  color: var(--text-primary);
+  overflow: hidden;
+  font-size: 13px;
+  -webkit-font-smoothing: antialiased;
+}
+
+.app-shell {
+  display: flex;
+  height: 100%;
+  flex-direction: column;
+  overflow: hidden;
+  background: var(--bg-body);
+}
