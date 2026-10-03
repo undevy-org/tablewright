@@ -322,11 +322,11 @@ function Field({ config, value, onChange, fieldId, hiddenSubSet }: FieldProps) {
   if (config.type === "compound") {
     const compound = getCompoundValue(value);
 
-    const updateSub = (subField: string, next: ActiveFilterValue | undefined) => {
+    const updateSub = (subKey: string, next: ActiveFilterValue | undefined) => {
       const rest = { ...compound };
-      delete rest[subField];
+      delete rest[subKey];
       const merged: CompoundFilterValue =
-        next === undefined || isFilterValueEmpty(next) ? rest : { ...rest, [subField]: next };
+        next === undefined || isFilterValueEmpty(next) ? rest : { ...rest, [subKey]: next };
       onChange(Object.keys(merged).length === 0 ? undefined : merged);
     };
 
@@ -343,7 +343,7 @@ function Field({ config, value, onChange, fieldId, hiddenSubSet }: FieldProps) {
         <span className="text-[11px] font-medium text-[var(--text-secondary)]">{config.label}</span>
         <div className="grid min-w-0 gap-2 grid-cols-[repeat(auto-fit,minmax(180px,1fr))]">
           {visibleSubs.map((sub) => {
-            const subValue = compound[sub.field];
+            const subValue = compound[sub.key];
             if (sub.type === "text") {
               const text = Array.isArray(subValue) ? ((subValue[0] as string) ?? "") : "";
               return (
@@ -354,7 +354,7 @@ function Field({ config, value, onChange, fieldId, hiddenSubSet }: FieldProps) {
                   value={text}
                   onChange={(e) => {
                     const v = e.target.value;
-                    updateSub(sub.field, v === "" ? undefined : [v]);
+                    updateSub(sub.key, v === "" ? undefined : [v]);
                   }}
                   className="h-9 min-w-0"
                 />
@@ -366,7 +366,7 @@ function Field({ config, value, onChange, fieldId, hiddenSubSet }: FieldProps) {
                 <Combobox
                   key={sub.key}
                   value={selected || null}
-                  onChange={(v) => updateSub(sub.field, v ? [v] : undefined)}
+                  onChange={(v) => updateSub(sub.key, v ? [v] : undefined)}
                   options={sub.options ?? []}
                   placeholder={sub.label}
                   triggerAriaLabel={sub.label}
@@ -384,7 +384,7 @@ function Field({ config, value, onChange, fieldId, hiddenSubSet }: FieldProps) {
                   [key]: Number.isFinite(parsed) ? parsed : undefined,
                 };
                 updateSub(
-                  sub.field,
+                  sub.key,
                   next.from !== undefined || next.to !== undefined ? next : undefined,
                 );
               };

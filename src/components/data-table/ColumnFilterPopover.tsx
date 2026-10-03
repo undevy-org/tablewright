@@ -108,6 +108,24 @@ export function ColumnFilterPopover({
   );
   const [draftNumberTo, setDraftNumberTo] = useState(numberDraft(getNumberRange(filter.value).to));
 
+  const resetDrafts = (value: ActiveFilterValue) => {
+    setDraftTags(config.type === "text" ? getStringArray(value) : []);
+    setDraftInput("");
+    setDraftEnum(getStringArray(value));
+    setDraftDate(dateDraft(value));
+    const numVal = getNumberRange(value);
+    setDraftNumberFrom(numberDraft(numVal.from));
+    setDraftNumberTo(numberDraft(numVal.to));
+  };
+
+  // The committed value can change from outside (filter form, preset, clear
+  // all) while the popover is closed — re-seed the drafts so it opens on it.
+  const [draftSource, setDraftSource] = useState(filter.value);
+  if (!isOpen && draftSource !== filter.value) {
+    setDraftSource(filter.value);
+    resetDrafts(filter.value);
+  }
+
   const handleOpenChange = (nextOpen: boolean) => {
     if (!nextOpen) {
       // Closing without Apply: remove chip if no committed value yet
@@ -116,13 +134,7 @@ export function ColumnFilterPopover({
         return;
       }
       // Otherwise reset draft to the committed value
-      setDraftTags(config.type === "text" ? getStringArray(filter.value) : []);
-      setDraftInput("");
-      setDraftEnum(getStringArray(filter.value));
-      setDraftDate(dateDraft(filter.value));
-      const numVal = getNumberRange(filter.value);
-      setDraftNumberFrom(numberDraft(numVal.from));
-      setDraftNumberTo(numberDraft(numVal.to));
+      resetDrafts(filter.value);
     }
     setIsOpen(nextOpen);
   };
