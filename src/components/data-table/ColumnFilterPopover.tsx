@@ -10,6 +10,7 @@ import type {
   ActiveFilterValue,
   FilterStatsSlice,
 } from "./filter-types";
+import { getDateRange, getNumberRange, getStringArray, isFilterValueEmpty } from "./filter-values";
 
 const DEFAULT_LABELS = {
   searchPlaceholder: "Search...",
@@ -46,22 +47,19 @@ function formatChipDate(iso: string): string {
 }
 
 function isEmptyValue(value: ActiveFilterValue, type: ColumnFilterConfig["type"]): boolean {
-  if (type === "text") return !Array.isArray(value) || value.length === 0;
-  if (type === "enum") return !Array.isArray(value) || value.length === 0;
-  if (type === "date")
-    return (
-      typeof value !== "object" ||
-      Array.isArray(value) ||
-      (!(value as { from?: string }).from && !(value as { to?: string }).to)
-    );
-  if (type === "number-range")
-    return (
-      typeof value !== "object" ||
-      Array.isArray(value) ||
-      ((value as { from?: number }).from === undefined &&
-        (value as { to?: number }).to === undefined)
-    );
+  if (type === "text" || type === "enum") return isFilterValueEmpty(getStringArray(value));
+  if (type === "date") return isFilterValueEmpty(getDateRange(value));
+  if (type === "number-range") return isFilterValueEmpty(getNumberRange(value));
   return true;
+}
+
+function dateDraft(value: ActiveFilterValue): { from: string; to: string } {
+  const { from = "", to = "" } = getDateRange(value);
+  return { from, to };
+}
+
+function numberDraft(bound: number | undefined): string {
+  return bound !== undefined ? String(bound) : "";
 }
 
 export function ColumnFilterPopover({
@@ -100,34 +98,15 @@ export function ColumnFilterPopover({
 
   // Draft state — separate from committed filter.value
   const [draftTags, setDraftTags] = useState<string[]>(
-    Array.isArray(filter.value) && config.type === "text" ? filter.value : [],
+    config.type === "text" ? getStringArray(filter.value) : [],
   );
   const [draftInput, setDraftInput] = useState("");
-  const [draftEnum, setDraftEnum] = useState<string[]>(
-    Array.isArray(filter.value) ? filter.value : [],
-  );
-  const [draftDate, setDraftDate] = useState(
-    typeof filter.value === "object" && !Array.isArray(filter.value)
-      ? {
-          from: String((filter.value as { from?: string }).from ?? ""),
-          to: String((filter.value as { to?: string }).to ?? ""),
-        }
-      : { from: "", to: "" },
-  );
+  const [draftEnum, setDraftEnum] = useState<string[]>(getStringArray(filter.value));
+  const [draftDate, setDraftDate] = useState(dateDraft(filter.value));
   const [draftNumberFrom, setDraftNumberFrom] = useState(
-    typeof filter.value === "object" &&
-      !Array.isArray(filter.value) &&
-      typeof (filter.value as { from?: number }).from === "number"
-      ? String((filter.value as { from: number }).from)
-      : "",
+    numberDraft(getNumberRange(filter.value).from),
   );
-  const [draftNumberTo, setDraftNumberTo] = useState(
-    typeof filter.value === "object" &&
-      !Array.isArray(filter.value) &&
-      typeof (filter.value as { to?: number }).to === "number"
-      ? String((filter.value as { to: number }).to)
-      : "",
-  );
+  const [draftNumberTo, setDraftNumberTo] = useState(numberDraft(getNumberRange(filter.value).to));
 
   const handleOpenChange = (nextOpen: boolean) => {
     if (!nextOpen) {
@@ -137,25 +116,13 @@ export function ColumnFilterPopover({
         return;
       }
       // Otherwise reset draft to the committed value
-      setDraftTags(Array.isArray(filter.value) && config.type === "text" ? filter.value : []);
+      setDraftTags(config.type === "text" ? getStringArray(filter.value) : []);
       setDraftInput("");
-      setDraftEnum(Array.isArray(filter.value) ? filter.value : []);
-      setDraftDate(
-        typeof filter.value === "object" && !Array.isArray(filter.value)
-          ? {
-              from: String((filter.value as { from?: string }).from ?? ""),
-              to: String((filter.value as { to?: string }).to ?? ""),
-            }
-          : { from: "", to: "" },
-      );
-      if (typeof filter.value === "object" && !Array.isArray(filter.value)) {
-        const numVal = filter.value as { from?: number; to?: number };
-        setDraftNumberFrom(typeof numVal.from === "number" ? String(numVal.from) : "");
-        setDraftNumberTo(typeof numVal.to === "number" ? String(numVal.to) : "");
-      } else {
-        setDraftNumberFrom("");
-        setDraftNumberTo("");
-      }
+      setDraftEnum(getStringArray(filter.value));
+      setDraftDate(dateDraft(filter.value));
+      const numVal = getNumberRange(filter.value);
+      setDraftNumberFrom(numberDraft(numVal.from));
+      setDraftNumberTo(numberDraft(numVal.to));
     }
     setIsOpen(nextOpen);
   };
@@ -621,15 +588,15 @@ export function ColumnFilterPopover({
       return DEFAULT_LABELS.selectedCount(value.length);
     }
 
-    if (config.type === "date" && typeof value === "object" && !Array.isArray(value)) {
-      const { from, to } = value as { from?: string; to?: string };
+    if (config.type === "date") {
+      const { from, to } = getDateRange(value);
       if (from && to) return `${from} \u2014 ${to}`;
       if (from) return `${DEFAULT_LABELS.chipFrom} ${from}`;
       if (to) return `${DEFAULT_LABELS.chipTo} ${to}`;
     }
 
-    if (config.type === "number-range" && typeof value === "object" && !Array.isArray(value)) {
-      const { from, to } = value as { from?: number; to?: number };
+    if (config.type === "number-range") {
+      const { from, to } = getNumberRange(value);
       if (from !== undefined && to !== undefined) return `${from}\u2013${to}`;
       if (from !== undefined) return `\u2265${from}`;
       if (to !== undefined) return `\u2264${to}`;

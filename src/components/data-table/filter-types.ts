@@ -17,12 +17,17 @@ export interface ColumnFilterConfig {
   subFilters?: CompoundSubFilter[];
 }
 
+export type DateRangeValue = { from?: string; to?: string };
+export type NumberRangeValue = { from?: number; to?: number };
+/** Compound filter value: sub-filter `field` → that sub-filter's value. */
+export type CompoundFilterValue = { [key: string]: ActiveFilterValue };
+
 export type ActiveFilterValue =
   | string
   | string[]
-  | { from?: string; to?: string }
-  | { from?: number; to?: number }
-  | { [key: string]: ActiveFilterValue };
+  | DateRangeValue
+  | NumberRangeValue
+  | CompoundFilterValue;
 
 export interface ActiveFilter {
   columnId: string;

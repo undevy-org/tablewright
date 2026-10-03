@@ -8,6 +8,7 @@ import type {
   ColumnFilterConfig,
   FilterStatsSlice,
 } from "./filter-types";
+import { isFilterValueEmpty } from "./filter-values";
 import { ColumnFilterPopover } from "./ColumnFilterPopover";
 import { CompoundFilterPopover } from "./CompoundFilterPopover";
 
@@ -17,16 +18,6 @@ const DEFAULT_LABELS = {
   hiddenCount: (n: number) => `${n} hidden`,
 };
 
-function isFilterValueEmpty(value: ActiveFilterValue): boolean {
-  if (Array.isArray(value)) return value.length === 0;
-  if (typeof value === "string") return value.length === 0;
-  if (typeof value === "object" && value !== null) {
-    const keys = Object.keys(value);
-    if (keys.length === 0) return true;
-    return keys.every((k) => isFilterValueEmpty((value as Record<string, ActiveFilterValue>)[k]));
-  }
-  return false;
-}
 
 interface AppliedStateChipsProps {
   filters: ActiveFilter[];
