@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { useStore } from "zustand";
 import type { VisibilityState } from "@tanstack/react-table";
 import { useColumnResize } from "../components/data-table/hooks/use-column-resize";
@@ -152,6 +152,9 @@ export interface TableOrchestrationReturn<TRow extends object, TViewKey extends 
 
 const EMPTY_ID_SET: ReadonlySet<string> = new Set<string>();
 
+// useLayoutEffect warns during SSR on React 18; fall back to useEffect there.
+const useIsomorphicLayoutEffect = typeof window !== "undefined" ? useLayoutEffect : useEffect;
+
 export function useTableOrchestration<TRow extends object, TViewKey extends string>(
   config: TableOrchestrationConfig<TRow, TViewKey>,
 ): TableOrchestrationReturn<TRow, TViewKey> {
@@ -196,14 +199,14 @@ export function useTableOrchestration<TRow extends object, TViewKey extends stri
   const requestOpenFilterId = useStore(store, (s) => s.requestOpenFilterId);
   const currentSort = useStore(store, (s) => s.currentSort);
   const columnVisibility = useStore(store, (s) => s.columnVisibility);
-  const page = useStore(store, (s) => s.page);
+  const storedPage = useStore(store, (s) => s.page);
   const rowsPerPage = useStore(store, (s) => s.rowsPerPage);
   const density = useStore(store, (s) => s.density);
   const isRefreshing = useStore(store, (s) => s.isRefreshing);
-  const selectedIds = useStore(store, (s) => s.selectedIds);
+  const storedSelectedIds = useStore(store, (s) => s.selectedIds);
   const activeView = useStore(store, (s) => s.activeView);
   const columnsMenuOpen = useStore(store, (s) => s.columnsMenuOpen);
-  const selectedRowId = useStore(store, (s) => s.selectedRowId);
+  const storedSelectedRowId = useStore(store, (s) => s.selectedRowId);
 
   // ── Responsive column collapse (P1/P2/P3) ────────────────────────────
   // Initialize to `true` (all columns shown) so the first client render
@@ -244,7 +247,7 @@ export function useTableOrchestration<TRow extends object, TViewKey extends stri
   }, [isWide, columnPriorities]);
 
   // ── Refs for stable closures ──────────────────────────────────────────
-  const selectedIdsRef = useRef(selectedIds);
+  const selectedIdsRef = useRef(storedSelectedIds);
   const headerCheckStateRef = useRef<boolean | "indeterminate">(false);
 
   // ── Sort state ────────────────────────────────────────────────────────
@@ -334,7 +337,7 @@ export function useTableOrchestration<TRow extends object, TViewKey extends stri
           if (s) result[`${columnId}:${sub.key}`] = s;
         }
       } else {
-        const s = computeColumnStats(filteredRows, columnId, cfg);
+        const s = computeColumnStats(filteredRows, cfg.fieldName ?? columnId, cfg);
         if (s) result[columnId] = s;
       }
     }
@@ -363,7 +366,8 @@ export function useTableOrchestration<TRow extends object, TViewKey extends stri
 
   // ── Pagination ────────────────────────────────────────────────────────
   const totalPages = Math.max(1, Math.ceil(filteredRows.length / rowsPerPage));
-  const safePage = Math.min(page, totalPages);
+  const safePage = Math.min(storedPage, totalPages);
+  const page = safePage;
   const pageNumbers = useMemo(
     () => getVisiblePageNumbers(safePage, totalPages),
     [safePage, totalPages],
@@ -373,6 +377,32 @@ export function useTableOrchestration<TRow extends object, TViewKey extends stri
     const start = (safePage - 1) * rowsPerPage;
     return filteredRows.slice(start, start + rowsPerPage);
   }, [filteredRows, rowsPerPage, safePage]);
+
+  // ── Derived corrections ───────────────────────────────────────────────
+  // Stored state can drift out of range when rows/filters change: page past
+  // the last page, a drawer row or selected ids that left the filtered set.
+  // Render with the corrected values and write them back to the store after
+  // commit — never during render, which would notify other store subscribers
+  // mid-render ("Cannot update a component while rendering a different one").
+  const filteredIdSet = useMemo(
+    () => new Set(filteredRows.map(getRowId)),
+    [filteredRows, getRowId],
+  );
+  const selectedRowId =
+    storedSelectedRowId && filteredIdSet.has(storedSelectedRowId) ? storedSelectedRowId : null;
+  const selectedIds = useMemo(() => {
+    const pruned = new Set([...storedSelectedIds].filter((id) => filteredIdSet.has(id)));
+    return pruned.size === storedSelectedIds.size ? storedSelectedIds : pruned;
+  }, [storedSelectedIds, filteredIdSet]);
+
+  useIsomorphicLayoutEffect(() => {
+    const state = store.getState();
+    if (state.page !== safePage) state.setPage(safePage);
+    if (state.selectedRowId !== selectedRowId) state.setSelectedRowId(selectedRowId);
+    if (state.selectedIds !== selectedIds) state.setSelectedIds(selectedIds);
+    // Stored values are deps too: a stored value can go out of range while the
+    // corrected one stays put (e.g. setPage(99) on the last page).
+  }, [store, storedPage, safePage, storedSelectedRowId, selectedRowId, storedSelectedIds, selectedIds]);
 
   // ── Selection ─────────────────────────────────────────────────────────
   const pageIds = useMemo(() => new Set(paginatedRows.map(getRowId)), [paginatedRows, getRowId]);
@@ -425,31 +455,6 @@ export function useTableOrchestration<TRow extends object, TViewKey extends stri
   selectedIdsRef.current = selectedIds;
   // eslint-disable-next-line react-hooks/refs
   headerCheckStateRef.current = headerCheckState;
-
-  // ── Render-phase corrections ──────────────────────────────────────────
-
-  // Page correction — keep page in valid range after filter/rows change
-  if (page !== safePage) {
-    store.getState().setPage(safePage);
-  }
-
-  // Drawer close on filter change — close if selected row left filtered set
-  if (selectedRowId && !filteredRows.some((row) => getRowId(row) === selectedRowId)) {
-    store.getState().setSelectedRowId(null);
-  }
-
-  // Prune selection when rows leave filtered set
-  const filteredIdSet = useMemo(
-    () => new Set(filteredRows.map(getRowId)),
-    [filteredRows, getRowId],
-  );
-  const prunedSelectedIds = useMemo(() => {
-    const pruned = new Set([...selectedIds].filter((id) => filteredIdSet.has(id)));
-    return pruned.size === selectedIds.size ? selectedIds : pruned;
-  }, [selectedIds, filteredIdSet]);
-  if (prunedSelectedIds !== selectedIds) {
-    store.getState().setSelectedIds(prunedSelectedIds);
-  }
 
   // ── Bound action wrappers (preserve old hook signatures) ──────────────
   const handleSearchSubmit = useCallback(
