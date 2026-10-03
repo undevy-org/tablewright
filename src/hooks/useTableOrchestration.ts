@@ -400,7 +400,9 @@ export function useTableOrchestration<TRow extends object, TViewKey extends stri
     if (state.page !== safePage) state.setPage(safePage);
     if (state.selectedRowId !== selectedRowId) state.setSelectedRowId(selectedRowId);
     if (state.selectedIds !== selectedIds) state.setSelectedIds(selectedIds);
-  }, [store, safePage, selectedRowId, selectedIds]);
+    // Stored values are deps too: a stored value can go out of range while the
+    // corrected one stays put (e.g. setPage(99) on the last page).
+  }, [store, storedPage, safePage, storedSelectedRowId, selectedRowId, storedSelectedIds, selectedIds]);
 
   // ── Selection ─────────────────────────────────────────────────────────
   const pageIds = useMemo(() => new Set(paginatedRows.map(getRowId)), [paginatedRows, getRowId]);
