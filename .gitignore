@@ -6,3 +6,10 @@ storybook-static/
 .env*
 debug-storybook.log
 *storybook.log
+
+# Agent files live in the private tablewright-notes repo, cloned at .private/ (see its README)
+.private/
+CLAUDE.md
+AGENTS.md
+.claude/
+.cursor/
