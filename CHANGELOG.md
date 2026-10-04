@@ -1,5 +1,11 @@
 # @undevy-org/tablewright
 
+## 0.6.0
+
+### Minor Changes
+
+- [#38](https://github.com/undevy-org/tablewright/pull/38) [`2dfb912`](https://github.com/undevy-org/tablewright/commit/2dfb912ad5ed453b430ae7b09a03984da2062563) Thanks [@undevy](https://github.com/undevy)! - Name popover dialogs from their trigger by default (`aria-labelledby`); add optional `RowActionsMenu.triggerAriaLabel`. Document and fix Select trigger accessible names at call sites (including table footer rows-per-page).
+
 ## 0.5.2
 
 ### Patch Changes
