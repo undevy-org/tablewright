@@ -1,4 +1,5 @@
 import * as React from "react";
+import { decorativeAvatarAlt } from "../../lib/decorative-avatar-alt";
 import { cn } from "../../lib/utils";
 import { useAppShell } from "./app-shell-context";
 
@@ -35,7 +36,7 @@ export const SidebarUser = React.forwardRef<HTMLDivElement, SidebarUserProps>(
         {avatarUrl ? (
           <img
             src={avatarUrl}
-            alt={name}
+            alt={decorativeAvatarAlt(!effectiveCollapsed, name)}
             className="h-8 w-8 shrink-0 rounded-full object-cover"
           />
         ) : (

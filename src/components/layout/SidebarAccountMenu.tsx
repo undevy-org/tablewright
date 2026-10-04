@@ -7,6 +7,7 @@ import {
   DropdownMenuItem,
 } from "../ui/dropdown-menu";
 import { ThemeSwitch } from "../ui/theme-switch";
+import { decorativeAvatarAlt } from "../../lib/decorative-avatar-alt";
 import { cn } from "../../lib/utils";
 import { useAppShell } from "./app-shell-context";
 
@@ -59,7 +60,7 @@ export function SidebarAccountMenu({
   const avatar = avatarUrl ? (
     <img
       src={avatarUrl}
-      alt={name}
+      alt={decorativeAvatarAlt(!effectiveCollapsed, name)}
       className="h-7 w-7 shrink-0 rounded-full object-cover"
     />
   ) : (
@@ -104,7 +105,7 @@ export function SidebarAccountMenu({
           {avatarUrl ? (
             <img
               src={avatarUrl}
-              alt={name}
+              alt={decorativeAvatarAlt(true, name)}
               className="h-8 w-8 shrink-0 rounded-full object-cover"
             />
           ) : (

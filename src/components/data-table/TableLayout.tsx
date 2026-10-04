@@ -1,4 +1,5 @@
 import { cn } from "../../lib/utils";
+import { SCROLL_REGION_TAB_INDEX } from "../../lib/scroll-region-tab-index";
 import { useScrollActivity } from "../../hooks/use-scroll-activity";
 
 interface TableLayoutProps {
@@ -18,7 +19,11 @@ function ScrollArea({ children, className }: { children: React.ReactNode; classN
   const scrollRef = useScrollActivity<HTMLDivElement>();
 
   return (
-    <div ref={scrollRef} className={cn("scrollbar-auto-hide flex-1 overflow-auto", className)}>
+    <div
+      ref={scrollRef}
+      tabIndex={SCROLL_REGION_TAB_INDEX}
+      className={cn("scrollbar-auto-hide flex-1 overflow-auto", className)}
+    >
       {children}
     </div>
   );

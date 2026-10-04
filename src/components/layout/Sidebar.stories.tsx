@@ -16,7 +16,7 @@ const NAV_GROUPS: NavGroup[] = [
   {
     label: 'Workspace',
     items: [
-      { key: 'dashboard', label: 'Dashboard', icon: LayoutGrid, href: '' },
+      { key: 'dashboard', label: 'Dashboard', icon: LayoutGrid, href: '/dashboard' },
       { key: 'projects', label: 'Projects', icon: FolderKanban, href: '/projects' },
       { key: 'tasks', label: 'Tasks', icon: ListChecks, href: '/tasks' },
     ],
