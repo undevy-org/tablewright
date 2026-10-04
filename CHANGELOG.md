@@ -1,5 +1,11 @@
 # @undevy-org/tablewright
 
+## 0.5.2
+
+### Patch Changes
+
+- [#36](https://github.com/undevy-org/tablewright/pull/36) [`2046d78`](https://github.com/undevy-org/tablewright/commit/2046d7812e05ba96b4ab72fc3b9ece3786c503ec) Thanks [@undevy](https://github.com/undevy)! - internal: inline a11y helpers; no behaviour change
+
 ## 0.5.1
 
 ### Patch Changes
