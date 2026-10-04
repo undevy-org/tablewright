@@ -23,7 +23,7 @@ export const FilterChip = React.forwardRef<HTMLDivElement, FilterChipProps>(
       >
         <div className="flex h-full items-center pl-2.5 pr-1.5 cursor-pointer">
           <div className="flex items-center gap-1.5">
-            <span className="text-[var(--text-secondary)]">{label}</span>
+            <span className="text-[var(--text-primary)]">{label}</span>
             {value && (
               <>
                 <span className="text-[var(--text-tertiary)]">:</span>
@@ -77,7 +77,7 @@ export const FilterChipPopoverTrigger = React.forwardRef<
       className="flex h-full flex-1 cursor-pointer items-center border-0 bg-transparent p-0 pl-2.5 pr-1.5 text-left text-[13px] font-normal text-inherit"
     >
       <div className="flex items-center gap-1.5">
-        <span className="text-[var(--text-secondary)]">{label}</span>
+        <span className="text-[var(--text-primary)]">{label}</span>
         {value && (
           <>
             <span className="text-[var(--text-tertiary)]">:</span>
