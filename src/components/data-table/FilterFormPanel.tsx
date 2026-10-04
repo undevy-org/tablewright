@@ -23,6 +23,38 @@ import {
 } from "./filter-values";
 import { hasActiveManagedFilters, type ManagedFilterChange } from "./managed-filters";
 
+export interface FilterFormPanelLabels {
+  closeFiltersAriaLabel: string;
+  closeFiltersTitle: string;
+  apply: string;
+  clear: string;
+  anyPlaceholder: string;
+  rangeFromPlaceholder: string;
+  rangeToPlaceholder: string;
+  fieldRangeFromAriaLabel: (fieldLabel: string) => string;
+  fieldRangeToAriaLabel: (fieldLabel: string) => string;
+  compoundSubRangeFromAriaLabel: (subLabel: string) => string;
+  compoundSubRangeToAriaLabel: (subLabel: string) => string;
+  compoundSubRangeFromPlaceholder: (subLabel: string) => string;
+  compoundSubRangeToPlaceholder: (subLabel: string) => string;
+}
+
+const DEFAULT_LABELS: FilterFormPanelLabels = {
+  closeFiltersAriaLabel: "Close filters",
+  closeFiltersTitle: "Close filters",
+  apply: "Apply",
+  clear: "Clear",
+  anyPlaceholder: "Any",
+  rangeFromPlaceholder: "From",
+  rangeToPlaceholder: "To",
+  fieldRangeFromAriaLabel: (fieldLabel) => `${fieldLabel} — from`,
+  fieldRangeToAriaLabel: (fieldLabel) => `${fieldLabel} — to`,
+  compoundSubRangeFromAriaLabel: (subLabel) => `${subLabel} — from`,
+  compoundSubRangeToAriaLabel: (subLabel) => `${subLabel} — to`,
+  compoundSubRangeFromPlaceholder: (subLabel) => `${subLabel} from`,
+  compoundSubRangeToPlaceholder: (subLabel) => `${subLabel} to`,
+};
+
 export interface FilterFormPanelProps {
   /** All known filter configs (same shape used by GroupedFilterAdd). */
   filterConfigs: Record<string, ColumnFilterConfig>;
@@ -53,6 +85,7 @@ export interface FilterFormPanelProps {
    * is done by leaving the id out of `fields`; this is only for sub-fields.
    */
   hiddenSubFilterKeys?: readonly string[];
+  labels?: Partial<FilterFormPanelLabels>;
 }
 
 type FormState = Record<string, ActiveFilterValue | undefined>;
@@ -76,7 +109,9 @@ export function FilterFormPanel({
   id,
   onClose,
   hiddenSubFilterKeys,
+  labels: labelOverrides,
 }: FilterFormPanelProps) {
+  const labels = { ...DEFAULT_LABELS, ...labelOverrides };
   const hiddenSubSet = useMemo(() => new Set(hiddenSubFilterKeys ?? []), [hiddenSubFilterKeys]);
 
   const renderableFields = useMemo(
@@ -163,8 +198,8 @@ export function FilterFormPanel({
             type="button"
             variant="ghost"
             size="icon"
-            aria-label="Close filters"
-            title="Close filters"
+            aria-label={labels.closeFiltersAriaLabel}
+            title={labels.closeFiltersTitle}
             onClick={onClose}
             className="h-7 w-7"
           >
@@ -185,6 +220,7 @@ export function FilterFormPanel({
               onChange={(v) => setField(fieldId, v)}
               fieldId={fieldId}
               hiddenSubSet={hiddenSubSet}
+              labels={labels}
             />
           );
         })}
@@ -199,10 +235,10 @@ export function FilterFormPanel({
             onClick={handleClear}
             disabled={isClearDisabled}
           >
-            Clear
+            {labels.clear}
           </Button>
           <Button type="submit" size="sm">
-            Apply
+            {labels.apply}
           </Button>
         </ButtonFooter>
       </div>
@@ -216,9 +252,10 @@ interface FieldProps {
   onChange: (next: ActiveFilterValue | undefined) => void;
   fieldId: string;
   hiddenSubSet: Set<string>;
+  labels: FilterFormPanelLabels;
 }
 
-function Field({ config, value, onChange, fieldId, hiddenSubSet }: FieldProps) {
+function Field({ config, value, onChange, fieldId, hiddenSubSet, labels }: FieldProps) {
   if (config.type === "text") {
     const text = Array.isArray(value) ? ((value[0] as string) ?? "") : "";
     return (
@@ -248,7 +285,7 @@ function Field({ config, value, onChange, fieldId, hiddenSubSet }: FieldProps) {
           value={selected || null}
           onChange={(v) => onChange(v ? [v] : undefined)}
           options={config.options ?? []}
-          placeholder="Any"
+          placeholder={labels.anyPlaceholder}
           triggerAriaLabel={config.label}
           triggerClassName="h-9 min-w-0"
         />
@@ -269,14 +306,14 @@ function Field({ config, value, onChange, fieldId, hiddenSubSet }: FieldProps) {
         <div className="flex min-w-0 gap-2">
           <Input
             type="date"
-            aria-label={`${config.label} — from`}
+            aria-label={labels.fieldRangeFromAriaLabel(config.label)}
             value={range.from ?? ""}
             onChange={update("from")}
             className="h-9 min-w-0 flex-1"
           />
           <Input
             type="date"
-            aria-label={`${config.label} — to`}
+            aria-label={labels.fieldRangeToAriaLabel(config.label)}
             value={range.to ?? ""}
             onChange={update("to")}
             className="h-9 min-w-0 flex-1"
@@ -300,18 +337,18 @@ function Field({ config, value, onChange, fieldId, hiddenSubSet }: FieldProps) {
         <div className="flex min-w-0 gap-2">
           <Input
             type="number"
-            aria-label={`${config.label} — from`}
+            aria-label={labels.fieldRangeFromAriaLabel(config.label)}
             value={range.from ?? ""}
             onChange={update("from")}
-            placeholder="From"
+            placeholder={labels.rangeFromPlaceholder}
             className="h-9 min-w-0 flex-1"
           />
           <Input
             type="number"
-            aria-label={`${config.label} — to`}
+            aria-label={labels.fieldRangeToAriaLabel(config.label)}
             value={range.to ?? ""}
             onChange={update("to")}
-            placeholder="To"
+            placeholder={labels.rangeToPlaceholder}
             className="h-9 min-w-0 flex-1"
           />
         </div>
@@ -392,18 +429,18 @@ function Field({ config, value, onChange, fieldId, hiddenSubSet }: FieldProps) {
                 <div key={sub.key} className="flex min-w-0 gap-2">
                   <Input
                     type="number"
-                    aria-label={`${sub.label} — from`}
+                    aria-label={labels.compoundSubRangeFromAriaLabel(sub.label)}
                     value={range.from ?? ""}
                     onChange={updateRange("from")}
-                    placeholder={`${sub.label} from`}
+                    placeholder={labels.compoundSubRangeFromPlaceholder(sub.label)}
                     className="h-9 min-w-0 flex-1"
                   />
                   <Input
                     type="number"
-                    aria-label={`${sub.label} — to`}
+                    aria-label={labels.compoundSubRangeToAriaLabel(sub.label)}
                     value={range.to ?? ""}
                     onChange={updateRange("to")}
-                    placeholder={`${sub.label} to`}
+                    placeholder={labels.compoundSubRangeToPlaceholder(sub.label)}
                     className="h-9 min-w-0 flex-1"
                   />
                 </div>

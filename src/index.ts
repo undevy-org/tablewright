@@ -49,6 +49,7 @@ export type { FilterChipProps } from "./components/data-table/FilterChip";
 export { ViewChip } from "./components/data-table/ViewChip";
 export type { ViewChipProps } from "./components/data-table/ViewChip";
 export { FilterPopoverFooter } from "./components/data-table/FilterPopoverFooter";
+export type { FilterPopoverFooterLabels } from "./components/data-table/FilterPopoverFooter";
 export * as FilterToolbar from "./components/data-table/FilterToolbar";
 export { RowActionsMenu } from "./components/data-table/RowActionsMenu";
 export { RowControlCell } from "./components/data-table/RowControlCell";
@@ -140,10 +141,13 @@ export type { TwoPanelMenuItem, TwoPanelMenuGroup } from "./components/data-tabl
 export { FlatColumnToggle } from "./components/data-table/FlatColumnToggle";
 export { GroupedColumnToggle } from "./components/data-table/GroupedColumnToggle";
 export { ColumnFilterPopover } from "./components/data-table/ColumnFilterPopover";
+export type { ColumnFilterPopoverLabels } from "./components/data-table/ColumnFilterPopover";
 export { CompoundFilterPopover } from "./components/data-table/CompoundFilterPopover";
+export type { CompoundFilterPopoverLabels } from "./components/data-table/CompoundFilterPopover";
 export { AppliedStateChips } from "./components/data-table/AppliedStateChips";
+export type { AppliedStateChipsLabels } from "./components/data-table/AppliedStateChips";
 export { FilterFormPanel } from "./components/data-table/FilterFormPanel";
-export type { FilterFormPanelProps } from "./components/data-table/FilterFormPanel";
+export type { FilterFormPanelProps, FilterFormPanelLabels } from "./components/data-table/FilterFormPanel";
 export { FilterFormToggle, useFilterFormOpen } from "./components/data-table/FilterFormToggle";
 export type { FilterFormToggleProps } from "./components/data-table/FilterFormToggle";
 export {
