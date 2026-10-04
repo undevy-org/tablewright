@@ -1,5 +1,11 @@
 # @undevy-org/tablewright
 
+## 0.5.1
+
+### Patch Changes
+
+- [#34](https://github.com/undevy-org/tablewright/pull/34) [`e438742`](https://github.com/undevy-org/tablewright/commit/e43874228da156e316060bf81cd5fbe6b4bb0f0f) Thanks [@undevy](https://github.com/undevy)! - Fix accessibility quick wins: collapsed sidebar link names, keyboard-focusable table/drawer scroll regions, and decorative avatar alt text.
+
 ## 0.5.0
 
 ### Minor Changes
