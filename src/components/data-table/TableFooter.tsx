@@ -1,3 +1,4 @@
+import { useId } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 
 import { Button } from "../ui/button";
@@ -109,33 +110,46 @@ export function TableFooter(props: TableFooterProps) {
   );
 }
 
+function RowsPerPagePagination(props: TableFooterPerPageProps) {
+  const rowsPerPageLabelId = useId();
+  const rowsPerPageOptions = props.rowsPerPageOptions ?? defaultRowsPerPageOptions;
+
+  return (
+    <div className="flex flex-wrap items-center gap-3 lg:justify-end">
+      <div className="flex items-center gap-2">
+        <span
+          id={rowsPerPageLabelId}
+          className="text-[12px] text-[var(--text-secondary)]"
+        >
+          Rows per page
+        </span>
+        <Select
+          value={String(props.rowsPerPage)}
+          onValueChange={(value) => props.onRowsPerPageChange(Number(value))}
+        >
+          <SelectTrigger
+            aria-labelledby={rowsPerPageLabelId}
+            className="h-[var(--size-control-sm)] w-[var(--size-select-compact)]"
+          >
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {rowsPerPageOptions.map((option) => (
+              <SelectItem key={option} value={String(option)}>
+                {option}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+      {renderNumericPager(props)}
+    </div>
+  );
+}
+
 function renderPagination(props: TableFooterProps) {
   if (props.paginationVariant === "perPage") {
-    const rowsPerPageOptions = props.rowsPerPageOptions ?? defaultRowsPerPageOptions;
-
-    return (
-      <div className="flex flex-wrap items-center gap-3 lg:justify-end">
-        <div className="flex items-center gap-2">
-          <span className="text-[12px] text-[var(--text-secondary)]">Rows per page</span>
-          <Select
-            value={String(props.rowsPerPage)}
-            onValueChange={(value) => props.onRowsPerPageChange(Number(value))}
-          >
-            <SelectTrigger className="h-[var(--size-control-sm)] w-[var(--size-select-compact)]">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {rowsPerPageOptions.map((option) => (
-                <SelectItem key={option} value={String(option)}>
-                  {option}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-        {renderNumericPager(props)}
-      </div>
-    );
+    return <RowsPerPagePagination {...props} />;
   }
 
   if (props.paginationVariant !== "pages") {

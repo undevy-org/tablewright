@@ -48,25 +48,25 @@ Re-verified: full 136-story corpus (both themes) re-ran clean after the changes,
 
 **Verified:** `story-diff --axe` — `image-redundant-alt` under axe fixed on SidebarUser / SidebarAccountMenu stories; `a11y-quick-wins.test.tsx` (SidebarUser and SidebarAccountMenu expanded, collapsed, and menu panel cases).
 
-## Open items
-
 ### 3. Popover content is an unnamed dialog
 
-`src/components/ui/popover.tsx:17`
+**Fix:** `Popover` shares a `useId` with `PopoverTrigger`; `PopoverContent` sets `aria-labelledby` to the trigger id when the consumer passes neither `aria-label` nor `aria-labelledby` and a trigger is mounted (`popover.tsx`). `RowActionsMenu` adds optional `triggerAriaLabel` (default `"Row actions"`).
 
-Radix gives `PopoverPrimitive.Content` `role="dialog"`. The component passes no `aria-label` or `aria-labelledby` and exposes no prop for one, so an open popover announces as an unnamed dialog.
+**Verified:** `story-diff --axe` — `aria-dialog-name` under axe fixed on popover-bearing stories (with `--interact` covering popover, select, and row-actions stories); `popover.test.tsx` — "labels content by its trigger by default", "uses an explicit aria-label on content instead of the trigger id", "keeps an explicit aria-labelledby on content", "does not set aria-labelledby when opened from an anchor without a trigger"; `RowActionsMenu.test.tsx` — `triggerAriaLabel` and default name tests.
 
-**Remedy:** needs an API decision, which is why it is not a quick fix. Either accept an optional labelling prop and require consumers to name their popovers, or set a generic default and let consumers override. The same question applies to `RowActionsMenu`, whose trigger currently hardcodes its name.
+### 4. `Select` triggers have no accessible name
 
-### 4. `Select` triggers have no accessible name — root cause pinned, and it recurs
+**Fix:** Call-site labelling — `TableFooter` associates the page-size trigger with "Rows per page" via `aria-labelledby`; Storybook `ui/select` stories and page fixture selects use `aria-label` (or equivalent); `SelectTrigger` JSDoc documents the requirement.
 
-Story `datatable-datatableshell--with-drawer-open`, node `w-[var(--size-select-compact)]` → **pinned 2026-08-19: `src/components/data-table/TableFooter.tsx:124`, the page-size `SelectTrigger`.** Not `select.tsx` and not `DrawerField.tsx` — the earlier grep was looking in the wrong files. `TableFooter` renders inside the drawer's own body on that story, which is why it read as "inside the drawer's action rows."
+**Verified:** `story-diff --axe` — Select-caused `button-name` under axe fixed (with `--interact` covering page, `ui-select`, and datatable footer/shell stories); `TableFooter.test.tsx` — 'names the rows-per-page select "Rows per page"'.
 
-Root cause, not just a location: `SelectTrigger` renders `role="combobox"` on a `<button>` whose only content is a `<span>` showing the **current value** ("15", "All Merchants"). Visually that reads as a label, but for a `combobox` role axe's (and the underlying WCAG) accessible-name computation does not credit that content as the control's *name* — a combobox needs a name saying what it is, distinct from a value saying what's selected. So every bare `Select`/`SelectTrigger` in the app without an adjacent `<label>` trips this, not just this one instance.
+## Open items
 
-**Confirmed to recur in the pages port itself**, found while running `axe` against the new pages (Task 7): the merchants view-preset selector, `src/stories/pages/merchants/MerchantsLiveRefactoredScreen.tsx:315` (`<SelectTrigger className="h-9 w-44">`), and its equivalent on the transactions page. Same defect, new call site — the port didn't introduce the bug, it just has more of it.
+### 11. TopBar narrow story icon button has no accessible name
 
-**Remedy:** same shape as item 3 — needs an API decision on `Select`/`SelectTrigger` (accept an optional `aria-label`/`label` prop, require it or default it), not a per-call-site patch. A per-site `aria-label` would silence axe at these particular triggers but leave every other bare `Select` in the library (and any added later) with the same gap.
+`src/components/layout/TopBar.stories.tsx` — `NarrowWithTruncation`: the `actions` slot renders an icon-only `<Button>` (Plus glyph) with no `aria-label`, so axe reports `button-name`.
+
+**Remedy:** add an `aria-label` on that story button (e.g. "Add") or pass visible action text; out of scope for the popover/select naming work.
 
 ### 7. Design Tokens page prints light-theme values in dark mode
 

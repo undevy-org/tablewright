@@ -280,7 +280,7 @@ export function TransactionsScreen() {
                     value={orch.activeView}
                     onValueChange={(v) => orch.handleViewChange(v as TransactionViewKey)}
                   >
-                    <SelectTrigger className="h-9 w-44">
+                    <SelectTrigger aria-label="View" className="h-9 w-44">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent className="min-w-44">

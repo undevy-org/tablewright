@@ -20,7 +20,7 @@ export const Default: Story = {
   render: () => (
     <div className="w-[280px]">
       <Select>
-        <SelectTrigger>
+        <SelectTrigger aria-label="Framework">
           <SelectValue placeholder="Select a framework" />
         </SelectTrigger>
         <SelectContent>
@@ -39,7 +39,7 @@ export const WithSelectedValue: Story = {
   render: () => (
     <div className="w-[280px]">
       <Select defaultValue="vue">
-        <SelectTrigger>
+        <SelectTrigger aria-label="Framework">
           <SelectValue placeholder="Select a framework" />
         </SelectTrigger>
         <SelectContent>
@@ -58,7 +58,7 @@ export const Open: Story = {
   render: () => (
     <div className="w-[280px]">
       <Select defaultOpen defaultValue="vue">
-        <SelectTrigger>
+        <SelectTrigger aria-label="Framework">
           <SelectValue placeholder="Select a framework" />
         </SelectTrigger>
         <SelectContent>
@@ -77,7 +77,7 @@ export const Disabled: Story = {
   render: () => (
     <div className="w-[280px]">
       <Select disabled>
-        <SelectTrigger>
+        <SelectTrigger aria-label="Framework">
           <SelectValue placeholder="Select a framework" />
         </SelectTrigger>
         <SelectContent>

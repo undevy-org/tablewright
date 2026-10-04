@@ -315,7 +315,7 @@ export function MerchantsLiveRefactoredScreen() {
                     value={orch.activeView}
                     onValueChange={(v) => orch.handleViewChange(v as MerchantViewKey)}
                   >
-                    <SelectTrigger className="h-9 w-44">
+                    <SelectTrigger aria-label="View" className="h-9 w-44">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>

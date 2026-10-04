@@ -72,7 +72,7 @@ export function CreateMerchantPreviewDialog({
                 }))
               }
             >
-              <SelectTrigger>
+              <SelectTrigger aria-label="Traffic Type">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -96,7 +96,7 @@ export function CreateMerchantPreviewDialog({
                 }))
               }
             >
-              <SelectTrigger>
+              <SelectTrigger aria-label="Balance Type">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
