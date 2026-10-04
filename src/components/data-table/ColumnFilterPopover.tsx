@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { Input } from "../ui/input";
 import { Checkbox } from "../ui/checkbox";
 import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
-import { FilterChipPopoverTrigger } from "./FilterChip";
+import { FilterChipPopoverTrigger } from "./FilterChipPopoverTrigger";
 import { FilterPopoverFooter, type FilterPopoverFooterLabels } from "./FilterPopoverFooter";
 import type {
   ActiveFilter,

@@ -1,9 +1,29 @@
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
+import { STYLE_SCOPE } from "../../lib/style-scope";
 import { Button } from "./button";
 import { Popover, PopoverAnchor, PopoverContent, PopoverTrigger } from "./popover";
 
 describe("Popover", () => {
+  it("requires components to be used within Popover", () => {
+    expect(() => render(<PopoverTrigger>Open</PopoverTrigger>)).toThrow(/within Popover/);
+  });
+
+  it("scopes popover content styles under the library root class", () => {
+    render(
+      <Popover defaultOpen>
+        <PopoverTrigger asChild>
+          <Button variant="secondary">Open</Button>
+        </PopoverTrigger>
+        <PopoverContent>Scoped</PopoverContent>
+      </Popover>,
+    );
+
+    const dialog = screen.getByRole("dialog");
+    expect(dialog.className).toContain(STYLE_SCOPE);
+    expect(dialog.className).toContain("rounded-lg");
+  });
+
   it("labels content by its trigger by default", () => {
     render(
       <Popover defaultOpen>
@@ -46,6 +66,19 @@ describe("Popover", () => {
 
     const dialog = screen.getByRole("dialog");
     expect(dialog.getAttribute("aria-labelledby")).toBe("external-label");
+  });
+
+  it("omits aria-labelledby when content has aria-label but no aria-labelledby", () => {
+    render(
+      <Popover defaultOpen>
+        <PopoverTrigger asChild>
+          <Button variant="secondary">Open</Button>
+        </PopoverTrigger>
+        <PopoverContent aria-label="Named by label">Body</PopoverContent>
+      </Popover>,
+    );
+
+    expect(screen.getByRole("dialog").getAttribute("aria-labelledby")).toBeNull();
   });
 
   it("does not set aria-labelledby when opened from an anchor without a trigger", () => {
