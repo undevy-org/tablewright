@@ -180,7 +180,7 @@ export { useRowDragOverride } from "./hooks/useRowDragOverride";
 export type { UseRowDragOverrideResult } from "./hooks/useRowDragOverride";
 
 // Utils
-export { computeColumnGaps } from "./lib/column-gaps";
+export { computeColumnGaps, gapColumnId } from "./lib/column-gaps";
 export { computeColumnStats } from "./lib/filter-stats";
 export { formatEnumLabel } from "./lib/format-enum";
 export {
