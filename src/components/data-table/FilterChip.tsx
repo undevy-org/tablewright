@@ -9,33 +9,55 @@ export interface FilterChipProps extends React.HTMLAttributes<HTMLDivElement> {
   active?: boolean;
 }
 
-export const FilterChip = React.forwardRef<HTMLDivElement, FilterChipProps>(
+export const FilterChip = React.forwardRef<HTMLButtonElement, FilterChipProps>(
   ({ label, value, onRemove, active, children, className, ...rest }, ref) => {
+    const isPopupTrigger = "aria-haspopup" in rest;
+
     return (
       <div
-        ref={ref}
-        {...rest}
         className={cn(
           "flex h-[var(--size-control-md)] items-center rounded-md border border-[var(--border-subtle)] text-[13px] transition-colors",
           active ? "bg-[var(--bg-secondary)]" : "bg-[var(--bg-surface)]",
-          className
+          className,
         )}
       >
-        <div className="flex h-full items-center pl-2.5 pr-1.5 cursor-pointer">
-          <div className="flex items-center gap-1.5">
-            <span className="text-[var(--text-secondary)]">{label}</span>
-            {value && (
-              <>
-                <span className="text-[var(--text-tertiary)]">:</span>
-                <span className="text-[var(--text-primary)] font-medium">
-                  {value}
-                </span>
-              </>
-            )}
-            {children}
+        {isPopupTrigger ? (
+          <button
+            ref={ref}
+            type="button"
+            {...(rest as React.ButtonHTMLAttributes<HTMLButtonElement>)}
+            className="flex h-full flex-1 cursor-pointer items-center pl-2.5 pr-1.5 text-left"
+          >
+            <div className="flex items-center gap-1.5">
+              <span className="text-[var(--text-secondary)]">{label}</span>
+              {value && (
+                <>
+                  <span className="text-[var(--text-tertiary)]">:</span>
+                  <span className="text-[var(--text-primary)] font-medium">
+                    {value}
+                  </span>
+                </>
+              )}
+              {children}
+            </div>
+          </button>
+        ) : (
+          <div className="flex h-full cursor-pointer items-center pl-2.5 pr-1.5">
+            <div className="flex items-center gap-1.5">
+              <span className="text-[var(--text-secondary)]">{label}</span>
+              {value && (
+                <>
+                  <span className="text-[var(--text-tertiary)]">:</span>
+                  <span className="text-[var(--text-primary)] font-medium">
+                    {value}
+                  </span>
+                </>
+              )}
+              {children}
+            </div>
           </div>
-        </div>
-        <div className="h-full flex items-center pr-1.5">
+        )}
+        <div className="flex h-full items-center pr-1.5">
           <button
             type="button"
             onClick={(e) => {
@@ -50,7 +72,7 @@ export const FilterChip = React.forwardRef<HTMLDivElement, FilterChipProps>(
         </div>
       </div>
     );
-  }
+  },
 );
 
 FilterChip.displayName = "FilterChip";
