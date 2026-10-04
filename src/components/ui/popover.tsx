@@ -6,8 +6,7 @@ import { STYLE_SCOPE } from "../../lib/style-scope";
 import { usePortalContainer } from "../../context/portal-container-context";
 
 type PopoverContextValue = {
-  triggerId: string | undefined;
-  setTriggerId: (id: string | undefined) => void;
+  triggerId: string;
   triggerMounted: boolean;
   setTriggerMounted: (mounted: boolean) => void;
 };
@@ -23,7 +22,7 @@ function usePopoverContext() {
 }
 
 function Popover(props: React.ComponentProps<typeof PopoverPrimitive.Root>) {
-  const [triggerId, setTriggerId] = React.useState<string | undefined>(undefined);
+  const triggerId = React.useId();
   const [triggerMounted, setTriggerMounted] = React.useState(false);
   const setTriggerMountedStable = React.useCallback((mounted: boolean) => {
     setTriggerMounted(mounted);
@@ -31,12 +30,7 @@ function Popover(props: React.ComponentProps<typeof PopoverPrimitive.Root>) {
 
   return (
     <PopoverContext.Provider
-      value={{
-        triggerId,
-        setTriggerId,
-        triggerMounted,
-        setTriggerMounted: setTriggerMountedStable,
-      }}
+      value={{ triggerId, triggerMounted, setTriggerMounted: setTriggerMountedStable }}
     >
       <PopoverPrimitive.Root {...props} />
     </PopoverContext.Provider>
@@ -47,18 +41,13 @@ const PopoverTrigger = React.forwardRef<
   React.ElementRef<typeof PopoverPrimitive.Trigger>,
   React.ComponentPropsWithoutRef<typeof PopoverPrimitive.Trigger>
 >(({ id, ...props }, ref) => {
-  const generatedId = React.useId();
-  const resolvedId = id ?? generatedId;
-  const { setTriggerId, setTriggerMounted } = usePopoverContext();
+  const { triggerId, setTriggerMounted } = usePopoverContext();
+  const resolvedId = id ?? triggerId;
 
   React.useEffect(() => {
-    setTriggerId(resolvedId);
     setTriggerMounted(true);
-    return () => {
-      setTriggerMounted(false);
-      setTriggerId(undefined);
-    };
-  }, [resolvedId, setTriggerId, setTriggerMounted]);
+    return () => setTriggerMounted(false);
+  }, [setTriggerMounted]);
 
   return <PopoverPrimitive.Trigger ref={ref} id={resolvedId} {...props} />;
 });
@@ -77,7 +66,7 @@ const PopoverContent = React.forwardRef<
   const resolvedAriaLabelledBy =
     ariaLabel !== undefined && ariaLabelledBy === undefined
       ? undefined
-      : (ariaLabelledBy ?? (triggerMounted && triggerId ? triggerId : undefined));
+      : (ariaLabelledBy ?? (triggerMounted ? triggerId : undefined));
 
   return (
     <PopoverPrimitive.Portal container={container}>

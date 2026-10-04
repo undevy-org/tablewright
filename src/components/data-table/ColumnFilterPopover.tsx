@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { Input } from "../ui/input";
 import { Checkbox } from "../ui/checkbox";
 import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
-import { FilterChip } from "./FilterChip";
+import { FilterChipPopoverTrigger } from "./FilterChip";
 import { FilterPopoverFooter, type FilterPopoverFooterLabels } from "./FilterPopoverFooter";
 import type {
   ActiveFilter,
@@ -647,7 +647,7 @@ export function ColumnFilterPopover({
   return (
     <Popover open={isOpen} onOpenChange={handleOpenChange}>
       <PopoverTrigger asChild>
-        <FilterChip
+        <FilterChipPopoverTrigger
           label={config.label}
           value={getDisplayValue()}
           onRemove={onRemove}
