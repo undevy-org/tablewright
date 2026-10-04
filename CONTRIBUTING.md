@@ -12,12 +12,12 @@ pnpm storybook   # dev server on :6006
 ## Before opening a PR
 
 ```bash
-pnpm lint && pnpm typecheck && pnpm build
+pnpm lint && pnpm typecheck && pnpm build && pnpm test
 STORYBOOK_BASE_PATH=/tablewright/ pnpm build-storybook
 ```
 
-There are no unit tests; CI runs the same checks. `pnpm check:render` is an optional headless-Chrome check that
-styles hold up against a hostile host stylesheet.
+CI runs the same checks. Unit tests use Vitest (`pnpm test`). `pnpm check:render` is an optional headless-Chrome
+check that styles hold up against a hostile host stylesheet.
 
 ## Changesets and releases
 
