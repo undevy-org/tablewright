@@ -3,7 +3,7 @@ import { Input } from "../ui/input";
 import { Checkbox } from "../ui/checkbox";
 import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
 import { FilterChip } from "./FilterChip";
-import { FilterPopoverFooter } from "./FilterPopoverFooter";
+import { FilterPopoverFooter, type FilterPopoverFooterLabels } from "./FilterPopoverFooter";
 import type {
   ActiveFilter,
   ActiveFilterValue,
@@ -18,14 +18,36 @@ import {
   isFilterValueEmpty,
 } from "./filter-values";
 
-const DEFAULT_LABELS = {
+export interface CompoundFilterPopoverLabels {
+  searchPlaceholder: string;
+  addPlaceholder: string;
+  contains: string;
+  orBadge: string;
+  chipMin: string;
+  chipMax: string;
+  statsAllPrefix: string;
+  statsFilteredPrefix: string;
+  numberInputPlaceholder: string;
+  resetSectionTitle: (subLabel: string) => string;
+  filtersCount: (n: number) => string;
+  subValuesCount: (n: number) => string;
+  subSelectedCount: (n: number) => string;
+}
+
+const DEFAULT_LABELS: CompoundFilterPopoverLabels = {
   searchPlaceholder: "Search...",
   addPlaceholder: "Add...",
   contains: "Contains",
+  orBadge: "OR",
   chipMin: "min",
   chipMax: "max",
   statsAllPrefix: "All:",
   statsFilteredPrefix: "Filt:",
+  numberInputPlaceholder: "0",
+  resetSectionTitle: (subLabel) => `Reset ${subLabel}`,
+  filtersCount: (n) => `${n} filters`,
+  subValuesCount: (n) => `${n} values`,
+  subSelectedCount: (n) => `${n} selected`,
 };
 
 // ── Draft types ──────────────────────────────────────────────────────────
@@ -82,7 +104,11 @@ function draftToValue(draft: SubFilterDraft): ActiveFilterValue | undefined {
 
 // ── Sub-filter display for chip ──────────────────────────────────────────
 
-function formatSubDisplay(sub: CompoundSubFilter, val: ActiveFilterValue): string | null {
+function formatSubDisplay(
+  sub: CompoundSubFilter,
+  val: ActiveFilterValue,
+  labels: CompoundFilterPopoverLabels,
+): string | null {
   if (isFilterValueEmpty(val)) return null;
   if (sub.type === "number-range") {
     const { from, to } = getNumberRange(val);
@@ -96,14 +122,14 @@ function formatSubDisplay(sub: CompoundSubFilter, val: ActiveFilterValue): strin
       const label = sub.options?.find((o) => o.value === val[0])?.label ?? val[0];
       return `${sub.label}: ${label}`;
     }
-    return `${sub.label}: ${val.length} selected`;
+    return `${sub.label}: ${labels.subSelectedCount(val.length)}`;
   }
   if (Array.isArray(val) && val.length > 0) {
     if (val.length === 1) {
       const display = val[0].length > 15 ? `${val[0].slice(0, 15)}…` : val[0];
       return `${sub.label}: ${display}`;
     }
-    return `${sub.label}: ${val.length} values`;
+    return `${sub.label}: ${labels.subValuesCount(val.length)}`;
   }
   return null;
 }
@@ -120,6 +146,8 @@ interface CompoundFilterPopoverProps {
   columnFilterStats?: Record<string, FilterStatsSlice>;
   requestOpen?: boolean;
   onRequestOpenHandled?: () => void;
+  labels?: Partial<CompoundFilterPopoverLabels>;
+  footerLabels?: Partial<FilterPopoverFooterLabels>;
 }
 
 // ── Component ────────────────────────────────────────────────────────────
@@ -134,7 +162,10 @@ export function CompoundFilterPopover({
   columnFilterStats,
   requestOpen,
   onRequestOpenHandled,
+  labels: labelOverrides,
+  footerLabels,
 }: CompoundFilterPopoverProps) {
+  const labels = { ...DEFAULT_LABELS, ...labelOverrides };
   const subFilters = config.subFilters ?? [];
   const compound = getCompoundValue(filter.value);
 
@@ -236,12 +267,12 @@ export function CompoundFilterPopover({
     if (isFilterValueEmpty(compound)) return undefined;
     const parts: string[] = [];
     for (const sub of subFilters) {
-      const display = formatSubDisplay(sub, compound[sub.key]);
+      const display = formatSubDisplay(sub, compound[sub.key], labels);
       if (display) parts.push(display);
     }
     if (parts.length === 0) return undefined;
     const joined = parts.join(" & ");
-    return joined.length > 30 ? `${parts.length} filters` : joined;
+    return joined.length > 30 ? labels.filtersCount(parts.length) : joined;
   };
 
   // ── Render sections ─────────────────────────────────────────────────
@@ -276,7 +307,7 @@ export function CompoundFilterPopover({
               updateDraft(sub.key, (d) => ({ ...d, from: String(min) }) as NumberRangeDraft)
             }
           >
-            {DEFAULT_LABELS.chipMin} {min.toLocaleString()}
+            {labels.chipMin} {min.toLocaleString()}
           </button>
           <button
             type="button"
@@ -285,7 +316,7 @@ export function CompoundFilterPopover({
               updateDraft(sub.key, (d) => ({ ...d, to: String(max) }) as NumberRangeDraft)
             }
           >
-            {DEFAULT_LABELS.chipMax} {max.toLocaleString()}
+            {labels.chipMax} {max.toLocaleString()}
           </button>
         </div>
       );
@@ -296,12 +327,12 @@ export function CompoundFilterPopover({
         <div className="flex gap-2">
           <div className="flex-1 space-y-1">
             <span className="text-[10px] font-semibold uppercase tracking-[0.1em] text-[var(--text-tertiary)] block">
-              {DEFAULT_LABELS.chipMin}
+              {labels.chipMin}
             </span>
             <Input
               type="number"
               autoFocus={subFilters.indexOf(sub) === 0}
-              placeholder={allNum ? String(allNum.min) : "0"}
+              placeholder={allNum ? String(allNum.min) : labels.numberInputPlaceholder}
               value={draft.from}
               onChange={(e) =>
                 updateDraft(sub.key, (prev) => ({
@@ -319,11 +350,11 @@ export function CompoundFilterPopover({
           </div>
           <div className="flex-1 space-y-1">
             <span className="text-[10px] font-semibold uppercase tracking-[0.1em] text-[var(--text-tertiary)] block">
-              {DEFAULT_LABELS.chipMax}
+              {labels.chipMax}
             </span>
             <Input
               type="number"
-              placeholder={allNum ? String(allNum.max) : "0"}
+              placeholder={allNum ? String(allNum.max) : labels.numberInputPlaceholder}
               value={draft.to}
               onChange={(e) =>
                 updateDraft(sub.key, (prev) => ({
@@ -342,10 +373,10 @@ export function CompoundFilterPopover({
         </div>
         {allNum && (
           <div className="border-t border-[var(--border-subtle)] mt-3 pt-2 space-y-2">
-            {renderNumRow(DEFAULT_LABELS.statsAllPrefix, allNum)}
+            {renderNumRow(labels.statsAllPrefix, allNum)}
             {filtNum && (
               <div className="border-t border-[var(--border-subtle)] pt-1.5">
-                {renderNumRow(DEFAULT_LABELS.statsFilteredPrefix, filtNum)}
+                {renderNumRow(labels.statsFilteredPrefix, filtNum)}
               </div>
             )}
           </div>
@@ -470,10 +501,10 @@ export function CompoundFilterPopover({
     return (
       <>
         <span className="text-[10px] font-semibold uppercase tracking-[0.1em] text-[var(--text-tertiary)] block mb-2">
-          {DEFAULT_LABELS.contains}
+          {labels.contains}
           {draft.tags.length >= 2 && (
             <span className="ml-1 text-[10px] font-semibold text-[var(--tag-blue-text)] bg-[var(--tag-blue-bg)] rounded px-1 py-0.5 uppercase">
-              OR
+              {labels.orBadge}
             </span>
           )}
         </span>
@@ -503,8 +534,8 @@ export function CompoundFilterPopover({
             className="flex-1 min-w-[50px] bg-transparent text-sm text-[var(--text-primary)] outline-none placeholder:text-[var(--text-tertiary)]"
             placeholder={
               draft.tags.length === 0
-                ? DEFAULT_LABELS.searchPlaceholder
-                : DEFAULT_LABELS.addPlaceholder
+                ? labels.searchPlaceholder
+                : labels.addPlaceholder
             }
             value={draft.input}
             onChange={(e) =>
@@ -515,10 +546,10 @@ export function CompoundFilterPopover({
         </div>
         {allText && (
           <div className="border-t border-[var(--border-subtle)] mt-3 pt-2 space-y-2">
-            {renderTextRow(DEFAULT_LABELS.statsAllPrefix, allText)}
+            {renderTextRow(labels.statsAllPrefix, allText)}
             {filtText && (
               <div className="border-t border-[var(--border-subtle)] pt-1.5">
-                {renderTextRow(DEFAULT_LABELS.statsFilteredPrefix, filtText)}
+                {renderTextRow(labels.statsFilteredPrefix, filtText)}
               </div>
             )}
           </div>
@@ -618,7 +649,7 @@ export function CompoundFilterPopover({
                     type="button"
                     className="text-[11px] text-[var(--text-tertiary)] hover:text-[var(--text-secondary)] transition-colors"
                     onClick={() => handleResetSection(sub.key)}
-                    title={`Reset ${sub.label}`}
+                    title={labels.resetSectionTitle(sub.label)}
                   >
                     ✕
                   </button>
@@ -636,7 +667,11 @@ export function CompoundFilterPopover({
           ))}
         </div>
         <div className="flex-shrink-0 bg-[var(--bg-surface)]">
-          <FilterPopoverFooter onApply={handleApply} onClear={handleClearAll} />
+          <FilterPopoverFooter
+            onApply={handleApply}
+            onClear={handleClearAll}
+            labels={footerLabels}
+          />
         </div>
       </PopoverContent>
     </Popover>

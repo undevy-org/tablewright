@@ -9,15 +9,21 @@ import type {
   FilterStatsSlice,
 } from "./filter-types";
 import { isFilterValueEmpty } from "./filter-values";
-import { ColumnFilterPopover } from "./ColumnFilterPopover";
-import { CompoundFilterPopover } from "./CompoundFilterPopover";
+import { ColumnFilterPopover, type ColumnFilterPopoverLabels } from "./ColumnFilterPopover";
+import { CompoundFilterPopover, type CompoundFilterPopoverLabels } from "./CompoundFilterPopover";
+import type { FilterPopoverFooterLabels } from "./FilterPopoverFooter";
 
-const DEFAULT_LABELS = {
+export interface AppliedStateChipsLabels {
+  clearAll: string;
+  columns: string;
+  hiddenCount: (n: number) => string;
+}
+
+const DEFAULT_LABELS: AppliedStateChipsLabels = {
   clearAll: "Clear all",
   columns: "Columns",
   hiddenCount: (n: number) => `${n} hidden`,
 };
-
 
 interface AppliedStateChipsProps {
   filters: ActiveFilter[];
@@ -37,6 +43,10 @@ interface AppliedStateChipsProps {
   columnFilterStats?: Record<string, FilterStatsSlice>;
   requestOpenFilterId?: string | null;
   onRequestOpenHandled?: () => void;
+  labels?: Partial<AppliedStateChipsLabels>;
+  columnFilterLabels?: Partial<ColumnFilterPopoverLabels>;
+  compoundFilterLabels?: Partial<CompoundFilterPopoverLabels>;
+  filterPopoverFooterLabels?: Partial<FilterPopoverFooterLabels>;
 }
 
 export function AppliedStateChips({
@@ -57,7 +67,12 @@ export function AppliedStateChips({
   columnFilterStats,
   requestOpenFilterId,
   onRequestOpenHandled,
+  labels: labelOverrides,
+  columnFilterLabels,
+  compoundFilterLabels,
+  filterPopoverFooterLabels,
 }: AppliedStateChipsProps) {
+  const labels = { ...DEFAULT_LABELS, ...labelOverrides };
   const hasFilters = filters.length > 0;
   const hasSort = currentSort !== null;
   const hasHiddenColumns = hiddenColumnsCount > 0;
@@ -74,13 +89,13 @@ export function AppliedStateChips({
     <div className="flex flex-wrap items-center gap-2 pb-3">
       <Button variant="secondary" onClick={onClearAll} className="shrink-0">
         <X size={14} />
-        {DEFAULT_LABELS.clearAll}
+        {labels.clearAll}
       </Button>
 
       {hasHiddenColumns && (
         <FilterChip
-          label={DEFAULT_LABELS.columns}
-          value={DEFAULT_LABELS.hiddenCount(hiddenColumnsCount)}
+          label={labels.columns}
+          value={labels.hiddenCount(hiddenColumnsCount)}
           onRemove={onResetColumns}
           onClick={onOpenColumnsMenu}
           className="cursor-pointer"
@@ -109,6 +124,8 @@ export function AppliedStateChips({
               columnFilterStats={columnFilterStats}
               requestOpen={filter.columnId === requestOpenFilterId}
               onRequestOpenHandled={onRequestOpenHandled}
+              labels={compoundFilterLabels}
+              footerLabels={filterPopoverFooterLabels}
             />
           );
         }
@@ -125,6 +142,8 @@ export function AppliedStateChips({
             stats={columnFilterStats?.[filter.columnId]}
             requestOpen={filter.columnId === requestOpenFilterId}
             onRequestOpenHandled={onRequestOpenHandled}
+            labels={columnFilterLabels}
+            footerLabels={filterPopoverFooterLabels}
           />
         );
       })}

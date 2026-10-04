@@ -3,7 +3,7 @@ import { Input } from "../ui/input";
 import { Checkbox } from "../ui/checkbox";
 import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
 import { FilterChip } from "./FilterChip";
-import { FilterPopoverFooter } from "./FilterPopoverFooter";
+import { FilterPopoverFooter, type FilterPopoverFooterLabels } from "./FilterPopoverFooter";
 import type {
   ActiveFilter,
   ColumnFilterConfig,
@@ -12,7 +12,26 @@ import type {
 } from "./filter-types";
 import { getDateRange, getNumberRange, getStringArray, isFilterValueEmpty } from "./filter-values";
 
-const DEFAULT_LABELS = {
+export interface ColumnFilterPopoverLabels {
+  searchPlaceholder: string;
+  addValuePlaceholder: string;
+  noData: string;
+  statsAllPrefix: string;
+  statsFilteredPrefix: string;
+  statsTextAllPrefix: string;
+  statsTextFilteredPrefix: string;
+  chipFrom: string;
+  chipTo: string;
+  chipMin: string;
+  chipMax: string;
+  contains: string;
+  orBadge: string;
+  numberInputPlaceholder: string;
+  valuesCount: (n: number) => string;
+  selectedCount: (n: number) => string;
+}
+
+const DEFAULT_LABELS: ColumnFilterPopoverLabels = {
   searchPlaceholder: "Search...",
   addValuePlaceholder: "Add value...",
   noData: "no data",
@@ -24,6 +43,9 @@ const DEFAULT_LABELS = {
   chipTo: "to",
   chipMin: "min",
   chipMax: "max",
+  contains: "Contains",
+  orBadge: "OR",
+  numberInputPlaceholder: "0",
   valuesCount: (n: number) => `${n} values`,
   selectedCount: (n: number) => `${n} selected`,
 };
@@ -38,6 +60,8 @@ interface ColumnFilterPopoverProps {
   stats?: FilterStatsSlice;
   requestOpen?: boolean;
   onRequestOpenHandled?: () => void;
+  labels?: Partial<ColumnFilterPopoverLabels>;
+  footerLabels?: Partial<FilterPopoverFooterLabels>;
 }
 
 function formatChipDate(iso: string): string {
@@ -72,7 +96,10 @@ export function ColumnFilterPopover({
   stats,
   requestOpen,
   onRequestOpenHandled,
+  labels: labelOverrides,
+  footerLabels,
 }: ColumnFilterPopoverProps) {
+  const labels = { ...DEFAULT_LABELS, ...labelOverrides };
   const [isOpen, setIsOpen] = useState(false);
   const onRequestOpenHandledRef = useRef(onRequestOpenHandled);
   useEffect(() => {
@@ -243,7 +270,7 @@ export function ColumnFilterPopover({
                   {label}
                 </span>
                 <span className="rounded bg-[var(--bg-secondary)] px-1.5 py-0.5 text-[11px] text-[var(--text-tertiary)] italic">
-                  {DEFAULT_LABELS.noData}
+                  {labels.noData}
                 </span>
               </div>
             );
@@ -283,10 +310,10 @@ export function ColumnFilterPopover({
         return (
           <div className="p-3 w-64 space-y-3">
             <span className="text-xs font-medium text-[var(--text-tertiary)] uppercase tracking-wider block">
-              Contains
+              {labels.contains}
               {draftTags.length >= 2 && (
                 <span className="ml-1 text-[10px] font-semibold text-[var(--tag-blue-text)] bg-[var(--tag-blue-bg)] rounded px-1 py-0.5 uppercase">
-                  OR
+                  {labels.orBadge}
                 </span>
               )}
             </span>
@@ -311,8 +338,8 @@ export function ColumnFilterPopover({
                 className="flex-1 min-w-[60px] bg-transparent text-sm text-[var(--text-primary)] outline-none placeholder:text-[var(--text-tertiary)]"
                 placeholder={
                   draftTags.length === 0
-                    ? DEFAULT_LABELS.searchPlaceholder
-                    : DEFAULT_LABELS.addValuePlaceholder
+                    ? labels.searchPlaceholder
+                    : labels.addValuePlaceholder
                 }
                 value={draftInput}
                 onChange={(e) => setDraftInput(e.target.value)}
@@ -321,10 +348,10 @@ export function ColumnFilterPopover({
             </div>
             {allText && (
               <div className="border-t border-[var(--border-subtle)] pt-2 space-y-2">
-                {renderTextRow(DEFAULT_LABELS.statsTextAllPrefix, allText)}
+                {renderTextRow(labels.statsTextAllPrefix, allText)}
                 {filteredStats !== null && (
                   <div className="border-t border-[var(--border-subtle)] pt-1.5">
-                    {renderTextRow(DEFAULT_LABELS.statsTextFilteredPrefix, filtText)}
+                    {renderTextRow(labels.statsTextFilteredPrefix, filtText)}
                   </div>
                 )}
               </div>
@@ -376,7 +403,7 @@ export function ColumnFilterPopover({
                   {label}
                 </span>
                 <span className="rounded bg-[var(--bg-secondary)] px-1.5 py-0.5 text-[11px] text-[var(--text-tertiary)] italic">
-                  {DEFAULT_LABELS.noData}
+                  {labels.noData}
                 </span>
               </div>
             );
@@ -409,14 +436,14 @@ export function ColumnFilterPopover({
                 className={chipCls(draftDate.from === min)}
                 onClick={() => setDraftDate((prev) => ({ ...prev, from: min }))}
               >
-                {DEFAULT_LABELS.chipFrom} {formatChipDate(min)}
+                {labels.chipFrom} {formatChipDate(min)}
               </button>
               <button
                 type="button"
                 className={chipCls(draftDate.to === max)}
                 onClick={() => setDraftDate((prev) => ({ ...prev, to: max }))}
               >
-                {DEFAULT_LABELS.chipTo} {formatChipDate(max)}
+                {labels.chipTo} {formatChipDate(max)}
               </button>
             </div>
           );
@@ -429,7 +456,7 @@ export function ColumnFilterPopover({
           <div className="p-3 w-64 space-y-4">
             <div className="space-y-2">
               <span className="text-xs font-medium text-[var(--text-tertiary)] uppercase tracking-wider block">
-                {DEFAULT_LABELS.chipFrom}
+                {labels.chipFrom}
               </span>
               <Input
                 type="date"
@@ -439,7 +466,7 @@ export function ColumnFilterPopover({
             </div>
             <div className="space-y-2">
               <span className="text-xs font-medium text-[var(--text-tertiary)] uppercase tracking-wider block">
-                {DEFAULT_LABELS.chipTo}
+                {labels.chipTo}
               </span>
               <Input
                 type="date"
@@ -449,10 +476,10 @@ export function ColumnFilterPopover({
             </div>
             {allDate && (
               <div className="border-t border-[var(--border-subtle)] pt-2 space-y-2">
-                {renderDateRow(DEFAULT_LABELS.statsAllPrefix, allDate)}
+                {renderDateRow(labels.statsAllPrefix, allDate)}
                 {filteredStats !== null && (
                   <div className="border-t border-[var(--border-subtle)] pt-1.5">
-                    {renderDateRow(DEFAULT_LABELS.statsFilteredPrefix, filtDate)}
+                    {renderDateRow(labels.statsFilteredPrefix, filtDate)}
                   </div>
                 )}
               </div>
@@ -470,7 +497,7 @@ export function ColumnFilterPopover({
                   {label}
                 </span>
                 <span className="rounded bg-[var(--bg-secondary)] px-1.5 py-0.5 text-[11px] text-[var(--text-tertiary)] italic">
-                  {DEFAULT_LABELS.noData}
+                  {labels.noData}
                 </span>
               </div>
             );
@@ -506,14 +533,14 @@ export function ColumnFilterPopover({
                 className={chipCls(draftNumberFrom === String(min))}
                 onClick={() => setDraftNumberFrom(String(min))}
               >
-                {DEFAULT_LABELS.chipMin} {min}
+                {labels.chipMin} {min}
               </button>
               <button
                 type="button"
                 className={chipCls(draftNumberTo === String(max))}
                 onClick={() => setDraftNumberTo(String(max))}
               >
-                {DEFAULT_LABELS.chipMax} {max}
+                {labels.chipMax} {max}
               </button>
             </div>
           );
@@ -526,12 +553,12 @@ export function ColumnFilterPopover({
           <div className="p-3 w-64 space-y-4">
             <div className="space-y-2">
               <span className="text-xs font-medium text-[var(--text-tertiary)] uppercase tracking-wider block">
-                {DEFAULT_LABELS.chipMin}
+                {labels.chipMin}
               </span>
               <Input
                 type="number"
                 autoFocus
-                placeholder={allNum ? String(allNum.min) : "0"}
+                placeholder={allNum ? String(allNum.min) : labels.numberInputPlaceholder}
                 value={draftNumberFrom}
                 onChange={(e) => setDraftNumberFrom(e.target.value)}
                 onKeyDown={(e) => {
@@ -544,11 +571,11 @@ export function ColumnFilterPopover({
             </div>
             <div className="space-y-2">
               <span className="text-xs font-medium text-[var(--text-tertiary)] uppercase tracking-wider block">
-                {DEFAULT_LABELS.chipMax}
+                {labels.chipMax}
               </span>
               <Input
                 type="number"
-                placeholder={allNum ? String(allNum.max) : "0"}
+                placeholder={allNum ? String(allNum.max) : labels.numberInputPlaceholder}
                 value={draftNumberTo}
                 onChange={(e) => setDraftNumberTo(e.target.value)}
                 onKeyDown={(e) => {
@@ -561,10 +588,10 @@ export function ColumnFilterPopover({
             </div>
             {allNum && (
               <div className="border-t border-[var(--border-subtle)] pt-2 space-y-2">
-                {renderNumRow(DEFAULT_LABELS.statsAllPrefix, allNum)}
+                {renderNumRow(labels.statsAllPrefix, allNum)}
                 {filteredStats !== null && (
                   <div className="border-t border-[var(--border-subtle)] pt-1.5">
-                    {renderNumRow(DEFAULT_LABELS.statsFilteredPrefix, filtNum)}
+                    {renderNumRow(labels.statsFilteredPrefix, filtNum)}
                   </div>
                 )}
               </div>
@@ -588,23 +615,23 @@ export function ColumnFilterPopover({
       }
       if (value.length === 2) {
         const joined = value.join(", ");
-        return joined.length > 24 ? `${value.length} values` : joined;
+        return joined.length > 24 ? labels.valuesCount(value.length) : joined;
       }
-      return DEFAULT_LABELS.valuesCount(value.length);
+      return labels.valuesCount(value.length);
     }
 
     if (config.type === "enum" && Array.isArray(value)) {
       if (value.length === 1) {
         return config.options?.find((o) => o.value === value[0])?.label ?? value[0];
       }
-      return DEFAULT_LABELS.selectedCount(value.length);
+      return labels.selectedCount(value.length);
     }
 
     if (config.type === "date") {
       const { from, to } = getDateRange(value);
       if (from && to) return `${from} \u2014 ${to}`;
-      if (from) return `${DEFAULT_LABELS.chipFrom} ${from}`;
-      if (to) return `${DEFAULT_LABELS.chipTo} ${to}`;
+      if (from) return `${labels.chipFrom} ${from}`;
+      if (to) return `${labels.chipTo} ${to}`;
     }
 
     if (config.type === "number-range") {
@@ -635,7 +662,11 @@ export function ColumnFilterPopover({
       >
         <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain">{renderContent()}</div>
         <div className="flex-shrink-0 bg-[var(--bg-surface)]">
-          <FilterPopoverFooter onApply={handleApply} onClear={handleClear} />
+          <FilterPopoverFooter
+            onApply={handleApply}
+            onClear={handleClear}
+            labels={footerLabels}
+          />
         </div>
       </PopoverContent>
     </Popover>
