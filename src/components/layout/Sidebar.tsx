@@ -1,6 +1,5 @@
 import * as React from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import { collapsedNavLinkAriaLabel } from "../../lib/collapsed-nav-link-a11y";
 import { cn } from "../../lib/utils";
 import { useAppShell } from "./app-shell-context";
 import type { NavGroup } from "./types";
@@ -131,20 +130,15 @@ export const Sidebar = React.forwardRef<HTMLElement, SidebarProps>(
                     </>
                   );
 
-                  const collapsedLinkLabel = collapsedNavLinkAriaLabel(
-                    showExpanded,
-                    item.label,
-                  );
-
                   if (renderLink) {
                     return (
                       <React.Fragment key={item.key}>
                         {renderLink(item.href, {
                           className: itemClassName,
                           children,
-                          ...(collapsedLinkLabel
-                            ? { "aria-label": collapsedLinkLabel }
-                            : {}),
+                          ...(showExpanded
+                            ? {}
+                            : { "aria-label": item.label }),
                         })}
                       </React.Fragment>
                     );
@@ -155,7 +149,7 @@ export const Sidebar = React.forwardRef<HTMLElement, SidebarProps>(
                       key={item.key}
                       href={item.href}
                       className={itemClassName}
-                      aria-label={collapsedLinkLabel}
+                      aria-label={showExpanded ? undefined : item.label}
                     >
                       {children}
                     </a>
