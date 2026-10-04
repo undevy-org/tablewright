@@ -19,8 +19,6 @@ export interface TableOrchestrationState<TViewKey extends string = string> {
   page: number;
   rowsPerPage: number;
   density: "normal" | "dense";
-  /** @deprecated Demo-only: it only spins for a fixed time (700 ms by default) and refetches nothing. Keep refresh state in your data layer (e.g. your query's `isFetching`). Will be removed in a future minor release. */
-  isRefreshing: boolean;
   selectedIds: Set<string>;
   activeView: TViewKey;
   columnsMenuOpen: boolean;
@@ -57,9 +55,6 @@ export interface TableOrchestrationActions<TViewKey extends string = string> {
   setRowsPerPage: (n: number) => void;
 
   setDensity: (v: "normal" | "dense") => void;
-
-  /** @deprecated Demo-only: it only spins for a fixed time (700 ms by default) and refetches nothing. Keep refresh state in your data layer (e.g. your query's `isFetching`). Will be removed in a future minor release. */
-  startRefresh: (durationMs?: number) => void;
 
   setSelectedIds: (next: Set<string> | ((prev: Set<string>) => Set<string>)) => void;
   toggleRowSelection: (id: string) => void;
@@ -126,7 +121,6 @@ export function createTableOrchestrationStore<TViewKey extends string>({
       page: 1,
       rowsPerPage: initialRowsPerPage,
       density: "normal",
-      isRefreshing: false,
       selectedIds: new Set<string>(),
       activeView: defaultViewKey,
       columnsMenuOpen: false,
@@ -226,13 +220,6 @@ export function createTableOrchestrationStore<TViewKey extends string>({
       setRowsPerPage: (n) => set({ rowsPerPage: n, page: 1 }),
 
       setDensity: (v) => set({ density: v }),
-
-      startRefresh: (durationMs = 700) => {
-        set({ isRefreshing: true });
-        if (typeof window !== "undefined") {
-          window.setTimeout(() => set({ isRefreshing: false }), durationMs);
-        }
-      },
 
       setSelectedIds: (next) =>
         set((s) => ({

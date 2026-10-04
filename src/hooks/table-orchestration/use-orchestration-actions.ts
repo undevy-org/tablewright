@@ -135,7 +135,6 @@ export function useOrchestrationActions<TRow extends object, TViewKey extends st
     [defaultViewKey, store],
   );
 
-  const handleRefresh = useCallback(() => store.getState().startRefresh(), [store]);
 
   const handleToggleRowSelection = useCallback(
     (id: string) => store.getState().toggleRowSelection(id),
@@ -212,7 +211,6 @@ export function useOrchestrationActions<TRow extends object, TViewKey extends st
     handleRemoveSort,
     handleRemoveCustomFilter,
     handleClearAll,
-    handleRefresh,
     handleToggleRowSelection,
     handleToggleHeaderCheck,
     handleExpandRow,

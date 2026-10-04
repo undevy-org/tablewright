@@ -78,8 +78,6 @@ export interface TableOrchestrationReturn<TRow extends object, TViewKey extends 
   rowsPerPage: number;
   density: "normal" | "dense";
   setDensity: (v: "normal" | "dense") => void;
-  /** @deprecated Demo-only: it only spins for a fixed time (700 ms by default) and refetches nothing. Keep refresh state in your data layer (e.g. your query's `isFetching`). Will be removed in a future minor release. */
-  isRefreshing: boolean;
   selectedIds: Set<string>;
   setSelectedIds: React.Dispatch<React.SetStateAction<Set<string>>>;
   activeView: TViewKey;
@@ -132,8 +130,6 @@ export interface TableOrchestrationReturn<TRow extends object, TViewKey extends 
   handleRemoveSort: () => void;
   handleRemoveCustomFilter: () => void;
   handleClearAll: () => void;
-  /** @deprecated Demo-only: it only spins for a fixed time (700 ms by default) and refetches nothing. Keep refresh state in your data layer (e.g. your query's `isFetching`). Will be removed in a future minor release. */
-  handleRefresh: () => void;
   handleToggleRowSelection: (id: string) => void;
   handleToggleHeaderCheck: () => void;
   handleExpandRow: (row: TRow, e: React.MouseEvent) => void;
@@ -203,7 +199,6 @@ export function useTableOrchestration<TRow extends object, TViewKey extends stri
   const storedPage = useStore(store, (s) => s.page);
   const rowsPerPage = useStore(store, (s) => s.rowsPerPage);
   const density = useStore(store, (s) => s.density);
-  const isRefreshing = useStore(store, (s) => s.isRefreshing);
   const storedSelectedIds = useStore(store, (s) => s.selectedIds);
   const activeView = useStore(store, (s) => s.activeView);
   const columnsMenuOpen = useStore(store, (s) => s.columnsMenuOpen);
@@ -357,7 +352,6 @@ export function useTableOrchestration<TRow extends object, TViewKey extends stri
     handleRemoveSort,
     handleRemoveCustomFilter,
     handleClearAll,
-    handleRefresh,
     handleToggleRowSelection,
     handleToggleHeaderCheck,
     handleExpandRow,
@@ -401,7 +395,6 @@ export function useTableOrchestration<TRow extends object, TViewKey extends stri
     rowsPerPage,
     density,
     setDensity,
-    isRefreshing,
     selectedIds,
     setSelectedIds,
     activeView,
@@ -452,7 +445,6 @@ export function useTableOrchestration<TRow extends object, TViewKey extends stri
     handleRemoveSort,
     handleRemoveCustomFilter,
     handleClearAll,
-    handleRefresh,
     handleToggleRowSelection,
     handleToggleHeaderCheck,
     handleExpandRow,
