@@ -1,5 +1,11 @@
 # @undevy-org/tablewright
 
+## 0.5.0
+
+### Minor Changes
+
+- [#32](https://github.com/undevy-org/tablewright/pull/32) [`7e495bb`](https://github.com/undevy-org/tablewright/commit/7e495bb5aafb6b4cacfafb6416be30c2c94e6755) Thanks [@undevy](https://github.com/undevy)! - Add optional `labels` props and exported `*Labels` types for filter UI components (`ColumnFilterPopover`, `CompoundFilterPopover`, `AppliedStateChips`, `FilterPopoverFooter`, `FilterFormPanel`) so consumers can localize strings without forking components.
+
 ## 0.4.0
 
 ### Minor Changes
