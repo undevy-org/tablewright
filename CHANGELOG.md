@@ -1,5 +1,11 @@
 # @undevy-org/tablewright
 
+## 0.3.0
+
+### Minor Changes
+
+- [#26](https://github.com/undevy-org/tablewright/pull/26) [`e8115df`](https://github.com/undevy-org/tablewright/commit/e8115df30cdc578b98748b329e96aa0c7a70ee2e) Thanks [@undevy](https://github.com/undevy)! - Export `gapColumnId(afterColumnId)`: the id of the gap indicator column that `useTableOrchestration` uses in `extendedColumnMeta` / `extendedWidths`. Use it when defining gap columns instead of rebuilding the `__gap_after_…` string by hand.
+
 ## 0.2.2
 
 ### Patch Changes
