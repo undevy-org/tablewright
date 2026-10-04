@@ -38,16 +38,22 @@ export const Default: Story = {
 
         <div className="mt-5 space-y-4">
           <div>
-            <label className="mb-1.5 block text-[12px] font-medium text-[var(--text-muted-strong)]">
+            <label
+              htmlFor="dialog-default-name"
+              className="mb-1.5 block text-[12px] font-medium text-[var(--text-muted-strong)]"
+            >
               Name
             </label>
-            <Input defaultValue="Jane Cooper" />
+            <Input id="dialog-default-name" defaultValue="Jane Cooper" />
           </div>
           <div>
-            <label className="mb-1.5 block text-[12px] font-medium text-[var(--text-muted-strong)]">
+            <label
+              htmlFor="dialog-default-username"
+              className="mb-1.5 block text-[12px] font-medium text-[var(--text-muted-strong)]"
+            >
               Username
             </label>
-            <Input defaultValue="jcooper" />
+            <Input id="dialog-default-username" defaultValue="jcooper" />
           </div>
         </div>
 

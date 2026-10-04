@@ -22,27 +22,33 @@ Task 6 added roughly 25 new components and two composed pages; `axe` had never r
 
 Re-verified: full 136-story corpus (both themes) re-ran clean after the changes, and re-running `axe` against `pages-merchants--default` / `pages-transactions--default` confirms all three finding types are gone with no new ones introduced.
 
-## Open items
+## Fixed (2026-10-04)
 
 ### 1. Dialog's Default story has unlabelled inputs
 
-`src/components/ui/dialog.stories.tsx:41-50`
+**Fix:** `id` / `htmlFor` pairs on the Default story's Name and Username fields (`dialog.stories.tsx`).
 
-The Name and Username fields have visible `<label>` elements, but no `htmlFor`, and the `<Input>`s have no `id` — so the association exists visually and not programmatically. A screen reader announces two unnamed text fields.
-
-This is a fixture defect, not a component one: the sibling `WithFormFields` story labels its own field correctly.
-
-**Remedy:** add `id` to each `Input` and a matching `htmlFor` to each `label`. Minutes.
+**Verified:** `story-diff --axe` — `label` under axe fixed on `ui-dialog` (with `--interact pages-,ui-dialog`); no new violations.
 
 ### 2. Collapsed sidebar navigation links have no accessible name
 
-`src/components/layout/Sidebar.tsx:120` and `:139-145`
+**Fix:** `aria-label={item.label}` on nav anchors when collapsed (`Sidebar.tsx`); Dashboard fixture `href` set to `/dashboard` (`Sidebar.stories.tsx`).
 
-The label `<span>` is gated behind `showExpanded` (`:120`), so in the collapsed rail each `<a>` contains only an icon. Six links, no text, no `aria-label`, nothing for assistive technology to announce.
+**Verified:** `story-diff --axe` — `link-name` under axe fixed on `layout-sidebar--collapsed`; `a11y-quick-wins.test.tsx` — "gives collapsed sidebar nav links an accessible name".
 
-Related fixture defect: `src/components/layout/Sidebar.stories.tsx:19` gives one item `href: ''`, which renders an anchor pointing at the current document.
+### 5. Two scroll regions are unreachable by keyboard
 
-**Remedy:** pass `aria-label={item.label}` on the anchor when collapsed — the label is already in the nav item, it just is not rendered in that state. Give the Dashboard fixture a real path. Small, component-level.
+**Fix:** `tabIndex={0}` on `DrawerShell` body scroll container and `TableLayout.ScrollArea`.
+
+**Verified:** `story-diff --axe` — `scrollable-region-focusable` under axe fixed on DrawerShell / TableLayout stories; `a11y-quick-wins.test.tsx` — drawer and table layout scroll region tests.
+
+### 6. Avatar `alt` text duplicates the adjacent visible name
+
+**Fix:** `alt=""` when the name is visible beside the image; keep `alt={name}` when collapsed/icon-only (`SidebarUser.tsx`, `SidebarAccountMenu.tsx` trigger + menu header).
+
+**Verified:** `story-diff --axe` — `image-redundant-alt` under axe fixed on SidebarUser / SidebarAccountMenu stories; `a11y-quick-wins.test.tsx` (SidebarUser and SidebarAccountMenu expanded, collapsed, and menu panel cases).
+
+## Open items
 
 ### 3. Popover content is an unnamed dialog
 
@@ -61,22 +67,6 @@ Root cause, not just a location: `SelectTrigger` renders `role="combobox"` on a 
 **Confirmed to recur in the pages port itself**, found while running `axe` against the new pages (Task 7): the merchants view-preset selector, `src/stories/pages/merchants/MerchantsLiveRefactoredScreen.tsx:315` (`<SelectTrigger className="h-9 w-44">`), and its equivalent on the transactions page. Same defect, new call site — the port didn't introduce the bug, it just has more of it.
 
 **Remedy:** same shape as item 3 — needs an API decision on `Select`/`SelectTrigger` (accept an optional `aria-label`/`label` prop, require it or default it), not a per-call-site patch. A per-site `aria-label` would silence axe at these particular triggers but leave every other bare `Select` in the library (and any added later) with the same gap.
-
-### 5. Two scroll regions are unreachable by keyboard
-
-`src/components/data-table/DrawerShell.tsx:61` and `src/components/data-table/TableLayout.tsx:21`
-
-Both are `overflow`-scrolling containers with no `tabindex`, so a keyboard-only user cannot focus them and therefore cannot scroll them. Content below the fold is unreachable without a pointer.
-
-**Remedy:** `tabIndex={0}` on both. Minutes. Consider whether they also want an accessible name, since a focusable region announces better with one.
-
-### 6. Avatar `alt` text duplicates the adjacent visible name
-
-`src/components/layout/SidebarAccountMenu.tsx:62` and `:107`, `src/components/layout/SidebarUser.tsx:38`
-
-Each avatar image uses `alt={name}` while the same name is rendered as visible text beside it, so a screen reader announces it twice.
-
-**Remedy:** the image is decorative in this composition — `alt=""` and let the visible text carry the name. Minutes, but check each of the three call sites: an avatar rendered *without* adjacent text does need its name.
 
 ### 7. Design Tokens page prints light-theme values in dark mode
 

@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { Maximize2, Minimize2, X } from "lucide-react";
 import { Button } from "../ui/button";
 import { cn } from "../../lib/utils";
+import { SCROLL_REGION_TAB_INDEX } from "../../lib/scroll-region-tab-index";
 import { useScrollActivity } from "../../hooks/use-scroll-activity";
 import { DrawerExpandContext } from "../../context/drawer-expand-context";
 
@@ -135,6 +136,7 @@ export function DrawerShell({
   const body = (
     <div
       ref={bodyScrollRef}
+      tabIndex={SCROLL_REGION_TAB_INDEX}
       className="scrollbar-auto-hide min-h-0 flex-1 overflow-y-auto px-6 py-6"
     >
       {children}
