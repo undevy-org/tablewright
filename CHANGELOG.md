@@ -1,5 +1,11 @@
 # @undevy-org/tablewright
 
+## 0.6.1
+
+### Patch Changes
+
+- [#40](https://github.com/undevy-org/tablewright/pull/40) [`e193ff9`](https://github.com/undevy-org/tablewright/commit/e193ff99094443b5803f3508cbe867a9058cd23d) Thanks [@undevy](https://github.com/undevy)! - Revert the text-colour changes that 0.6.0 made to filter popover section labels, the column header menu, sortable headers, the filter chip label and the combobox placeholder (they were not part of the a11y naming change). Contrast will be handled separately.
+
 ## 0.6.0
 
 ### Minor Changes
