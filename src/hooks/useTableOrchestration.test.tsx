@@ -1,10 +1,12 @@
 import type { FormEvent } from "react";
-import { act, renderHook, waitFor } from "@testing-library/react";
+import { act, render, renderHook, waitFor } from "@testing-library/react";
+import { useStore } from "zustand";
 import { describe, expect, it, vi } from "vitest";
 
 import type { ActiveFilter, ColumnFilterConfig, ViewPreset } from "../components/data-table/filter-types";
 import type { ColumnMetaDef } from "../components/data-table/types";
 import { gapColumnId } from "../lib/column-gaps";
+import type { TableOrchestrationStoreApi } from "./table-orchestration-store";
 import { useTableOrchestration } from "./useTableOrchestration";
 
 type FixtureRow = {
@@ -91,6 +93,12 @@ const STABLE_CALLBACK_KEYS = [
 
 const baseConfig = makeConfig();
 
+function StoreSubscriber({ store }: { store: TableOrchestrationStoreApi<ViewKey> }) {
+  useStore(store, (s) => s.selectedRowId);
+  useStore(store, (s) => s.selectedIds);
+  return null;
+}
+
 describe("useTableOrchestration", () => {
   it("filters, searches, sorts, and paginates rows", () => {
     const { result } = renderHook(() => useTableOrchestration(baseConfig));
@@ -145,6 +153,7 @@ describe("useTableOrchestration", () => {
     const errorSpy = vi.spyOn(console, "error").mockImplementation(() => undefined);
 
     const { result } = renderHook(() => useTableOrchestration(baseConfig));
+    render(<StoreSubscriber store={result.current.store} />);
 
     act(() => {
       result.current.handleToggleRowSelection("1");
@@ -166,7 +175,7 @@ describe("useTableOrchestration", () => {
     });
 
     const reactRenderWarnings = errorSpy.mock.calls.filter((args) =>
-      String(args[0]).includes("Cannot update a component while rendering a different component"),
+      String(args[0]).includes("while rendering a different component"),
     );
     expect(reactRenderWarnings).toHaveLength(0);
 
