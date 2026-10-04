@@ -168,7 +168,7 @@ export function Combobox<TValue extends string = string>({
               triggerClassName,
             )}
           >
-            <span className={cn("truncate", !selected && "text-[var(--text-secondary)]")}>
+            <span className={cn("truncate", !selected && "text-[var(--text-tertiary)]")}>
               {selected
                 ? renderSelected
                   ? renderSelected(selected)
