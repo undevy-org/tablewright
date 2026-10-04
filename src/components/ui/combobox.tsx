@@ -213,7 +213,7 @@ export function Combobox<TValue extends string = string>({
                       <div className="flex min-w-0 flex-col">
                         <span className="truncate">{option.label}</span>
                         {option.description && (
-                          <span className="truncate text-[11px] text-[var(--text-secondary)]">
+                          <span className="truncate text-[11px] text-[var(--text-tertiary)]">
                             {option.description}
                           </span>
                         )}

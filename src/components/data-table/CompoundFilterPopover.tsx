@@ -326,7 +326,7 @@ export function CompoundFilterPopover({
       <>
         <div className="flex gap-2">
           <div className="flex-1 space-y-1">
-            <span className="text-[10px] font-semibold uppercase tracking-[0.1em] text-[var(--text-secondary)] block">
+            <span className="text-[10px] font-semibold uppercase tracking-[0.1em] text-[var(--text-tertiary)] block">
               {labels.chipMin}
             </span>
             <Input
@@ -349,7 +349,7 @@ export function CompoundFilterPopover({
             />
           </div>
           <div className="flex-1 space-y-1">
-            <span className="text-[10px] font-semibold uppercase tracking-[0.1em] text-[var(--text-secondary)] block">
+            <span className="text-[10px] font-semibold uppercase tracking-[0.1em] text-[var(--text-tertiary)] block">
               {labels.chipMax}
             </span>
             <Input
@@ -500,7 +500,7 @@ export function CompoundFilterPopover({
 
     return (
       <>
-        <span className="text-[10px] font-semibold uppercase tracking-[0.1em] text-[var(--text-secondary)] block mb-2">
+        <span className="text-[10px] font-semibold uppercase tracking-[0.1em] text-[var(--text-tertiary)] block mb-2">
           {labels.contains}
           {draft.tags.length >= 2 && (
             <span className="ml-1 text-[10px] font-semibold text-[var(--tag-blue-text)] bg-[var(--tag-blue-bg)] rounded px-1 py-0.5 uppercase">

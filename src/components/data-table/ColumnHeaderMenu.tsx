@@ -127,7 +127,7 @@ export function ColumnHeaderMenu({
         {primarySorted === "asc" && <ArrowUp className="h-3 w-3 shrink-0" />}
         {primarySorted === "desc" && <ArrowDown className="h-3 w-3 shrink-0" />}
       </span>
-      <span className="mt-1 inline-flex items-center gap-1 text-[10px] font-medium uppercase tracking-[0.06em] text-[var(--text-secondary)]">
+      <span className="mt-1 inline-flex items-center gap-1 text-[10px] font-medium uppercase tracking-[0.06em] text-[var(--text-tertiary)]">
         {secondaryLabel}
         {secondarySorted === "asc" && <ArrowUp className="h-2.5 w-2.5 shrink-0" />}
         {secondarySorted === "desc" && <ArrowDown className="h-2.5 w-2.5 shrink-0" />}
