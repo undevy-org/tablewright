@@ -66,7 +66,7 @@ export function UpdateStatusDialog({
           <label className="grid gap-2 text-[12px] text-[var(--text-secondary)]">
             <span>Status</span>
             <Select value={status} onValueChange={(value) => setStatus(value as TxStatus)}>
-              <SelectTrigger>
+              <SelectTrigger aria-label="Status">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>

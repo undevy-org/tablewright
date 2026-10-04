@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { Input } from "../ui/input";
 import { Checkbox } from "../ui/checkbox";
 import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
-import { FilterChip } from "./FilterChip";
+import { FilterChipPopoverTrigger } from "./FilterChipPopoverTrigger";
 import { FilterPopoverFooter, type FilterPopoverFooterLabels } from "./FilterPopoverFooter";
 import type {
   ActiveFilter,
@@ -326,7 +326,7 @@ export function CompoundFilterPopover({
       <>
         <div className="flex gap-2">
           <div className="flex-1 space-y-1">
-            <span className="text-[10px] font-semibold uppercase tracking-[0.1em] text-[var(--text-tertiary)] block">
+            <span className="text-[10px] font-semibold uppercase tracking-[0.1em] text-[var(--text-secondary)] block">
               {labels.chipMin}
             </span>
             <Input
@@ -349,7 +349,7 @@ export function CompoundFilterPopover({
             />
           </div>
           <div className="flex-1 space-y-1">
-            <span className="text-[10px] font-semibold uppercase tracking-[0.1em] text-[var(--text-tertiary)] block">
+            <span className="text-[10px] font-semibold uppercase tracking-[0.1em] text-[var(--text-secondary)] block">
               {labels.chipMax}
             </span>
             <Input
@@ -500,7 +500,7 @@ export function CompoundFilterPopover({
 
     return (
       <>
-        <span className="text-[10px] font-semibold uppercase tracking-[0.1em] text-[var(--text-tertiary)] block mb-2">
+        <span className="text-[10px] font-semibold uppercase tracking-[0.1em] text-[var(--text-secondary)] block mb-2">
           {labels.contains}
           {draft.tags.length >= 2 && (
             <span className="ml-1 text-[10px] font-semibold text-[var(--tag-blue-text)] bg-[var(--tag-blue-bg)] rounded px-1 py-0.5 uppercase">
@@ -613,7 +613,7 @@ export function CompoundFilterPopover({
   return (
     <Popover open={isOpen} onOpenChange={handleOpenChange}>
       <PopoverTrigger asChild>
-        <FilterChip
+        <FilterChipPopoverTrigger
           label={config.label}
           value={getDisplayValue()}
           onRemove={onRemove}

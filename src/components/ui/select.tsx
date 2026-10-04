@@ -8,6 +8,11 @@ import { usePortalContainer } from "../../context/portal-container-context";
 
 const Select = SelectPrimitive.Root;
 
+/**
+ * Select field control. Give the trigger an accessible name with `aria-label`, `aria-labelledby`,
+ * or a `<label htmlFor>` that points at the trigger's `id` — the trigger shows the selected value,
+ * not the field name.
+ */
 const SelectTrigger = React.forwardRef<
   React.ElementRef<typeof SelectPrimitive.Trigger>,
   React.ComponentPropsWithoutRef<typeof SelectPrimitive.Trigger>

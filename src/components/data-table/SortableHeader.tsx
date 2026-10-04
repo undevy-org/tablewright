@@ -80,7 +80,7 @@ export function SortableHeader({
           className="group/secondary inline-flex cursor-pointer select-none items-center gap-1 text-left"
           onClick={onSecondaryClick}
         >
-          <span className="text-[10px] font-medium uppercase tracking-[0.06em] text-[var(--text-tertiary)]">
+          <span className="text-[10px] font-medium uppercase tracking-[0.06em] text-[var(--text-secondary)]">
             {secondaryLabel}
           </span>
           <SortIcon
@@ -106,7 +106,7 @@ export function SortableHeader({
           <span className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--text-primary)]">
             {resolvedPrimaryLabel}
           </span>
-          <span className="mt-1 text-[10px] font-medium uppercase tracking-[0.06em] text-[var(--text-tertiary)]">
+          <span className="mt-1 text-[10px] font-medium uppercase tracking-[0.06em] text-[var(--text-secondary)]">
             {secondaryLabel}
           </span>
         </span>

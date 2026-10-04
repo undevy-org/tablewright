@@ -13,7 +13,7 @@ export function ViewSelectorBar({ views, activeView, onViewChange }: ViewSelecto
     <div className="flex items-center gap-2 px-4 py-3">
       <span className="text-[12px] font-medium text-[var(--text-tertiary)]">View</span>
       <Select value={activeView} onValueChange={(v) => onViewChange(v as MerchantViewKey)}>
-        <SelectTrigger className="h-8 w-48">
+        <SelectTrigger aria-label="View" className="h-8 w-48">
           <SelectValue />
         </SelectTrigger>
         <SelectContent>

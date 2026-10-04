@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { Input } from "../ui/input";
 import { Checkbox } from "../ui/checkbox";
 import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
-import { FilterChip } from "./FilterChip";
+import { FilterChipPopoverTrigger } from "./FilterChipPopoverTrigger";
 import { FilterPopoverFooter, type FilterPopoverFooterLabels } from "./FilterPopoverFooter";
 import type {
   ActiveFilter,
@@ -309,7 +309,7 @@ export function ColumnFilterPopover({
 
         return (
           <div className="p-3 w-64 space-y-3">
-            <span className="text-xs font-medium text-[var(--text-tertiary)] uppercase tracking-wider block">
+            <span className="text-xs font-medium text-[var(--text-secondary)] uppercase tracking-wider block">
               {labels.contains}
               {draftTags.length >= 2 && (
                 <span className="ml-1 text-[10px] font-semibold text-[var(--tag-blue-text)] bg-[var(--tag-blue-bg)] rounded px-1 py-0.5 uppercase">
@@ -455,7 +455,7 @@ export function ColumnFilterPopover({
         return (
           <div className="p-3 w-64 space-y-4">
             <div className="space-y-2">
-              <span className="text-xs font-medium text-[var(--text-tertiary)] uppercase tracking-wider block">
+              <span className="text-xs font-medium text-[var(--text-secondary)] uppercase tracking-wider block">
                 {labels.chipFrom}
               </span>
               <Input
@@ -465,7 +465,7 @@ export function ColumnFilterPopover({
               />
             </div>
             <div className="space-y-2">
-              <span className="text-xs font-medium text-[var(--text-tertiary)] uppercase tracking-wider block">
+              <span className="text-xs font-medium text-[var(--text-secondary)] uppercase tracking-wider block">
                 {labels.chipTo}
               </span>
               <Input
@@ -552,7 +552,7 @@ export function ColumnFilterPopover({
         return (
           <div className="p-3 w-64 space-y-4">
             <div className="space-y-2">
-              <span className="text-xs font-medium text-[var(--text-tertiary)] uppercase tracking-wider block">
+              <span className="text-xs font-medium text-[var(--text-secondary)] uppercase tracking-wider block">
                 {labels.chipMin}
               </span>
               <Input
@@ -570,7 +570,7 @@ export function ColumnFilterPopover({
               />
             </div>
             <div className="space-y-2">
-              <span className="text-xs font-medium text-[var(--text-tertiary)] uppercase tracking-wider block">
+              <span className="text-xs font-medium text-[var(--text-secondary)] uppercase tracking-wider block">
                 {labels.chipMax}
               </span>
               <Input
@@ -647,7 +647,7 @@ export function ColumnFilterPopover({
   return (
     <Popover open={isOpen} onOpenChange={handleOpenChange}>
       <PopoverTrigger asChild>
-        <FilterChip
+        <FilterChipPopoverTrigger
           label={config.label}
           value={getDisplayValue()}
           onRemove={onRemove}

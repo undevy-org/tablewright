@@ -16,6 +16,8 @@ interface RowActionsMenuProps {
   align?: "start" | "center" | "end";
   triggerClassName?: string;
   contentClassName?: string;
+  /** Accessible name for the icon trigger (e.g. "Actions for TX-123"). */
+  triggerAriaLabel?: string;
 }
 
 export function RowActionsMenu({
@@ -24,6 +26,7 @@ export function RowActionsMenu({
   align = "end",
   triggerClassName,
   contentClassName,
+  triggerAriaLabel = "Row actions",
 }: RowActionsMenuProps) {
   const resolvedSections =
     sections && sections.length > 0 ? sections : actions.length > 0 ? [{ label: "", actions }] : [];
@@ -35,7 +38,7 @@ export function RowActionsMenu({
         <Button
           variant="ghost"
           size="icon"
-          aria-label="Row actions"
+          aria-label={triggerAriaLabel}
           className={cn(
             "h-7 w-7 rounded-sm p-0 opacity-0 transition-opacity group-hover:opacity-100 data-[state=open]:opacity-100",
             triggerClassName,
