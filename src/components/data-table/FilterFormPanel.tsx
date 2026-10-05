@@ -275,15 +275,16 @@ function Field({ config, value, onChange, fieldId, hiddenSubSet, labels }: Field
   }
 
   if (config.type === "enum") {
-    const selected = Array.isArray(value) ? ((value[0] as string) ?? "") : "";
+    const comboboxValue =
+      Array.isArray(value) && value.length > 0 ? (value[0] as string) : null;
     // Combobox (cmdk) вместо Radix Select: строка поиска фильтрует опции по
     // label+value подстрокой. Повторный клик по выбранному (clearable) = «Any».
     return (
       <label className="flex min-w-0 flex-col gap-1.5">
         <span className="text-[11px] font-medium text-[var(--text-secondary)]">{config.label}</span>
         <Combobox
-          value={selected || null}
-          onChange={(v) => onChange(v ? [v] : undefined)}
+          value={comboboxValue}
+          onChange={(v) => onChange(v === null ? undefined : [v])}
           options={config.options ?? []}
           placeholder={labels.anyPlaceholder}
           triggerAriaLabel={config.label}
@@ -398,12 +399,13 @@ function Field({ config, value, onChange, fieldId, hiddenSubSet, labels }: Field
               );
             }
             if (sub.type === "enum") {
-              const selected = Array.isArray(subValue) ? ((subValue[0] as string) ?? "") : "";
+              const comboboxValue =
+                Array.isArray(subValue) && subValue.length > 0 ? (subValue[0] as string) : null;
               return (
                 <Combobox
                   key={sub.key}
-                  value={selected || null}
-                  onChange={(v) => updateSub(sub.key, v ? [v] : undefined)}
+                  value={comboboxValue}
+                  onChange={(v) => updateSub(sub.key, v === null ? undefined : [v])}
                   options={sub.options ?? []}
                   placeholder={sub.label}
                   triggerAriaLabel={sub.label}
