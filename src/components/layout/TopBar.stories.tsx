@@ -100,7 +100,7 @@ export const NarrowWithTruncation: Story = {
     <div className="w-[320px] overflow-hidden rounded-2xl border border-[var(--border-subtle)] [box-shadow:var(--shadow-card)]">
       <TopBar
         actions={
-          <Button size="sm" variant="secondary">
+          <Button size="sm" variant="secondary" aria-label="Add">
             <Plus className="size-4" />
           </Button>
         }
