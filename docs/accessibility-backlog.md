@@ -30,7 +30,7 @@ Re-verified: full 136-story corpus (both themes) re-ran clean after the changes,
 
 **Measured (token pairs in `tokens.test.ts`):** light minimum 4.62:1 (`--text-utility` on `--bg-tertiary`); dark minimum 4.61:1 (`--text-tertiary` on `--bg-tertiary`).
 
-**Verified:** `tokens.css text on surface contrast` (`src/css/tokens.test.ts`); `story-diff --axe` (see PR evidence for axe counts).
+**Verified:** `tokens.css text on surface contrast` (`src/css/tokens.test.ts`); `story-diff --axe` — `color-contrast` 936 → 0, total axe violations 984 → 48 (other rules unchanged).
 
 ## Fixed (2026-10-04)
 
