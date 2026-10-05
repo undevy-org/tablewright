@@ -1,5 +1,11 @@
 # @undevy-org/tablewright
 
+## 0.7.2
+
+### Patch Changes
+
+- [#47](https://github.com/undevy-org/tablewright/pull/47) [`9b50da8`](https://github.com/undevy-org/tablewright/commit/9b50da8acbf073139127181aba7d4be6cebfaeef) Thanks [@undevy](https://github.com/undevy)! - Fix FilterFormPanel enum fields treating empty-string option values as no selection.
+
 ## 0.7.1
 
 ### Patch Changes
