@@ -11,17 +11,25 @@ import type {
   ActiveFilter,
   ActiveFilterValue,
   ColumnFilterConfig,
-  CompoundFilterValue,
   DateRangeValue,
   NumberRangeValue,
 } from "./filter-types";
+import {
+  formatEnumMultiSummary,
+  formatTextMultiSummary,
+  enumComboboxSelection,
+  mergeCompoundSubDraft,
+  patchFieldState,
+  recordFilterFieldTouch,
+  resolveFieldApplyChange,
+  singleStringDraftValue,
+} from "./filter-form-panel-apply";
 import {
   getCompoundValue,
   getDateRange,
   getNumberRange,
   getStringArray,
   isFilterValueEmpty,
-  isMultiStringFilterValue,
 } from "./filter-values";
 import { hasActiveManagedFilters, type ManagedFilterChange } from "./managed-filters";
 
@@ -161,9 +169,8 @@ export function FilterFormPanel({
 
   const setField = useCallback(
     (id: string, value: ActiveFilterValue | undefined, compoundSubKey?: string) => {
-      touchedRef.current.add(id);
-      if (compoundSubKey) touchedRef.current.add(compoundSubTouchKey(id, compoundSubKey));
-      setState((prev) => ({ ...prev, [id]: value }));
+      recordFilterFieldTouch(touchedRef.current, id, compoundSubKey);
+      setState((prev) => patchFieldState(prev, id, value));
     },
     [],
   );
@@ -174,8 +181,7 @@ export function FilterFormPanel({
     const touched = touchedRef.current;
     const changes: ManagedFilterChange[] = [];
     for (const id of renderableFields) {
-      const config = filterConfigs[id];
-      if (!config) continue;
+      const config = filterConfigs[id]!;
       const committed = committedById.get(id);
       const draft = state[id];
       const resolution = resolveFieldApplyChange(
@@ -298,7 +304,7 @@ function Field({ config, value, onChange, fieldId, hiddenSubSet, labels }: Field
         />
       );
     }
-    const text = strings[0] ?? "";
+    const text = singleStringDraftValue(strings);
     return (
       <label className="flex min-w-0 flex-col gap-1.5">
         <span className="text-[11px] font-medium text-[var(--text-secondary)]">{config.label}</span>
@@ -328,7 +334,7 @@ function Field({ config, value, onChange, fieldId, hiddenSubSet, labels }: Field
         />
       );
     }
-    const comboboxValue = strings.length > 0 ? strings[0] : null;
+    const comboboxValue = enumComboboxSelection(strings);
     // Combobox (cmdk) вместо Radix Select: строка поиска фильтрует опции по
     // label+value подстрокой. Повторный клик по выбранному (clearable) = «Any».
     return (
@@ -413,11 +419,7 @@ function Field({ config, value, onChange, fieldId, hiddenSubSet, labels }: Field
     const compound = getCompoundValue(value);
 
     const updateSub = (subKey: string, next: ActiveFilterValue | undefined) => {
-      const rest = { ...compound };
-      delete rest[subKey];
-      const merged: CompoundFilterValue =
-        next === undefined || isFilterValueEmpty(next) ? rest : { ...rest, [subKey]: next };
-      onChange(Object.keys(merged).length === 0 ? undefined : merged, subKey);
+      onChange(mergeCompoundSubDraft(compound, subKey, next), subKey);
     };
 
     const visibleSubs = (config.subFilters ?? []).filter(
@@ -449,7 +451,7 @@ function Field({ config, value, onChange, fieldId, hiddenSubSet, labels }: Field
                   />
                 );
               }
-              const text = strings[0] ?? "";
+              const text = singleStringDraftValue(strings);
               return (
                 <Input
                   key={sub.key}
@@ -479,7 +481,7 @@ function Field({ config, value, onChange, fieldId, hiddenSubSet, labels }: Field
                   />
                 );
               }
-              const comboboxValue = strings.length > 0 ? strings[0] : null;
+              const comboboxValue = enumComboboxSelection(strings);
               return (
                 <Combobox
                   key={sub.key}
@@ -536,116 +538,6 @@ function Field({ config, value, onChange, fieldId, hiddenSubSet, labels }: Field
 
   // No fall-through expected — every `ColumnFilterType` is handled above.
   return null;
-}
-
-function compoundSubTouchKey(fieldId: string, subKey: string): string {
-  return `${fieldId}:${subKey}`;
-}
-
-function formatTextMultiSummary(values: string[], labels: FilterFormPanelLabels): string {
-  if (values.length === 2) {
-    const joined = values.join(", ");
-    return joined.length > 24 ? labels.valuesCount(values.length) : joined;
-  }
-  return labels.valuesCount(values.length);
-}
-
-function formatEnumMultiSummary(
-  values: string[],
-  options: { label: string; value: string }[] | undefined,
-  labels: FilterFormPanelLabels,
-): string {
-  if (values.length === 2) {
-    const parts = values.map((v) => options?.find((o) => o.value === v)?.label ?? v);
-    const joined = parts.join(", ");
-    return joined.length > 24 ? labels.selectedCount(values.length) : joined;
-  }
-  return labels.selectedCount(values.length);
-}
-
-function mergeCompoundValueForApply(
-  config: ColumnFilterConfig,
-  fieldId: string,
-  committed: ActiveFilterValue | undefined,
-  draft: ActiveFilterValue | undefined,
-  touched: Set<string>,
-  hiddenSubSet: Set<string>,
-): ActiveFilterValue | undefined {
-  const committedCompound = getCompoundValue(committed);
-  const draftCompound = getCompoundValue(draft);
-  const merged: CompoundFilterValue = {};
-
-  for (const sub of config.subFilters ?? []) {
-    if (hiddenSubSet.has(compoundSubTouchKey(fieldId, sub.key))) continue;
-    const touchKey = compoundSubTouchKey(fieldId, sub.key);
-    const subCommitted = committedCompound[sub.key];
-    const subDraft = draftCompound[sub.key];
-
-    if (
-      (sub.type === "text" || sub.type === "enum") &&
-      isMultiStringFilterValue(subCommitted) &&
-      !touched.has(touchKey)
-    ) {
-      if (subCommitted !== undefined && !isFilterValueEmpty(subCommitted)) {
-        merged[sub.key] = subCommitted;
-      }
-      continue;
-    }
-
-    if (subDraft === undefined || isFilterValueEmpty(subDraft)) continue;
-    merged[sub.key] = subDraft;
-  }
-
-  return Object.keys(merged).length === 0 ? undefined : merged;
-}
-
-type ApplyResolution =
-  | { kind: "skip" }
-  | { kind: "remove" }
-  | { kind: "set"; value: ActiveFilterValue };
-
-function resolveFieldApplyChange(
-  config: ColumnFilterConfig,
-  fieldId: string,
-  committed: ActiveFilterValue | undefined,
-  draft: ActiveFilterValue | undefined,
-  touched: Set<string>,
-  hiddenSubSet: Set<string>,
-  isActive: boolean,
-): ApplyResolution {
-  if (config.type === "text" || config.type === "enum") {
-    if (isMultiStringFilterValue(committed) && !touched.has(fieldId)) {
-      return { kind: "skip" };
-    }
-    if (draft === undefined || isFilterValueEmpty(draft)) {
-      return isActive ? { kind: "remove" } : { kind: "skip" };
-    }
-    return { kind: "set", value: draft };
-  }
-
-  if (config.type === "date" || config.type === "number-range") {
-    if (draft === undefined || isFilterValueEmpty(draft)) {
-      return isActive ? { kind: "remove" } : { kind: "skip" };
-    }
-    return { kind: "set", value: draft };
-  }
-
-  if (config.type === "compound") {
-    const merged = mergeCompoundValueForApply(
-      config,
-      fieldId,
-      committed,
-      draft,
-      touched,
-      hiddenSubSet,
-    );
-    if (merged === undefined || isFilterValueEmpty(merged)) {
-      return isActive ? { kind: "remove" } : { kind: "skip" };
-    }
-    return { kind: "set", value: merged };
-  }
-
-  return { kind: "skip" };
 }
 
 interface MultiValueStringSummaryProps {

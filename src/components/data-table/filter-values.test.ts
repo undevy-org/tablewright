@@ -44,6 +44,7 @@ describe("isMultiStringFilterValue", () => {
     expect(isMultiStringFilterValue(["a", "b"])).toBe(true);
     expect(isMultiStringFilterValue(["a"])).toBe(false);
     expect(isMultiStringFilterValue([])).toBe(false);
+    expect(isMultiStringFilterValue({ from: "2024-01-01" })).toBe(false);
   });
 });
 
@@ -63,6 +64,11 @@ describe("getDateRange", () => {
     });
     expect(getDateRange({ from: 1, to: true } as unknown as ActiveFilterValue)).toEqual({});
     expect(getDateRange(["x"])).toEqual({});
+  });
+
+  it("returns empty range for null and non-object values", () => {
+    expect(getDateRange(null as unknown as ActiveFilterValue)).toEqual({});
+    expect(getDateRange("2024-01-01" as unknown as ActiveFilterValue)).toEqual({});
   });
 });
 
