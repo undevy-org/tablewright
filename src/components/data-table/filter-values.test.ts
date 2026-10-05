@@ -6,6 +6,7 @@ import {
   getDateRange,
   getNumberRange,
   getStringArray,
+  isMultiStringFilterValue,
   isFilterValueEmpty,
 } from "./filter-values";
 
@@ -35,6 +36,14 @@ describe("isFilterValueEmpty", () => {
     expect(isFilterValueEmpty({ sub: ["x"] })).toBe(false);
     expect(isFilterValueEmpty({ a: { b: [] } })).toBe(true);
     expect(isFilterValueEmpty({ a: { b: [""] } })).toBe(false);
+  });
+});
+
+describe("isMultiStringFilterValue", () => {
+  it("is true only when more than one string is selected", () => {
+    expect(isMultiStringFilterValue(["a", "b"])).toBe(true);
+    expect(isMultiStringFilterValue(["a"])).toBe(false);
+    expect(isMultiStringFilterValue([])).toBe(false);
   });
 });
 

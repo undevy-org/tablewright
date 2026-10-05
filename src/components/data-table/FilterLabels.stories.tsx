@@ -68,6 +68,11 @@ const formPanelLabelsRu = {
   compoundSubRangeToAriaLabel: (subLabel: string) => `${subLabel} — по`,
   compoundSubRangeFromPlaceholder: (subLabel: string) => `${subLabel} от`,
   compoundSubRangeToPlaceholder: (subLabel: string) => `${subLabel} до`,
+  multiValueFormHint:
+    "Несколько значений — редактируйте в чипах или попапе фильтра колонки над таблицей.",
+  valuesCount: (n: number) => `${n} знач.`,
+  selectedCount: (n: number) => `${n} выбрано`,
+  clearFieldForSingleEdit: "Сбросить, чтобы ввести одно значение",
 };
 
 const filterConfigs: Record<string, ColumnFilterConfig> = {

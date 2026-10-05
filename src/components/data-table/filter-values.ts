@@ -20,6 +20,11 @@ export function getStringArray(value: ActiveFilterValue | undefined): string[] {
   return Array.isArray(value) ? value : [];
 }
 
+/** True when a text/enum value selects more than one string (popover/chip multi-select). */
+export function isMultiStringFilterValue(value: ActiveFilterValue | undefined): boolean {
+  return getStringArray(value).length > 1;
+}
+
 /** Read a date filter value. Non-string bounds are dropped. */
 export function getDateRange(value: ActiveFilterValue | undefined): DateRangeValue {
   const range: DateRangeValue = {};
