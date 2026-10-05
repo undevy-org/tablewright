@@ -1,5 +1,11 @@
 # @undevy-org/tablewright
 
+## 0.7.3
+
+### Patch Changes
+
+- [#49](https://github.com/undevy-org/tablewright/pull/49) [`f0d6fa0`](https://github.com/undevy-org/tablewright/commit/f0d6fa02162bc8312ed6aee471dd0b539622b4d5) Thanks [@undevy](https://github.com/undevy)! - Guard `FilterFormPanel` against silently truncating multi-value text and enum filters on Apply; show a read-only summary and require clearing before single-value edit.
+
 ## 0.7.2
 
 ### Patch Changes
