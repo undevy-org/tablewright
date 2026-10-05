@@ -6,6 +6,7 @@ import {
   getDateRange,
   getNumberRange,
   getStringArray,
+  isMultiStringFilterValue,
   isFilterValueEmpty,
 } from "./filter-values";
 
@@ -38,6 +39,15 @@ describe("isFilterValueEmpty", () => {
   });
 });
 
+describe("isMultiStringFilterValue", () => {
+  it("is true only when more than one string is selected", () => {
+    expect(isMultiStringFilterValue(["a", "b"])).toBe(true);
+    expect(isMultiStringFilterValue(["a"])).toBe(false);
+    expect(isMultiStringFilterValue([])).toBe(false);
+    expect(isMultiStringFilterValue({ from: "2024-01-01" })).toBe(false);
+  });
+});
+
 describe("getStringArray", () => {
   it("returns arrays as-is and non-arrays as []", () => {
     expect(getStringArray(["a"])).toEqual(["a"]);
@@ -54,6 +64,11 @@ describe("getDateRange", () => {
     });
     expect(getDateRange({ from: 1, to: true } as unknown as ActiveFilterValue)).toEqual({});
     expect(getDateRange(["x"])).toEqual({});
+  });
+
+  it("returns empty range for null and non-object values", () => {
+    expect(getDateRange(null as unknown as ActiveFilterValue)).toEqual({});
+    expect(getDateRange("2024-01-01" as unknown as ActiveFilterValue)).toEqual({});
   });
 });
 

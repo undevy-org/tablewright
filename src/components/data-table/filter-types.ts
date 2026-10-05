@@ -24,6 +24,14 @@ export type NumberRangeValue = { from?: number; to?: number };
 /** Compound filter value: sub-filter `key` → that sub-filter's value. */
 export type CompoundFilterValue = { [key: string]: ActiveFilterValue };
 
+/**
+ * Stored filter payload for one column. Text and enum filters are usually `string[]`
+ * (one element for a single selection; multiple for popover/chip multi-select).
+ *
+ * `FilterFormPanel` edits at most one string per text/enum field (and per compound
+ * sub-filter of those types). Multi-value text/enum filters are edited via column
+ * filter chips and `ColumnFilterPopover`, not the form panel.
+ */
 export type ActiveFilterValue =
   | string
   | string[]

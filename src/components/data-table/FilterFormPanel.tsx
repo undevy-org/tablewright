@@ -11,14 +11,24 @@ import type {
   ActiveFilter,
   ActiveFilterValue,
   ColumnFilterConfig,
-  CompoundFilterValue,
   DateRangeValue,
   NumberRangeValue,
 } from "./filter-types";
 import {
+  formatEnumMultiSummary,
+  formatTextMultiSummary,
+  enumComboboxSelection,
+  mergeCompoundSubDraft,
+  patchFieldState,
+  recordFilterFieldTouch,
+  resolveFieldApplyChange,
+  singleStringDraftValue,
+} from "./filter-form-panel-apply";
+import {
   getCompoundValue,
   getDateRange,
   getNumberRange,
+  getStringArray,
   isFilterValueEmpty,
 } from "./filter-values";
 import { hasActiveManagedFilters, type ManagedFilterChange } from "./managed-filters";
@@ -37,6 +47,12 @@ export interface FilterFormPanelLabels {
   compoundSubRangeToAriaLabel: (subLabel: string) => string;
   compoundSubRangeFromPlaceholder: (subLabel: string) => string;
   compoundSubRangeToPlaceholder: (subLabel: string) => string;
+  /** Shown under read-only multi-value text fields in the form panel. */
+  multiValueFormHint: string;
+  valuesCount: (count: number) => string;
+  selectedCount: (count: number) => string;
+  /** Clears a multi-value field so the user can enter a single value. */
+  clearFieldForSingleEdit: string;
 }
 
 const DEFAULT_LABELS: FilterFormPanelLabels = {
@@ -53,6 +69,11 @@ const DEFAULT_LABELS: FilterFormPanelLabels = {
   compoundSubRangeToAriaLabel: (subLabel) => `${subLabel} — to`,
   compoundSubRangeFromPlaceholder: (subLabel) => `${subLabel} from`,
   compoundSubRangeToPlaceholder: (subLabel) => `${subLabel} to`,
+  multiValueFormHint:
+    "Multiple values — edit using the column filter chips or popover above the table.",
+  valuesCount: (count) => `${count} values`,
+  selectedCount: (count) => `${count} selected`,
+  clearFieldForSingleEdit: "Clear to edit one value",
 };
 
 export interface FilterFormPanelProps {
@@ -146,25 +167,39 @@ export function FilterFormPanel({
     });
   }, [filters, renderableFields]);
 
-  const setField = useCallback((id: string, value: ActiveFilterValue | undefined) => {
-    touchedRef.current.add(id);
-    setState((prev) => ({ ...prev, [id]: value }));
-  }, []);
+  const setField = useCallback(
+    (id: string, value: ActiveFilterValue | undefined, compoundSubKey?: string) => {
+      recordFilterFieldTouch(touchedRef.current, id, compoundSubKey);
+      setState((prev) => patchFieldState(prev, id, value));
+    },
+    [],
+  );
 
   const handleApply = useCallback(() => {
     const activeIds = new Set(filters.map((f) => f.columnId));
+    const committedById = new Map(filters.map((f) => [f.columnId, f.value] as const));
+    const touched = touchedRef.current;
     const changes: ManagedFilterChange[] = [];
     for (const id of renderableFields) {
-      const value = state[id];
-      if (value === undefined || isFilterValueEmpty(value)) {
-        if (activeIds.has(id)) changes.push({ columnId: id, action: "remove" });
-      } else {
-        changes.push({ columnId: id, action: "set", value });
-      }
+      const config = filterConfigs[id]!;
+      const committed = committedById.get(id);
+      const draft = state[id];
+      const resolution = resolveFieldApplyChange(
+        config,
+        id,
+        committed,
+        draft,
+        touched,
+        hiddenSubSet,
+        activeIds.has(id),
+      );
+      if (resolution.kind === "skip") continue;
+      if (resolution.kind === "remove") changes.push({ columnId: id, action: "remove" });
+      else changes.push({ columnId: id, action: "set", value: resolution.value });
     }
     onApply(changes);
     touchedRef.current.clear();
-  }, [filters, onApply, renderableFields, state]);
+  }, [filterConfigs, filters, hiddenSubSet, onApply, renderableFields, state]);
 
   const handleClear = useCallback(() => {
     setState(deriveInitialState(renderableFields, []));
@@ -217,7 +252,7 @@ export function FilterFormPanel({
               key={fieldId}
               config={config}
               value={state[fieldId]}
-              onChange={(v) => setField(fieldId, v)}
+              onChange={(v, compoundSubKey) => setField(fieldId, v, compoundSubKey)}
               fieldId={fieldId}
               hiddenSubSet={hiddenSubSet}
               labels={labels}
@@ -249,7 +284,7 @@ export function FilterFormPanel({
 interface FieldProps {
   config: ColumnFilterConfig;
   value: ActiveFilterValue | undefined;
-  onChange: (next: ActiveFilterValue | undefined) => void;
+  onChange: (next: ActiveFilterValue | undefined, compoundSubKey?: string) => void;
   fieldId: string;
   hiddenSubSet: Set<string>;
   labels: FilterFormPanelLabels;
@@ -257,7 +292,19 @@ interface FieldProps {
 
 function Field({ config, value, onChange, fieldId, hiddenSubSet, labels }: FieldProps) {
   if (config.type === "text") {
-    const text = Array.isArray(value) ? ((value[0] as string) ?? "") : "";
+    const strings = getStringArray(value);
+    if (strings.length > 1) {
+      return (
+        <MultiValueStringSummary
+          label={config.label}
+          summary={formatTextMultiSummary(strings, labels)}
+          hint={labels.multiValueFormHint}
+          clearLabel={labels.clearFieldForSingleEdit}
+          onClearForEdit={() => onChange(undefined)}
+        />
+      );
+    }
+    const text = singleStringDraftValue(strings);
     return (
       <label className="flex min-w-0 flex-col gap-1.5">
         <span className="text-[11px] font-medium text-[var(--text-secondary)]">{config.label}</span>
@@ -275,8 +322,19 @@ function Field({ config, value, onChange, fieldId, hiddenSubSet, labels }: Field
   }
 
   if (config.type === "enum") {
-    const comboboxValue =
-      Array.isArray(value) && value.length > 0 ? (value[0] as string) : null;
+    const strings = getStringArray(value);
+    if (strings.length > 1) {
+      return (
+        <MultiValueStringSummary
+          label={config.label}
+          summary={formatEnumMultiSummary(strings, config.options, labels)}
+          hint={labels.multiValueFormHint}
+          clearLabel={labels.clearFieldForSingleEdit}
+          onClearForEdit={() => onChange(undefined)}
+        />
+      );
+    }
+    const comboboxValue = enumComboboxSelection(strings);
     // Combobox (cmdk) вместо Radix Select: строка поиска фильтрует опции по
     // label+value подстрокой. Повторный клик по выбранному (clearable) = «Any».
     return (
@@ -361,11 +419,7 @@ function Field({ config, value, onChange, fieldId, hiddenSubSet, labels }: Field
     const compound = getCompoundValue(value);
 
     const updateSub = (subKey: string, next: ActiveFilterValue | undefined) => {
-      const rest = { ...compound };
-      delete rest[subKey];
-      const merged: CompoundFilterValue =
-        next === undefined || isFilterValueEmpty(next) ? rest : { ...rest, [subKey]: next };
-      onChange(Object.keys(merged).length === 0 ? undefined : merged);
+      onChange(mergeCompoundSubDraft(compound, subKey, next), subKey);
     };
 
     const visibleSubs = (config.subFilters ?? []).filter(
@@ -383,7 +437,21 @@ function Field({ config, value, onChange, fieldId, hiddenSubSet, labels }: Field
           {visibleSubs.map((sub) => {
             const subValue = compound[sub.key];
             if (sub.type === "text") {
-              const text = Array.isArray(subValue) ? ((subValue[0] as string) ?? "") : "";
+              const strings = getStringArray(subValue);
+              if (strings.length > 1) {
+                return (
+                  <MultiValueStringSummary
+                    key={sub.key}
+                    label={sub.label}
+                    summary={formatTextMultiSummary(strings, labels)}
+                    hint={labels.multiValueFormHint}
+                    clearLabel={labels.clearFieldForSingleEdit}
+                    onClearForEdit={() => updateSub(sub.key, undefined)}
+                    compact
+                  />
+                );
+              }
+              const text = singleStringDraftValue(strings);
               return (
                 <Input
                   key={sub.key}
@@ -399,8 +467,21 @@ function Field({ config, value, onChange, fieldId, hiddenSubSet, labels }: Field
               );
             }
             if (sub.type === "enum") {
-              const comboboxValue =
-                Array.isArray(subValue) && subValue.length > 0 ? (subValue[0] as string) : null;
+              const strings = getStringArray(subValue);
+              if (strings.length > 1) {
+                return (
+                  <MultiValueStringSummary
+                    key={sub.key}
+                    label={sub.label}
+                    summary={formatEnumMultiSummary(strings, sub.options, labels)}
+                    hint={labels.multiValueFormHint}
+                    clearLabel={labels.clearFieldForSingleEdit}
+                    onClearForEdit={() => updateSub(sub.key, undefined)}
+                    compact
+                  />
+                );
+              }
+              const comboboxValue = enumComboboxSelection(strings);
               return (
                 <Combobox
                   key={sub.key}
@@ -457,4 +538,39 @@ function Field({ config, value, onChange, fieldId, hiddenSubSet, labels }: Field
 
   // No fall-through expected — every `ColumnFilterType` is handled above.
   return null;
+}
+
+interface MultiValueStringSummaryProps {
+  label: string;
+  summary: string;
+  hint: string;
+  clearLabel: string;
+  onClearForEdit: () => void;
+  compact?: boolean;
+}
+
+function MultiValueStringSummary({
+  label,
+  summary,
+  hint,
+  clearLabel,
+  onClearForEdit,
+  compact,
+}: MultiValueStringSummaryProps) {
+  return (
+    <div className={cn("flex min-w-0 flex-col gap-1.5", compact && "col-span-full")}>
+      <span className="text-[11px] font-medium text-[var(--text-secondary)]">{label}</span>
+      <p className="text-[12px] text-[var(--text-primary)]">{summary}</p>
+      <p className="text-[11px] leading-snug text-[var(--text-secondary)]">{hint}</p>
+      <Button
+        type="button"
+        variant="secondary"
+        size="sm"
+        className="h-9 self-start"
+        onClick={onClearForEdit}
+      >
+        {clearLabel}
+      </Button>
+    </div>
+  );
 }
