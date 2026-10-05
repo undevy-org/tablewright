@@ -70,13 +70,15 @@ Re-verified: full 136-story corpus (both themes) re-ran clean after the changes,
 
 **Verified:** `story-diff --axe` — Select-caused `button-name` under axe fixed (with `--interact` covering page, `ui-select`, and datatable footer/shell stories); `TableFooter.test.tsx` — 'names the rows-per-page select "Rows per page"'.
 
-## Open items
+## Fixed (2026-10-05)
 
 ### 11. TopBar narrow story icon button has no accessible name
 
-`src/components/layout/TopBar.stories.tsx` — `NarrowWithTruncation`: the `actions` slot renders an icon-only `<Button>` (Plus glyph) with no `aria-label`, so axe reports `button-name`.
+**Fix:** `aria-label="Add"` on the icon-only action button in `NarrowWithTruncation` (`TopBar.stories.tsx`).
 
-**Remedy:** add an `aria-label` on that story button (e.g. "Add") or pass visible action text; out of scope for the popover/select naming work.
+**Verified:** `story-diff --axe` — `button-name` under axe fixed on `layout-topbar--narrow-with-truncation`; `topbar-narrow-a11y.test.tsx` — "names the icon-only action in NarrowWithTruncation".
+
+## Open items
 
 ### 7. Design Tokens page prints light-theme values in dark mode
 
