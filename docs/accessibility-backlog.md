@@ -1,6 +1,6 @@
 # Accessibility backlog
 
-Known accessibility defects in this library, with locations and remedies. Everything here was found by an audit of the built Storybook — `axe-core` via `@storybook/addon-a11y`, plus reading the rendered DOM — not by static review. Nothing listed here is fixed.
+Known accessibility defects in this library, with locations and remedies. Everything here was found by an audit of the built Storybook — `axe-core` via `@storybook/addon-a11y`, plus reading the rendered DOM — not by static review. Resolved defects are under **Fixed** below; **Open items** are still queued.
 
 This file exists because shipping a component library with an accessibility addon installed makes a claim. Leaving that claim undocumented would be worse than the defects themselves: a reader opening the a11y panel deserves to know which findings are understood and queued, and which are noise the tooling produces on every project.
 
@@ -31,6 +31,12 @@ Re-verified: full 136-story corpus (both themes) re-ran clean after the changes,
 **Measured (token pairs in `tokens.test.ts`):** light minimum 4.62:1 (`--text-utility` on `--bg-tertiary`); dark minimum 4.61:1 (`--text-tertiary` on `--bg-tertiary`).
 
 **Verified:** `tokens.css text on surface contrast` (`src/css/tokens.test.ts`); `story-diff --axe` — `color-contrast` 936 → 0, total axe violations 984 → 48 (other rules unchanged).
+
+### 8. `--text-tertiary` fails AA against white
+
+**Fix (release 0.7.0, PR #42):** same token retune as above — light `--text-tertiary` (and related text tokens) in `src/css/tokens.css`; addresses the ID column, Design Tokens demo, sidebar section labels, and account-switcher role caption instances called out in the original audit.
+
+**Verified:** `pnpm test src/css/tokens.test.ts` (contrast pairs for text on `--bg-primary` / `--bg-secondary` / `--bg-tertiary` in light and dark); `story-diff --axe` — `color-contrast` 936 → 0, total axe violations 984 → 48 (other rules unchanged).
 
 ## Fixed (2026-10-04)
 
@@ -89,16 +95,6 @@ Re-verified: full 136-story corpus (both themes) re-ran clean after the changes,
 Not a WCAG issue, but the one page whose entire purpose is documenting exact values prints the wrong ones in half its states.
 
 **Remedy:** read the active theme and select `modes.dark` when it applies, or read the resolved custom property from the DOM. The data is already there.
-
-### 8. `--text-tertiary` fails AA against white
-
-`src/styles.css` — light-theme `--text-tertiary: #9ca3af`
-
-Measured **2.54:1** against a white surface, well under the 4.5:1 required for body text. Two confirmed places: the ID column of `datatable-tablelayout--default`, and the Design Tokens page's own demonstration of the token — which is how both the name and the value were confirmed.
-
-**Remedy:** a token-level decision, not a patch. Darkening the light-theme value affects everything using it; scoping the change to body-sized text does not. Whoever takes this should decide deliberately rather than nudging the hex until `axe` goes quiet.
-
-**More instances found 2026-08-19, same token, same verdict.** Running `axe` against the two new pages surfaced six more `--text-tertiary`-on-white nodes: the sidebar's five section labels ("Operations", "Finance", ...) at 2.53:1, and the account-switcher's role caption at 2.53:1. Composition, not new code — these are the pre-existing `Sidebar`/`SidebarAccountMenu` components, just exercised by a page for the first time. Two **new, narrower** near-misses also turned up, different tokens, worth naming separately since they're closer to passing and a smaller nudge might clear them: the resource-tab-bar's label text (`#6b7280` on `#f3f4f6`, **4.39:1**) and its count badge (`#667085` on `#eef2f6`, **4.42:1**), both in `MerchantsLiveRefactoredScreen.tsx`'s tab strip — new, Task 6. Also the sidebar-user avatar initials (`#6b7280` on `#eef2f6`, **4.29:1**), pre-existing. All four still route through the same "token-level decision" remedy above, not a per-node patch.
 
 ### 9. Merchants page's resource tabs point `aria-controls` at content that is never rendered
 
