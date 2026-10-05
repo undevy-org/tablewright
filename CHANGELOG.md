@@ -1,5 +1,11 @@
 # @undevy-org/tablewright
 
+## 0.7.0
+
+### Minor Changes
+
+- [#42](https://github.com/undevy-org/tablewright/pull/42) [`c7c1e1a`](https://github.com/undevy-org/tablewright/commit/c7c1e1a4f99ace5b3778fa339a30852c92b84268) Thanks [@undevy](https://github.com/undevy)! - text colour tokens retuned for WCAG AA contrast (light: secondary, tertiary, utility; dark: tertiary); visual change, no API change
+
 ## 0.6.1
 
 ### Patch Changes
