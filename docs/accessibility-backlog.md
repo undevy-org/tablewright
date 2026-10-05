@@ -22,6 +22,16 @@ Task 6 added roughly 25 new components and two composed pages; `axe` had never r
 
 Re-verified: full 136-story corpus (both themes) re-ran clean after the changes, and re-running `axe` against `pages-merchants--default` / `pages-transactions--default` confirms all three finding types are gone with no new ones introduced.
 
+## Fixed (2026-10-05)
+
+### Text colour tokens — WCAG AA contrast on surfaces
+
+**Fix:** Retuned light `--text-secondary`, `--text-tertiary`, `--text-utility` and dark `--text-tertiary` in `src/css/tokens.css` (values only; hierarchy unchanged).
+
+**Measured (token pairs in `tokens.test.ts`):** light minimum 4.62:1 (`--text-utility` on `--bg-tertiary`); dark minimum 4.61:1 (`--text-tertiary` on `--bg-tertiary`).
+
+**Verified:** `tokens.css text on surface contrast` (`src/css/tokens.test.ts`); `story-diff --axe` — `color-contrast` 936 → 0, total axe violations 984 → 48 (other rules unchanged).
+
 ## Fixed (2026-10-04)
 
 ### 1. Dialog's Default story has unlabelled inputs
