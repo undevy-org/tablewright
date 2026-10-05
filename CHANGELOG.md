@@ -1,5 +1,11 @@
 # @undevy-org/tablewright
 
+## 0.7.1
+
+### Patch Changes
+
+- [#44](https://github.com/undevy-org/tablewright/pull/44) [`6ed4229`](https://github.com/undevy-org/tablewright/commit/6ed42292e1704179be60427a67b478cb4c901651) Thanks [@undevy](https://github.com/undevy)! - Fix accessible name on the icon-only action in the TopBar narrow truncation Storybook story.
+
 ## 0.7.0
 
 ### Minor Changes
