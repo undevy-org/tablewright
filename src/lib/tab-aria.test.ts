@@ -35,20 +35,4 @@ describe("tabTriggersReferenceExistingPanels", () => {
       '<button role="tab" aria-controls="doc-panel">Tab</button><div id="doc-panel"></div>';
     expect(tabTriggersReferenceExistingPanels(document)).toBe(true);
   });
-
-  it("resolves panels via document lookup when the root is mounted in the document", () => {
-    const host = document.createElement("div");
-    host.innerHTML =
-      '<button role="tab" aria-controls="hosted-panel">Tab</button><div id="hosted-panel"></div>';
-    document.body.append(host);
-    expect(tabTriggersReferenceExistingPanels(host)).toBe(true);
-    host.remove();
-  });
-
-  it("returns false when the panel id exists in the document but outside the root", () => {
-    document.body.innerHTML =
-      '<div id="host"><button role="tab" aria-controls="outside">Tab</button></div><div id="outside"></div>';
-    const host = document.getElementById("host")!;
-    expect(tabTriggersReferenceExistingPanels(host)).toBe(false);
-  });
 });

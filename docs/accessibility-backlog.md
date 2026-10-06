@@ -90,7 +90,7 @@ Re-verified: full 136-story corpus (both themes) re-ran clean after the changes,
 
 **Fix:** Wrapped each resource tab panel in `TabsContent` inside the same `Tabs` root as the strip (`MerchantsLiveRefactoredScreen.tsx`), matching the Transaction drawer tabs pattern.
 
-**Verified:** `MerchantsLiveRefactoredScreen.test.tsx` — aria-controls id exists for each tab trigger; `story-diff --axe` — `aria-valid-attr-value` under axe fixed on `pages-merchants--default`, total axe violations 47 → 44, 0 new violations.
+**Verified:** `MerchantsLiveRefactoredScreen.test.tsx` — aria-controls id exists for each tab trigger; `story-diff --axe` — `aria-valid-attr-value` under axe fixed on `pages-merchants--default`, total axe violations 49 → 44, 0 new violations.
 
 ## Open items
 
