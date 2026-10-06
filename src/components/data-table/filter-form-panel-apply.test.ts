@@ -679,14 +679,14 @@ describe("mergeCompoundValueForApply", () => {
     expect(merged).toEqual({ amount: { from: 1 } });
   });
 
-  it("drops a visible sub-filter when the draft clears it to undefined", () => {
+  it("drops a visible sub-filter when the draft omits a cleared key", () => {
     const touch = new Set([compoundSubTouchKey("bundle", "tags")]);
     expect(
       mergeCompoundValueForApply(
         compoundConfig,
         "bundle",
         { tags: ["solo"], amount: { from: 1 } },
-        { tags: undefined, amount: { from: 1 } },
+        { amount: { from: 1 } },
         touch,
         hidden,
       ),
