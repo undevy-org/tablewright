@@ -84,6 +84,14 @@ Re-verified: full 136-story corpus (both themes) re-ran clean after the changes,
 
 **Verified:** `story-diff --axe` — `button-name` under axe fixed on `layout-topbar--narrow-with-truncation`; `topbar-narrow-a11y.test.tsx` — "names the icon-only action in NarrowWithTruncation".
 
+## Fixed (2026-10-06)
+
+### 9. Merchants page resource tabs — `aria-controls` without matching panels
+
+**Fix:** Wrapped each resource tab panel in `TabsContent` inside the same `Tabs` root as the strip (`MerchantsLiveRefactoredScreen.tsx`), matching the Transaction drawer tabs pattern.
+
+**Verified:** `MerchantsLiveRefactoredScreen.test.tsx` — aria-controls id exists for each tab trigger; resource tab switching shows reports/summary panels; `story-diff --axe` — `aria-valid-attr-value` under axe fixed on `pages-merchants--default`, total axe violations 47 → 44, 0 new violations.
+
 ## Open items
 
 ### 7. Design Tokens page prints light-theme values in dark mode
@@ -95,16 +103,6 @@ Re-verified: full 136-story corpus (both themes) re-ran clean after the changes,
 Not a WCAG issue, but the one page whose entire purpose is documenting exact values prints the wrong ones in half its states.
 
 **Remedy:** read the active theme and select `modes.dark` when it applies, or read the resolved custom property from the DOM. The data is already there.
-
-### 9. Merchants page's resource tabs point `aria-controls` at content that is never rendered
-
-`src/stories/pages/merchants/MerchantsLiveRefactoredScreen.tsx` — the top tab strip (Merchants / Balances / Statistics / Widgets / Reports / ...).
-
-The strip uses `<Tabs>` / `<TabsList>` / `<TabsTrigger>` (Radix, via `src/components/ui/tabs.tsx`), which is real ARIA tabs semantics: each trigger gets `aria-controls="…-content-<value>"` pointing at a `Tabs.Content` panel it expects to exist. But the actual panel content is switched by a plain `activeTab === "merchants" ? <div>…</div> : …` conditional below the `<Tabs>` block — no `<TabsContent>` is ever rendered for any tab, active or not. So every trigger's `aria-controls` references an id that doesn't exist in the DOM (`aria-valid-attr-value`, confirmed on the active "Merchants" trigger; the other eight are not individually reachable while inactive but share the same wiring).
-
-**Why this isn't a quick fix:** the screen has nine tab panels (Merchants, Balances, Statistics, Widgets, Reports, Bank Block Lists, Merchant Rate Settings, Merchant Withdraw Fees, Request Logs), each a sizeable conditional block. Making this correct means either wrapping all nine in real `<Tabs.Content value="…">` (Radix supports `forceMount` + its own `hidden`-attribute toggling, so the current "only mount the active one" behaviour could be preserved, but that's a structural change to how the screen switches content, not a one-line patch), or deliberately dropping the ARIA tabs semantics (plain buttons with `role="tab"` removed, no `aria-controls`) in favour of what this component actually is — a segmented nav, not a tabs+tabpanel pair. Either way it's an intentional pattern decision, not something to nudge silently while fixing the port's own defects.
-
-**Remedy:** pick one of the two shapes above and apply it consistently; out of scope for a verification pass to decide unilaterally.
 
 ### 10. Sidebar nav-item text stays at its light-theme color in dark mode
 

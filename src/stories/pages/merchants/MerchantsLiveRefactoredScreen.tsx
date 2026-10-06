@@ -6,7 +6,7 @@ import { Badge } from "../../../components/ui/badge";
 import { Button } from "../../../components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "../../../components/ui/dialog";
 import { Input } from "../../../components/ui/input";
-import { Tabs, TabsList, TabsTrigger } from "../../../components/ui/tabs";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../../components/ui/tabs";
 import { TopBar } from "../../../components/layout/TopBar";
 import { CopyableText } from "../../../components/data-table/CopyableText";
 import { DataTableShell } from "../../../components/data-table/DataTableShell";
@@ -256,8 +256,12 @@ export function MerchantsLiveRefactoredScreen() {
       </TopBar>
 
       <div className="flex min-h-0 flex-1 flex-col px-6">
-        <div className="py-2">
-          <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as LiveTabKey)}>
+        <Tabs
+          value={activeTab}
+          onValueChange={(value) => setActiveTab(value as LiveTabKey)}
+          className="flex min-h-0 flex-1 flex-col"
+        >
+          <div className="py-2">
             <div ref={tabsScrollRef} className="scrollbar-auto-hide overflow-x-auto pb-0.5">
               <TabsList className="min-w-max">
                 {liveTabs.map((tab) => (
@@ -267,12 +271,11 @@ export function MerchantsLiveRefactoredScreen() {
                 ))}
               </TabsList>
             </div>
-          </Tabs>
-        </div>
+          </div>
 
-        <div className="min-h-0 flex-1 overflow-hidden bg-[var(--bg-body)]">
-          {activeTab === "merchants" ? (
-            <div className="flex h-full min-h-0 flex-col overflow-hidden">
+          <div className="min-h-0 flex-1 overflow-hidden bg-[var(--bg-body)]">
+            <TabsContent value="merchants" className="h-full">
+              <div className="flex h-full min-h-0 flex-col overflow-hidden">
               <FilterToolbar.Root>
                 <FilterToolbar.SearchForm onSubmit={orch.handleSearchSubmit}>
                   <Input
@@ -451,17 +454,30 @@ export function MerchantsLiveRefactoredScreen() {
                 }
                 drawer={drawer}
               />
-            </div>
-          ) : activeTab === "reports" ? (
-            <div ref={panelScrollRef} className="scrollbar-auto-hide h-full overflow-auto py-6">
-              <LiveReportsShell sections={liveReportSections} />
-            </div>
-          ) : (
-            <div ref={panelScrollRef} className="scrollbar-auto-hide h-full overflow-auto py-6">
-              <LiveSummaryShell summary={liveTabSummaries[activeTab]} />
-            </div>
-          )}
-        </div>
+              </div>
+            </TabsContent>
+
+            <TabsContent value="reports" className="h-full">
+              <div ref={panelScrollRef} className="scrollbar-auto-hide h-full overflow-auto py-6">
+                <LiveReportsShell sections={liveReportSections} />
+              </div>
+            </TabsContent>
+
+            {liveTabs
+              .filter(
+                (tab): tab is (typeof liveTabs)[number] & {
+                  key: Exclude<LiveTabKey, "merchants" | "reports">;
+                } => tab.key !== "merchants" && tab.key !== "reports",
+              )
+              .map((tab) => (
+                <TabsContent key={tab.key} value={tab.key} className="h-full">
+                  <div ref={panelScrollRef} className="scrollbar-auto-hide h-full overflow-auto py-6">
+                    <LiveSummaryShell summary={liveTabSummaries[tab.key]} />
+                  </div>
+                </TabsContent>
+              ))}
+          </div>
+        </Tabs>
       </div>
 
       <CreateMerchantPreviewDialog
