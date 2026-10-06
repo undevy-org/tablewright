@@ -1,6 +1,6 @@
 {
   "name": "@undevy-org/tablewright",
-  "version": "0.7.5",
+  "version": "0.7.6",
   "description": "React data-table and application-shell components: filters, drawers, row controls, sortable and resizable columns, built on Radix UI and TanStack Table.",
   "license": "MIT",
   "repository": {
