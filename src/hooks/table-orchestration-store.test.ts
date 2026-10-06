@@ -75,6 +75,58 @@ describe("createTableOrchestrationStore", () => {
     expect(store.getState().page).toBe(5);
   });
 
+  it("hideColumn updates visibility without switching to custom view", () => {
+    const store = makeStore("all");
+    store.getState().showColumns(["other"]);
+    expect(store.getState().columnVisibility.other).toBe(true);
+
+    store.getState().hideColumn("other");
+    expect(store.getState().columnVisibility.other).toBe(false);
+    expect(store.getState().activeView).toBe("all");
+  });
+
+  it("hideColumn does not change activeView when already on custom", () => {
+    const store = makeStore("all");
+    store.getState().toggleSort("name", "asc");
+    expect(store.getState().activeView).toBe("custom");
+
+    store.getState().hideColumn("visible");
+    expect(store.getState().columnVisibility.visible).toBe(false);
+    expect(store.getState().activeView).toBe("custom");
+  });
+
+  it("setColumnVisibility accepts a value or updater without changing activeView", () => {
+    const store = makeStore("all");
+    store.getState().setColumnVisibility({ a: false, b: true });
+    expect(store.getState().columnVisibility).toEqual({ a: false, b: true });
+    expect(store.getState().activeView).toBe("all");
+
+    store.getState().setColumnVisibility((prev) => ({ ...prev, c: true }));
+    expect(store.getState().columnVisibility).toEqual({ a: false, b: true, c: true });
+    expect(store.getState().activeView).toBe("all");
+  });
+
+  it("showColumns merges visibility without changing activeView", () => {
+    const store = makeStore("all");
+    store.getState().hideColumn("keep-hidden");
+    store.getState().showColumns(["x", "y"]);
+    expect(store.getState().columnVisibility).toEqual({
+      col: false,
+      "keep-hidden": false,
+      x: true,
+      y: true,
+    });
+    expect(store.getState().activeView).toBe("all");
+  });
+
+  it("setRowsPerPage resets page to 1", () => {
+    const store = makeStore();
+    store.getState().setPage(4);
+    store.getState().setRowsPerPage(25);
+    expect(store.getState().rowsPerPage).toBe(25);
+    expect(store.getState().page).toBe(1);
+  });
+
   it("applyPreset restores view, filters, sort, visibility, and page", () => {
     const store = makeStore();
     store.getState().setPage(3);
