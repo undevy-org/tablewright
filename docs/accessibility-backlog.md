@@ -98,17 +98,15 @@ Re-verified: full 136-story corpus (both themes) re-ran clean after the changes,
 
 **Verified:** `SidebarAccountMenu.test.tsx` — direct children of the open menu are only `menuitem` and `separator`; `story-diff --axe` — `aria-required-children` under axe fixed on `pages-merchants--default` and `pages-transactions--default`, total axe violations 44 → 42, 0 new violations.
 
-## Open items
-
 ### 7. Design Tokens page prints light-theme values in dark mode
 
-`src/DesignTokens.stories.tsx:114-118`
+**Fix:** `displayTokenValue` in `src/design-tokens-display.ts` selects `modes.dark` when Storybook's theme toolbar is dark; a story decorator passes `globals.theme` into context so captions update on toggle.
 
-`formatTokenValue` returns `token.value` and never consults `token.modes.dark`, though the field exists in the type (`:13`, `:108`) and in the manifest. The swatches recolour correctly when the theme flips; the hex captions underneath keep reading their light values.
+**Repro (before fix):** `STORYBOOK_BASE_PATH=/ pnpm exec storybook build -o storybook-static --quiet`, then Playwright on `design-tokens--tokens` with `globals=theme:dark` — `text-secondary` caption was `#6b7280` while `--text-secondary` on `documentElement` was `#cbd5e1`.
 
-Not a WCAG issue, but the one page whose entire purpose is documenting exact values prints the wrong ones in half its states.
+**Verified:** `pnpm test src/DesignTokens.test.ts`; post-build harness on `design-tokens--tokens` with `globals=theme:dark` — `text-secondary` caption `#cbd5e1` matches resolved `--text-secondary`; `story-diff --axe` with `allow-diff: design-tokens--tokens, design-tokens--docs`.
 
-**Remedy:** read the active theme and select `modes.dark` when it applies, or read the resolved custom property from the DOM. The data is already there.
+## Open items
 
 ### 10. Sidebar nav-item text stays at its light-theme color in dark mode
 

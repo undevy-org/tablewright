@@ -1,6 +1,7 @@
-import type { CSSProperties, ReactNode } from 'react';
+import { createContext, useContext, type CSSProperties, type ReactNode } from 'react';
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import manifestJson from '../design-tokens/manifest.json';
+import { displayTokenValue, type DesignTokensTheme } from './design-tokens-display';
 
 type TokenModeValue = string | number;
 
@@ -102,20 +103,14 @@ function cssVar(cssVarName: string) {
   return `var(${cssVarName})`;
 }
 
-function formatTokenValue(token: {
-  value: TokenModeValue;
-  unit?: string;
-  modes?: { dark?: TokenModeValue };
-}) {
-  // This story renders inside Storybook's normal preview pipeline, so its swatch
-  // COLORS (rendered via `var(--css-var)`) already track the live theme toggle —
-  // no theme argument needed for that. The printed VALUE TEXT here always reflects
-  // light mode; see the closing note on the Design Tokens docs page for why.
-  return typeof token.value === 'number'
-    ? token.unit
-      ? `${token.value}${token.unit}`
-      : String(token.value)
-    : token.value;
+const DesignTokensThemeContext = createContext<DesignTokensTheme>('light');
+
+function storybookThemeFromGlobals(globals: Record<string, unknown> | undefined): DesignTokensTheme {
+  return globals?.theme === 'dark' ? 'dark' : 'light';
+}
+
+function useDesignTokensTheme() {
+  return useContext(DesignTokensThemeContext);
 }
 
 function TokenSectionHeader({ title, description }: { title: string; description: string }) {
@@ -158,6 +153,8 @@ function TokenPreviewCard({
 }
 
 function TokenNumberList({ title, tokens }: { title: string; tokens: readonly NumericToken[] }) {
+  const theme = useDesignTokensTheme();
+
   return (
     <div className="rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-surface)] p-4">
       <p className="mb-3 text-[12px] font-semibold text-[var(--text-primary)]">{title}</p>
@@ -166,7 +163,7 @@ function TokenNumberList({ title, tokens }: { title: string; tokens: readonly Nu
           <div key={token.name} className="flex items-center justify-between gap-4">
             <p className="text-[11px] text-[var(--text-secondary)]">{token.name}</p>
             <p className="text-[12px] font-semibold text-[var(--text-primary)]">
-              {formatTokenValue(token)}
+              {displayTokenValue(token, theme)}
             </p>
           </div>
         ))}
@@ -176,6 +173,8 @@ function TokenNumberList({ title, tokens }: { title: string; tokens: readonly Nu
 }
 
 function PaletteSection() {
+  const theme = useDesignTokensTheme();
+
   return (
     <article className="rounded-2xl border border-[var(--border-subtle)] bg-[var(--bg-surface-muted)] p-5 [box-shadow:var(--shadow-card)]">
       <TokenSectionHeader
@@ -189,7 +188,7 @@ function PaletteSection() {
             <TokenRow
               key={token.name}
               name={token.name}
-              value={formatTokenValue(token)}
+              value={displayTokenValue(token, theme)}
               preview={
                 <span
                   className="h-10 w-10 shrink-0 rounded-lg border border-[var(--border-subtle)]"
@@ -205,7 +204,7 @@ function PaletteSection() {
             <TokenPreviewCard
               key={token.name}
               name={token.name}
-              value={formatTokenValue(token)}
+              value={displayTokenValue(token, theme)}
               preview={
                 <p className="mt-1 text-[14px] font-medium" style={{ color: cssVar(token.cssVar) }}>
                   Fast operational status overview
@@ -220,7 +219,7 @@ function PaletteSection() {
             <TokenPreviewCard
               key={token.name}
               name={token.name}
-              value={formatTokenValue(token)}
+              value={displayTokenValue(token, theme)}
               preview={
                 <div
                   className="mt-2 h-10 rounded-lg border bg-[var(--bg-surface-sunken)]"
@@ -234,7 +233,7 @@ function PaletteSection() {
             <TokenPreviewCard
               key={token.name}
               name={token.name}
-              value={formatTokenValue(token)}
+              value={displayTokenValue(token, theme)}
               preview={
                 token.name === 'accent-primary' ? (
                   <div
@@ -261,6 +260,8 @@ function PaletteSection() {
 }
 
 function StatusAndOverlaySection() {
+  const theme = useDesignTokensTheme();
+
   return (
     <article className="rounded-2xl border border-[var(--border-subtle)] bg-[var(--bg-surface-muted)] p-5 [box-shadow:var(--shadow-card)]">
       <TokenSectionHeader
@@ -309,7 +310,7 @@ function StatusAndOverlaySection() {
           <TokenPreviewCard
             key={token.name}
             name={token.name}
-            value={formatTokenValue(token)}
+            value={displayTokenValue(token, theme)}
             preview={
               <div
                 className="mt-2 h-12 rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-secondary)]"
@@ -324,6 +325,8 @@ function StatusAndOverlaySection() {
 }
 
 function TypographyAndScalesSection() {
+  const theme = useDesignTokensTheme();
+
   return (
     <div className="grid gap-6 xl:grid-cols-2">
       <article className="rounded-2xl border border-[var(--border-subtle)] bg-[var(--bg-surface-muted)] p-5 [box-shadow:var(--shadow-card)]">
@@ -370,7 +373,9 @@ function TypographyAndScalesSection() {
               />
               <div className="mt-3 flex items-center justify-between gap-4">
                 <p className="text-[12px] font-semibold text-[var(--text-primary)]">{token.name}</p>
-                <p className="text-[11px] text-[var(--text-secondary)]">{formatTokenValue(token)}</p>
+                <p className="text-[11px] text-[var(--text-secondary)]">
+                  {displayTokenValue(token, theme)}
+                </p>
               </div>
             </div>
           ))}
@@ -386,6 +391,8 @@ function TypographyAndScalesSection() {
 }
 
 function EffectsAndPaintSection() {
+  const theme = useDesignTokensTheme();
+
   return (
     <div className="grid gap-6 xl:grid-cols-2">
       <article className="rounded-2xl border border-[var(--border-subtle)] bg-[var(--bg-surface-muted)] p-5 [box-shadow:var(--shadow-card)]">
@@ -403,7 +410,7 @@ function EffectsAndPaintSection() {
               <TokenPreviewCard
                 key={style.name}
                 name={style.name}
-                value={formatTokenValue(token)}
+                value={displayTokenValue(token, theme)}
                 preview={
                   <div
                     className="mt-2 h-16 rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-surface)]"
@@ -431,7 +438,7 @@ function EffectsAndPaintSection() {
               <TokenPreviewCard
                 key={style.name}
                 name={style.name}
-                value={formatTokenValue(token)}
+                value={displayTokenValue(token, theme)}
                 preview={
                   <div
                     className="mt-2 h-16 rounded-xl border border-[var(--border-subtle)]"
@@ -465,6 +472,13 @@ const meta: Meta<typeof DesignTokensPage> = {
   parameters: {
     layout: 'padded',
   },
+  decorators: [
+    (Story, { globals }) => (
+      <DesignTokensThemeContext.Provider value={storybookThemeFromGlobals(globals)}>
+        <Story />
+      </DesignTokensThemeContext.Provider>
+    ),
+  ],
 };
 
 export default meta;
