@@ -388,6 +388,21 @@ describe("resolveFieldApplyChange", () => {
     ).toEqual({ kind: "skip" });
   });
 
+  it("sets compound payload for legacy keys when subFilters is empty", () => {
+    const emptyCompound: ColumnFilterConfig = { type: "compound", label: "Empty", subFilters: [] };
+    expect(
+      resolveFieldApplyChange(
+        emptyCompound,
+        "empty",
+        { legacy: ["a"] },
+        { legacy: ["a"] },
+        new Set(),
+        new Set(),
+        true,
+      ),
+    ).toEqual({ kind: "set", value: { legacy: ["a"] } });
+  });
+
   it("sets compound merged payload when sub-filters change", () => {
     const draft = { amount: { from: 2 } };
     expect(
@@ -512,7 +527,20 @@ describe("mergeCompoundValueForApply", () => {
     expect(merged).toEqual({ tags: ["solo"] });
   });
 
-  it("omits hidden sub-filters", () => {
+  it("carries hidden sub-filters from draft on apply without edits", () => {
+    const hide = new Set([compoundSubTouchKey("bundle", "tags")]);
+    const merged = mergeCompoundValueForApply(
+      compoundConfig,
+      "bundle",
+      { tags: ["x"], amount: { from: 1 } },
+      { tags: ["x"], amount: { from: 1 } },
+      touched,
+      hide,
+    );
+    expect(merged).toEqual({ tags: ["x"], amount: { from: 1 } });
+  });
+
+  it("updates only visible sub-filters when hidden sub-filters share the compound draft", () => {
     const hide = new Set([compoundSubTouchKey("bundle", "tags")]);
     const merged = mergeCompoundValueForApply(
       compoundConfig,
@@ -522,7 +550,7 @@ describe("mergeCompoundValueForApply", () => {
       new Set([compoundSubTouchKey("bundle", "amount")]),
       hide,
     );
-    expect(merged).toEqual({ amount: { from: 1, to: 2 } });
+    expect(merged).toEqual({ tags: ["x", "y"], amount: { from: 1, to: 2 } });
   });
 
   it("does not write empty draft sub-values into the merged compound payload", () => {
@@ -599,18 +627,18 @@ describe("mergeCompoundValueForApply", () => {
     expect(merged).toEqual({ tags: ["a", "b"], amount: { from: 1, to: 9 } });
   });
 
-  it("iterates zero times when compound config has no subFilters array", () => {
+  it("carries legacy compound keys when config has no subFilters array", () => {
     const bare: ColumnFilterConfig = { type: "compound", label: "Bare" };
     expect(
       mergeCompoundValueForApply(bare, "bare", { legacy: ["a"] }, { legacy: ["a"] }, touched, hidden),
-    ).toBeUndefined();
+    ).toEqual({ legacy: ["a"] });
   });
 
-  it("iterates zero times when subFilters is an empty array", () => {
+  it("carries legacy compound keys when subFilters is an empty array", () => {
     const empty: ColumnFilterConfig = { type: "compound", label: "Empty", subFilters: [] };
     expect(
       mergeCompoundValueForApply(empty, "empty", { legacy: ["a"] }, { legacy: ["a"] }, touched, hidden),
-    ).toBeUndefined();
+    ).toEqual({ legacy: ["a"] });
   });
 
   it("omits empty draft sub-filters while keeping other sub-filter values", () => {
@@ -651,7 +679,62 @@ describe("mergeCompoundValueForApply", () => {
     expect(merged).toEqual({ amount: { from: 1 } });
   });
 
-  it("returns undefined when every sub-filter is hidden or empty", () => {
+  it("drops a visible sub-filter when the draft clears it to undefined", () => {
+    const touch = new Set([compoundSubTouchKey("bundle", "tags")]);
+    expect(
+      mergeCompoundValueForApply(
+        compoundConfig,
+        "bundle",
+        { tags: ["solo"], amount: { from: 1 } },
+        { tags: undefined, amount: { from: 1 } },
+        touch,
+        hidden,
+      ),
+    ).toEqual({ amount: { from: 1 } });
+  });
+
+  it("drops a visible number-range sub-filter when the draft becomes an empty range object", () => {
+    const touch = new Set([compoundSubTouchKey("bundle", "amount")]);
+    expect(
+      mergeCompoundValueForApply(
+        compoundConfig,
+        "bundle",
+        { tags: ["solo"], amount: { from: 1 } },
+        { tags: ["solo"], amount: {} },
+        touch,
+        hidden,
+      ),
+    ).toEqual({ tags: ["solo"] });
+  });
+
+  it("omits empty values carried from draft for hidden sub-filters", () => {
+    const hide = new Set([compoundSubTouchKey("bundle", "tags")]);
+    expect(
+      mergeCompoundValueForApply(
+        compoundConfig,
+        "bundle",
+        { tags: [], amount: { from: 1 } },
+        { tags: [], amount: { from: 1 } },
+        touched,
+        hide,
+      ),
+    ).toEqual({ amount: { from: 1 } });
+  });
+
+  it("returns undefined when the draft compound has no non-empty values", () => {
+    expect(
+      mergeCompoundValueForApply(
+        compoundConfig,
+        "bundle",
+        { tags: [], amount: {} },
+        { tags: [], amount: {} },
+        touched,
+        hidden,
+      ),
+    ).toBeUndefined();
+  });
+
+  it("carries hidden sub-filter values when every configured sub-filter is hidden", () => {
     const hideAll = new Set([
       compoundSubTouchKey("bundle", "tags"),
       compoundSubTouchKey("bundle", "status"),
@@ -666,7 +749,7 @@ describe("mergeCompoundValueForApply", () => {
         touched,
         hideAll,
       ),
-    ).toBeUndefined();
+    ).toEqual({ tags: ["a", "b"] });
   });
 
   it("uses an empty subFilters list when config has no sub-filters", () => {
@@ -676,7 +759,7 @@ describe("mergeCompoundValueForApply", () => {
     ).toEqual({ kind: "skip" });
   });
 
-  it("removes an active compound filter when the config defines no sub-filters", () => {
+  it("keeps an active legacy compound value when the config defines no sub-filters", () => {
     const emptyCompound: ColumnFilterConfig = { type: "compound", label: "Empty" };
     expect(
       resolveFieldApplyChange(
@@ -688,7 +771,7 @@ describe("mergeCompoundValueForApply", () => {
         new Set(),
         true,
       ),
-    ).toEqual({ kind: "remove" });
+    ).toEqual({ kind: "set", value: { legacy: ["a"] } });
   });
 
   it("applies only text sub-filter drafts when enum sub-filter stays multi-value", () => {

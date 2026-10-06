@@ -95,7 +95,7 @@ export function mergeCompoundValueForApply(
 ): ActiveFilterValue | undefined {
   const committedCompound = getCompoundValue(committed);
   const draftCompound = getCompoundValue(draft);
-  const merged: CompoundFilterValue = {};
+  const merged: CompoundFilterValue = { ...draftCompound };
 
   for (const sub of config.subFilters ?? []) {
     if (hiddenSubSet.has(compoundSubTouchKey(fieldId, sub.key))) continue;
@@ -112,6 +112,13 @@ export function mergeCompoundValueForApply(
 
     if (subDraft === undefined || isFilterValueEmpty(subDraft)) continue;
     merged[sub.key] = subDraft;
+  }
+
+  for (const key of Object.keys(merged)) {
+    const value = merged[key];
+    if (isFilterValueEmpty(value)) {
+      delete merged[key];
+    }
   }
 
   return Object.keys(merged).length === 0 ? undefined : merged;
