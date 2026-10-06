@@ -105,7 +105,7 @@ export const Sidebar = React.forwardRef<HTMLElement, SidebarProps>(
                   const Icon = item.icon;
 
                   const itemClassName = cn(
-                    "flex w-full items-center rounded-[var(--radius-md)] transition-colors",
+                    "flex w-full items-center rounded-[var(--radius-md)] transition-[background-color]",
                     showExpanded
                       ? "gap-2.5 px-3 py-2"
                       : "justify-center p-2.5",

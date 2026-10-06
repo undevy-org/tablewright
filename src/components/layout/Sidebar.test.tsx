@@ -232,6 +232,14 @@ describe("Sidebar", () => {
     );
   });
 
+  it("does not transition color on nav links so theme token changes apply immediately", () => {
+    render(<Sidebar groups={SIDEBAR_GROUPS} activeKey="/dashboard" />);
+
+    const inactive = screen.getByRole("link", { name: "Settings" });
+    expect(inactive.className).not.toContain("transition-colors");
+    expect(inactive.className).toContain("transition-[background-color]");
+  });
+
   it("passes the item href to renderLink", () => {
     const renderLink = vi.fn(
       (href: string, props: { className: string; children: ReactNode }) => (
