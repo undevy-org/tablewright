@@ -1,5 +1,11 @@
 # @undevy-org/tablewright
 
+## 0.7.4
+
+### Patch Changes
+
+- [#52](https://github.com/undevy-org/tablewright/pull/52) [`1974da9`](https://github.com/undevy-org/tablewright/commit/1974da97fc640621a78741db0a6bac9c72521fe5) Thanks [@undevy](https://github.com/undevy)! - Fix `aria-required-children` on sidebar account dropdown by using Radix menu items and separators for the account header, theme row, and dividers.
+
 ## 0.7.3
 
 ### Patch Changes
