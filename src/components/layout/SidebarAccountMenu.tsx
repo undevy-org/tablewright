@@ -5,6 +5,7 @@ import {
   DropdownMenuTrigger,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
 } from "../ui/dropdown-menu";
 import { ThemeSwitch } from "../ui/theme-switch";
 import { cn } from "../../lib/utils";
@@ -99,8 +100,10 @@ export function SidebarAccountMenu({
         sideOffset={6}
         className="min-w-[220px]"
       >
-        {/* Account info */}
-        <div className="flex items-center gap-2.5 px-2 py-2">
+        <DropdownMenuItem
+          disabled
+          className="gap-2.5 px-2 py-2 opacity-100 focus:bg-transparent data-[disabled]:opacity-100"
+        >
           {avatarUrl ? (
             <img
               src={avatarUrl}
@@ -122,14 +125,16 @@ export function SidebarAccountMenu({
               </div>
             )}
           </div>
-        </div>
+        </DropdownMenuItem>
 
-        <div className="my-1 border-t border-[var(--border-subtle)]" />
+        <DropdownMenuSeparator />
 
-        {/* Theme row */}
         {showTheme && (
           <>
-            <div className="flex items-center justify-between px-3 py-2">
+            <DropdownMenuItem
+              className="flex items-center justify-between px-3 py-2 focus:bg-transparent"
+              onSelect={(event) => event.preventDefault()}
+            >
               <div className="flex items-center gap-2">
                 <SunMoon className="h-4 w-4" />
                 <span className="text-[13px]">Theme</span>
@@ -139,10 +144,8 @@ export function SidebarAccountMenu({
                 value={theme!}
                 onValueChange={onThemeChange}
               />
-            </div>
-            {hasItemsBelow && (
-              <div className="my-1 border-t border-[var(--border-subtle)]" />
-            )}
+            </DropdownMenuItem>
+            {hasItemsBelow && <DropdownMenuSeparator />}
           </>
         )}
 
@@ -165,9 +168,7 @@ export function SidebarAccountMenu({
         })}
 
         {/* Separator before sign-out */}
-        {menuItems && menuItems.length > 0 && onSignOut && (
-          <div className="my-1 border-t border-[var(--border-subtle)]" />
-        )}
+        {menuItems && menuItems.length > 0 && onSignOut && <DropdownMenuSeparator />}
 
         {/* Sign out */}
         {onSignOut && (

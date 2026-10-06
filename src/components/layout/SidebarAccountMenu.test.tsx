@@ -54,6 +54,10 @@ describe("SidebarAccountMenu", () => {
     return waitFor(() => screen.getByRole("menu"));
   }
 
+  function separatorsIn(menu: HTMLElement) {
+    return Array.from(menu.querySelectorAll('[role="separator"]'));
+  }
+
   it("shows the account role in the menu panel", async () => {
     render(
       <SidebarAccountMenu name="Priya Natarajan" role="Admin" avatarUrl={AVATAR} />,
@@ -146,5 +150,114 @@ describe("SidebarAccountMenu", () => {
 
     await openMenu();
     expect(screen.getByText("Theme")).toBeTruthy();
+  });
+
+  it("uses only menuitem and separator roles as direct children of the open menu", async () => {
+    render(
+      <SidebarAccountMenu
+        name="Priya Natarajan"
+        role="Admin"
+        avatarUrl={AVATAR}
+        theme="light"
+        onThemeChange={vi.fn()}
+        menuItems={[
+          { key: "prefs", label: "Preferences", icon: Settings, onClick: vi.fn() },
+        ]}
+        onSignOut={vi.fn()}
+      />,
+    );
+
+    const menu = await openMenu();
+    const roles = Array.from(menu.children)
+      .map((element) => element.getAttribute("role"))
+      .filter((role): role is string => role !== null);
+
+    expect(roles.length).toBeGreaterThan(0);
+    expect(roles.every((role) => role === "menuitem" || role === "separator")).toBe(true);
+  });
+
+  it("omits the separator after theme when no items or sign-out follow", async () => {
+    render(
+      <SidebarAccountMenu
+        name="Priya Natarajan"
+        avatarUrl={AVATAR}
+        theme="light"
+        onThemeChange={vi.fn()}
+      />,
+    );
+
+    const menu = await openMenu();
+    expect(separatorsIn(menu)).toHaveLength(1);
+  });
+
+  it("adds a separator after theme when sign-out follows", async () => {
+    render(
+      <SidebarAccountMenu
+        name="Priya Natarajan"
+        avatarUrl={AVATAR}
+        theme="light"
+        onThemeChange={vi.fn()}
+        onSignOut={vi.fn()}
+      />,
+    );
+
+    const menu = await openMenu();
+    expect(separatorsIn(menu)).toHaveLength(2);
+  });
+
+  it("adds a separator before sign-out when custom items precede it", async () => {
+    render(
+      <SidebarAccountMenu
+        name="Priya Natarajan"
+        avatarUrl={AVATAR}
+        menuItems={[{ key: "prefs", label: "Preferences", onClick: vi.fn() }]}
+        onSignOut={vi.fn()}
+      />,
+    );
+
+    const menu = await openMenu();
+    expect(separatorsIn(menu)).toHaveLength(2);
+  });
+
+  it("does not add a separator before sign-out when there are no custom items", async () => {
+    render(
+      <SidebarAccountMenu
+        name="Priya Natarajan"
+        avatarUrl={AVATAR}
+        onSignOut={vi.fn()}
+      />,
+    );
+
+    const menu = await openMenu();
+    expect(separatorsIn(menu)).toHaveLength(1);
+  });
+
+  it("does not add a separator before sign-out when menuItems is empty", async () => {
+    render(
+      <SidebarAccountMenu
+        name="Priya Natarajan"
+        avatarUrl={AVATAR}
+        menuItems={[]}
+        onSignOut={vi.fn()}
+      />,
+    );
+
+    const menu = await openMenu();
+    expect(separatorsIn(menu)).toHaveLength(1);
+  });
+
+  it("keeps the menu open when the theme row is activated", async () => {
+    render(
+      <SidebarAccountMenu
+        name="Priya Natarajan"
+        avatarUrl={AVATAR}
+        theme="light"
+        onThemeChange={vi.fn()}
+      />,
+    );
+
+    await openMenu();
+    fireEvent.click(screen.getByRole("menuitem", { name: /Theme/i }));
+    expect(screen.getByRole("menu")).toBeTruthy();
   });
 });
