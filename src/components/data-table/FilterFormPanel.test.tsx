@@ -570,6 +570,29 @@ describe("FilterFormPanel multi-value guard", () => {
     expect(screen.getByRole("spinbutton", { name: "Amount — from" })).toBeTruthy();
   });
 
+  it("preserves hidden compound sub-filters on apply without edits", () => {
+    const onApply = vi.fn();
+    render(
+      <FilterFormPanel
+        filterConfigs={compoundMultiAndRange}
+        fields={["bundle"]}
+        filters={[{ columnId: "bundle", value: { tags: ["x"], amount: { from: 1 } } }]}
+        onApply={onApply}
+        onClear={vi.fn()}
+        hiddenSubFilterKeys={["bundle:tags"]}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "Apply" }));
+    expect(onApply).toHaveBeenCalledWith([
+      {
+        columnId: "bundle",
+        action: "set",
+        value: { tags: ["x"], amount: { from: 1 } },
+      },
+    ]);
+  });
+
   it("calls onClear with managed column ids when Clear is pressed", () => {
     const onClear = vi.fn();
     render(
