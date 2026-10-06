@@ -11,6 +11,7 @@
   },
   "include": ["src"],
   "exclude": [
+    "src/design-tokens-display.ts",
     "src/**/*.stories.tsx",
     "src/**/*.mdx",
     "src/**/*.test.ts",
