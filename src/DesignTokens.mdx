@@ -9,14 +9,12 @@ Canonical token inventory for the component library: the surface, text, border, 
 color roles; status-pair and overlay colors; typography styles; the radii, spacing, and size
 scales; shadow effect styles; and gradient paint styles. Every swatch below renders its live CSS
 custom property, so it tracks Storybook's theme toggle automatically. The printed value next to
-each swatch (hex codes, pixel numbers) reflects light mode only — see the note at the bottom of
-this page for why.
+each swatch (hex codes, pixel numbers) tracks the active theme as well, including dark-mode
+overrides from the token manifest.
 
 <Story of={DesignTokensStories.Tokens} />
 
 ---
 
-_Swatch colors above read directly from live CSS custom properties, so they always match
-Storybook's active light/dark theme. The printed value text next to each swatch is computed
-once for light mode and does not update with the toggle — an intentional simplification for this
-docs page rather than a bug._
+_Swatch colors read from live CSS custom properties; printed captions use the manifest value for
+the active Storybook theme (light `value` or `modes.dark` when the toolbar is set to dark)._
