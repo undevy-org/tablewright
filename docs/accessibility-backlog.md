@@ -92,6 +92,12 @@ Re-verified: full 136-story corpus (both themes) re-ran clean after the changes,
 
 **Verified:** `MerchantsLiveRefactoredScreen.test.tsx` — aria-controls id exists for each tab trigger; resource tab switching shows reports/summary panels; `story-diff --axe` — `aria-valid-attr-value` under axe fixed on `pages-merchants--default`, total axe violations 47 → 44, 0 new violations.
 
+### Sidebar account menu — invalid children inside `role="menu"`
+
+**Fix:** Account header, theme row, and dividers in `SidebarAccountMenu.tsx` now use `DropdownMenuItem` / `DropdownMenuSeparator` (Radix menu primitives) instead of plain `div` blocks; `DropdownMenuLabel` and `DropdownMenuSeparator` exported from `dropdown-menu.tsx`.
+
+**Verified:** `SidebarAccountMenu.test.tsx` — direct children of the open menu are only `menuitem` and `separator`; `story-diff --axe` — `aria-required-children` under axe fixed on `pages-merchants--default` and `pages-transactions--default`, total axe violations 44 → 42, 0 new violations.
+
 ## Open items
 
 ### 7. Design Tokens page prints light-theme values in dark mode
