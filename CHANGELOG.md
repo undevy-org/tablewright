@@ -1,5 +1,11 @@
 # @undevy-org/tablewright
 
+## 0.7.5
+
+### Patch Changes
+
+- [#54](https://github.com/undevy-org/tablewright/pull/54) [`89e278b`](https://github.com/undevy-org/tablewright/commit/89e278b1b3b6bc7dcdfb5ea650033944786ec151) Thanks [@undevy](https://github.com/undevy)! - Fix inactive sidebar nav link color when switching to dark theme by limiting row transitions to background color only.
+
 ## 0.7.4
 
 ### Patch Changes
