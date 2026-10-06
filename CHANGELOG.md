@@ -1,5 +1,11 @@
 # @undevy-org/tablewright
 
+## 0.7.6
+
+### Patch Changes
+
+- [#59](https://github.com/undevy-org/tablewright/pull/59) [`8941976`](https://github.com/undevy-org/tablewright/commit/894197657b607f56fc7287d9e8e395761deda4f4) Thanks [@undevy](https://github.com/undevy)! - Fix FilterFormPanel Apply dropping compound filter keys hidden from the form or absent from subFilters (regression since 0.7.3).
+
 ## 0.7.5
 
 ### Patch Changes
