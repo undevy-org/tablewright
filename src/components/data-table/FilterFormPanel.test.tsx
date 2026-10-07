@@ -1,6 +1,21 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
+const setFieldCallbackDeps: unknown[] = [];
+
+vi.mock("react", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("react")>();
+  return {
+    ...actual,
+    useCallback<T extends (...args: never[]) => unknown>(fn: T, deps: unknown[]) {
+      if (Function.prototype.toString.call(fn).includes("patchFieldState")) {
+        setFieldCallbackDeps.push(deps);
+      }
+      return actual.useCallback(fn, deps);
+    },
+  };
+});
+
 import { FilterFormPanel } from "./FilterFormPanel";
 import type { ManagedFilterChange } from "./managed-filters";
 import type { ColumnFilterConfig } from "./filter-types";
@@ -80,6 +95,21 @@ const numberRangeConfig: Record<string, ColumnFilterConfig> = {
 };
 
 describe("FilterFormPanel multi-value guard", () => {
+  it("memoizes setField with a stable empty dependency list", () => {
+    setFieldCallbackDeps.length = 0;
+    render(
+      <FilterFormPanel
+        filterConfigs={textConfig}
+        fields={["note"]}
+        filters={[]}
+        onApply={vi.fn()}
+        onClear={vi.fn()}
+      />,
+    );
+
+    expect(setFieldCallbackDeps).toContainEqual([]);
+  });
+
   it("does not emit a change for a text field with multiple values when Apply is untouched", () => {
     const onApply = vi.fn();
     render(
