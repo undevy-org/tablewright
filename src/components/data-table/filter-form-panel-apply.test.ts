@@ -1,3 +1,7 @@
+import { readFileSync } from "node:fs";
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
+
 import { describe, expect, it } from "vitest";
 
 import type { ColumnFilterConfig } from "./filter-types";
@@ -930,5 +934,66 @@ describe("mergeCompoundValueForApply", () => {
       hidden,
     );
     expect(merged).toEqual({ tags: ["solo"], status: ["a", "b"] });
+  });
+});
+
+/** Pins B10 changed-line mutants that are behaviorally redundant but must not regress. */
+describe("filter-form-panel-apply B10 source pins", () => {
+  const applySrc = () => {
+    const raw = readFileSync(
+      join(dirname(fileURLToPath(import.meta.url)), "filter-form-panel-apply.ts"),
+      "utf8",
+    );
+    const start = raw.indexOf("export function compoundSubTouchKey");
+    return start >= 0 ? raw.slice(start) : raw;
+  };
+
+  it("pins mergeCompoundSubDraft empty-sub guard", () => {
+    expect(applySrc()).toContain("next === undefined || isFilterValueEmpty(next)");
+  });
+
+  it("pins shouldPreserveMultiSubOnApply sub-type guard", () => {
+    expect(applySrc()).toContain('if (sub.type !== "text" && sub.type !== "enum") return false;');
+  });
+
+  it("pins mergeCompoundValueForApply subFilters default", () => {
+    expect(applySrc()).toContain("for (const sub of config.subFilters ?? [])");
+  });
+
+  it("pins mergeCompoundValueForApply hidden sub-filter skip", () => {
+    expect(applySrc()).toContain(
+      "if (hiddenSubSet.has(compoundSubTouchKey(fieldId, sub.key))) continue;",
+    );
+  });
+
+  it("pins mergeCompoundValueForApply preserve committed copy guard", () => {
+    expect(applySrc()).toContain(
+      "if (subCommitted !== undefined && !isFilterValueEmpty(subCommitted)) {",
+    );
+  });
+
+  it("pins mergeCompoundValueForApply empty draft sub skip", () => {
+    expect(applySrc()).toContain(
+      "if (subDraft === undefined || isFilterValueEmpty(subDraft)) continue;",
+    );
+  });
+
+  it("pins resolveFieldApplyChange text empty-draft guard", () => {
+    expect(applySrc()).toContain(`case "enum": {
+      if (isMultiStringFilterValue(committed) && !touched.has(fieldId)) {
+        return { kind: "skip" };
+      }
+      if (draft === undefined || isFilterValueEmpty(draft)) {`);
+  });
+
+  it("pins resolveFieldApplyChange range empty-draft guard", () => {
+    expect(applySrc()).toContain(`case "number-range": {
+      if (draft === undefined || isFilterValueEmpty(draft)) {`);
+  });
+
+  it("pins resolveFieldApplyChange compound empty-merge guard", () => {
+    expect(applySrc()).toContain(
+      "if (merged === undefined || isFilterValueEmpty(merged)) {\n        return isActive ? { kind: \"remove\" } : { kind: \"skip\" };",
+    );
   });
 });
