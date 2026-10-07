@@ -38,6 +38,12 @@ Re-verified: full 136-story corpus (both themes) re-ran clean after the changes,
 
 **Verified:** `pnpm test src/css/tokens.test.ts` (contrast pairs for text on `--bg-primary` / `--bg-secondary` / `--bg-tertiary` in light and dark); `story-diff --axe` — `color-contrast` 936 → 0, total axe violations 984 → 48 (other rules unchanged).
 
+### 11. TopBar narrow story icon button has no accessible name
+
+**Fix:** `aria-label="Add"` on the icon-only action button in `NarrowWithTruncation` (`TopBar.stories.tsx`).
+
+**Verified:** `story-diff --axe` — `button-name` under axe fixed on `layout-topbar--narrow-with-truncation`; `topbar-narrow-a11y.test.tsx` — "names the icon-only action in NarrowWithTruncation".
+
 ## Fixed (2026-10-04)
 
 ### 1. Dialog's Default story has unlabelled inputs
@@ -76,14 +82,6 @@ Re-verified: full 136-story corpus (both themes) re-ran clean after the changes,
 
 **Verified:** `story-diff --axe` — Select-caused `button-name` under axe fixed (with `--interact` covering page, `ui-select`, and datatable footer/shell stories); `TableFooter.test.tsx` — 'names the rows-per-page select "Rows per page"'.
 
-## Fixed (2026-10-05)
-
-### 11. TopBar narrow story icon button has no accessible name
-
-**Fix:** `aria-label="Add"` on the icon-only action button in `NarrowWithTruncation` (`TopBar.stories.tsx`).
-
-**Verified:** `story-diff --axe` — `button-name` under axe fixed on `layout-topbar--narrow-with-truncation`; `topbar-narrow-a11y.test.tsx` — "names the icon-only action in NarrowWithTruncation".
-
 ## Fixed (2026-10-06)
 
 ### 9. Merchants page resource tabs — `aria-controls` without matching panels
@@ -106,17 +104,17 @@ Re-verified: full 136-story corpus (both themes) re-ran clean after the changes,
 
 **Verified:** `pnpm test src/DesignTokens.test.ts`; post-build harness on `design-tokens--tokens` with `globals=theme:dark` — `text-secondary` caption `#cbd5e1` matches resolved `--text-secondary`; `story-diff --axe` with `allow-diff: design-tokens--tokens, design-tokens--docs`.
 
-## Open items
-
 ### 10. Sidebar nav-item text stays at its light-theme color in dark mode
 
-`src/components/layout/Sidebar.tsx` — the `<a>`/`<button>` wrapper for each non-active nav item, class `text-[var(--text-secondary)]`.
+`src/components/layout/Sidebar.tsx` — inactive nav links, class `text-[var(--text-secondary)]`.
 
-Confirmed by direct measurement, not by trusting `axe`'s contrast number at face value (see "Not in this list" below for why that caution matters here specifically): on `layout-sidebar--default` with `data-theme="dark"` on `<html>`, `getComputedStyle(a).getPropertyValue('--text-secondary')` correctly returns `#cbd5e1` (the dark value from `styles.css:116`) — but `getComputedStyle(a).color` on that *same element* is `rgb(107, 114, 128)` (`#6b7280`, the **light** value from `styles.css:25`). The custom property resolves correctly; the applied `color` doesn't match it. That's a real rendering discrepancy, confirmed at the exact node, not a stale/incorrect `axe` contrast computation — unlike the dismissed finding below, this one was checked against the live computed value and reproduces.
+**Diagnosis:** On the pre-fix build, inactive nav links used `transition-colors` (150 ms). The defect reproduces with a synchronous `getComputedStyle(a).color` read immediately after a theme switch: mid-transition RGB values (`rgb(74,81,96)` → `rgb(133,141,155)` → `rgb(193,203,215)` → settled `rgb(203,213,225)` before 250 ms. Not a stale token or cascade bug.
 
-**Pre-existing, not introduced by the pages port** — reproduces on the baseline `layout-sidebar--default` story in dark theme alone; it surfaced during Task 7 only because `axe` was run against dark-theme `Sidebar` compositions more thoroughly than before.
+**Fix (release 0.7.5, PR #54):** `transition-[background-color]` on nav rows only; label, icon, and border snap with the theme.
 
-**Remedy:** not diagnosed further here — the CSS variable is right, the applied color isn't, and why needs a cascade-level look (specificity/order between the compiled Tailwind utility and whatever sets `color` on this element) that a verification pass isn't the place to do. Repro: build Storybook, open `layout-sidebar--default` with dark theme active, inspect any inactive nav link's computed `color`.
+## Open items
+
+None.
 
 ## Not in this list
 
