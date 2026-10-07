@@ -85,6 +85,18 @@ describe("mergeCompoundSubDraft", () => {
     });
   });
 
+  it("drops a sub-filter when the next value is an empty number-range object", () => {
+    expect(
+      mergeCompoundSubDraft({ tags: ["a"], amount: { from: 1 } }, "amount", {}),
+    ).toEqual({ tags: ["a"] });
+  });
+
+  it("does not leave an undefined property when clearing a sub-filter with undefined", () => {
+    const cleared = mergeCompoundSubDraft({ tags: ["solo"] }, "tags", undefined);
+    expect(cleared).toBeUndefined();
+    expect(Object.keys(cleared ?? {})).toHaveLength(0);
+  });
+
   it("replaces a sub-filter value when next is non-empty", () => {
     expect(mergeCompoundSubDraft({ tags: ["a"] }, "tags", ["b"])).toEqual({ tags: ["b"] });
   });
@@ -218,6 +230,48 @@ describe("resolveFieldApplyChange", () => {
     ).toEqual({ kind: "skip" });
   });
 
+  it("does not set an undefined text draft when the column is active and the draft was cleared", () => {
+    expect(
+      resolveFieldApplyChange(
+        text,
+        "note",
+        ["solo"],
+        undefined,
+        new Set(["note"]),
+        new Set(),
+        true,
+      ),
+    ).toEqual({ kind: "remove" });
+  });
+
+  it("does not set an undefined date draft when the column is active and the range was cleared", () => {
+    expect(
+      resolveFieldApplyChange(
+        date,
+        "created",
+        { from: "2024-01-01" },
+        undefined,
+        new Set(["created"]),
+        new Set(),
+        true,
+      ),
+    ).toEqual({ kind: "remove" });
+  });
+
+  it("does not set an empty number-range draft when the column is active and bounds were cleared", () => {
+    expect(
+      resolveFieldApplyChange(
+        range,
+        "amount",
+        { from: 1, to: 2 },
+        {},
+        new Set(["amount"]),
+        new Set(),
+        true,
+      ),
+    ).toEqual({ kind: "remove" });
+  });
+
   it("skips untouched multi-value enum", () => {
     expect(
       resolveFieldApplyChange(
@@ -313,6 +367,34 @@ describe("resolveFieldApplyChange", () => {
         false,
       ),
     ).toEqual({ kind: "skip" });
+  });
+
+  it("skips compound apply when inactive and merge yields undefined", () => {
+    expect(
+      resolveFieldApplyChange(
+        compoundConfig,
+        "bundle",
+        undefined,
+        undefined,
+        new Set(),
+        new Set(),
+        false,
+      ),
+    ).toEqual({ kind: "skip" });
+  });
+
+  it("removes active compound when merge yields undefined after clearing every sub-filter", () => {
+    expect(
+      resolveFieldApplyChange(
+        compoundConfig,
+        "bundle",
+        { tags: ["solo"] },
+        undefined,
+        new Set([compoundSubTouchKey("bundle", "tags")]),
+        new Set(),
+        true,
+      ),
+    ).toEqual({ kind: "remove" });
   });
 
   it("skips compound clear when field was never active", () => {
@@ -484,6 +566,17 @@ describe("shouldPreserveMultiSubOnApply", () => {
       ),
     ).toBe(false);
   });
+
+  it("is false for number-range sub-filters even when committed is a multi-string array", () => {
+    expect(
+      shouldPreserveMultiSubOnApply(
+        rangeSub,
+        ["a", "b"],
+        compoundSubTouchKey("b", "amount"),
+        new Set(),
+      ),
+    ).toBe(false);
+  });
 });
 
 describe("mergeCompoundValueForApply", () => {
@@ -533,6 +626,19 @@ describe("mergeCompoundValueForApply", () => {
       compoundConfig,
       "bundle",
       { tags: ["x"], amount: { from: 1 } },
+      { tags: ["x"], amount: { from: 1 } },
+      touched,
+      hide,
+    );
+    expect(merged).toEqual({ tags: ["x"], amount: { from: 1 } });
+  });
+
+  it("skips hidden sub-filters in the merge loop so committed multi-value text is not re-applied from draft truncation", () => {
+    const hide = new Set([compoundSubTouchKey("bundle", "tags")]);
+    const merged = mergeCompoundValueForApply(
+      compoundConfig,
+      "bundle",
+      { tags: ["x", "y"], amount: { from: 1 } },
       { tags: ["x"], amount: { from: 1 } },
       touched,
       hide,
@@ -634,6 +740,23 @@ describe("mergeCompoundValueForApply", () => {
     ).toEqual({ legacy: ["a"] });
   });
 
+  it("does not iterate synthetic sub-filters when subFilters is omitted from config", () => {
+    const bare: ColumnFilterConfig = { type: "compound", label: "Bare" };
+    expect(
+      mergeCompoundValueForApply(
+        bare,
+        "bare",
+        { only: ["x"] },
+        { only: ["x"] },
+        touched,
+        hidden,
+      ),
+    ).toEqual({ only: ["x"] });
+    expect(
+      mergeCompoundValueForApply(bare, "bare", { only: ["x"] }, { only: ["y"] }, touched, hidden),
+    ).toEqual({ only: ["y"] });
+  });
+
   it("carries legacy compound keys when subFilters is an empty array", () => {
     const empty: ColumnFilterConfig = { type: "compound", label: "Empty", subFilters: [] };
     expect(
@@ -652,6 +775,20 @@ describe("mergeCompoundValueForApply", () => {
       hidden,
     );
     expect(merged).toEqual({ amount: { from: 1 } });
+  });
+
+  it("does not copy undefined draft sub-keys into the merged compound payload", () => {
+    const touch = new Set([compoundSubTouchKey("bundle", "amount")]);
+    const merged = mergeCompoundValueForApply(
+      compoundConfig,
+      "bundle",
+      { tags: ["solo"], amount: { from: 1 } },
+      { amount: { from: 2 } },
+      touch,
+      hidden,
+    );
+    expect(merged).toEqual({ amount: { from: 2 } });
+    expect(merged).not.toHaveProperty("tags");
   });
 
   it("skips empty draft sub-values without copying undefined committed keys", () => {

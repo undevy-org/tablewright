@@ -49,9 +49,10 @@ export function mergeCompoundSubDraft(
 ): ActiveFilterValue | undefined {
   const rest = { ...compound };
   delete rest[subKey];
-  const merged: CompoundFilterValue =
-    next === undefined || isFilterValueEmpty(next) ? rest : { ...rest, [subKey]: next };
-  return Object.keys(merged).length === 0 ? undefined : merged;
+  if (isFilterValueEmpty(next)) {
+    return Object.keys(rest).length === 0 ? undefined : rest;
+  }
+  return { ...rest, [subKey]: next as ActiveFilterValue };
 }
 
 export function formatTextMultiSummary(values: string[], labels: MultiValueSummaryLabels): string {
@@ -96,22 +97,15 @@ export function mergeCompoundValueForApply(
   const committedCompound = getCompoundValue(committed);
   const draftCompound = getCompoundValue(draft);
   const merged: CompoundFilterValue = { ...draftCompound };
-
   for (const sub of config.subFilters ?? []) {
     if (hiddenSubSet.has(compoundSubTouchKey(fieldId, sub.key))) continue;
     const touchKey = compoundSubTouchKey(fieldId, sub.key);
     const subCommitted = committedCompound[sub.key];
-    const subDraft = draftCompound[sub.key];
 
     if (shouldPreserveMultiSubOnApply(sub, subCommitted, touchKey, touched)) {
-      if (subCommitted !== undefined && !isFilterValueEmpty(subCommitted)) {
-        merged[sub.key] = subCommitted;
-      }
+      merged[sub.key] = subCommitted as ActiveFilterValue;
       continue;
     }
-
-    if (subDraft === undefined || isFilterValueEmpty(subDraft)) continue;
-    merged[sub.key] = subDraft;
   }
 
   for (const key of Object.keys(merged)) {
@@ -144,17 +138,17 @@ export function resolveFieldApplyChange(
       if (isMultiStringFilterValue(committed) && !touched.has(fieldId)) {
         return { kind: "skip" };
       }
-      if (draft === undefined || isFilterValueEmpty(draft)) {
+      if (isFilterValueEmpty(draft)) {
         return isActive ? { kind: "remove" } : { kind: "skip" };
       }
-      return { kind: "set", value: draft };
+      return { kind: "set", value: draft as ActiveFilterValue };
     }
     case "date":
     case "number-range": {
-      if (draft === undefined || isFilterValueEmpty(draft)) {
+      if (isFilterValueEmpty(draft)) {
         return isActive ? { kind: "remove" } : { kind: "skip" };
       }
-      return { kind: "set", value: draft };
+      return { kind: "set", value: draft as ActiveFilterValue };
     }
     case "compound": {
       const merged = mergeCompoundValueForApply(
@@ -165,10 +159,10 @@ export function resolveFieldApplyChange(
         touched,
         hiddenSubSet,
       );
-      if (merged === undefined || isFilterValueEmpty(merged)) {
+      if (isFilterValueEmpty(merged)) {
         return isActive ? { kind: "remove" } : { kind: "skip" };
       }
-      return { kind: "set", value: merged };
+      return { kind: "set", value: merged as ActiveFilterValue };
     }
     default:
       return { kind: "skip" };
