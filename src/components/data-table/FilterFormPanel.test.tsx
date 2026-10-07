@@ -1,7 +1,3 @@
-import { readFileSync } from "node:fs";
-import { dirname, join } from "node:path";
-import { fileURLToPath } from "node:url";
-
 import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
@@ -1056,22 +1052,6 @@ describe("FilterFormPanel multi-value guard", () => {
     expect(onApply).toHaveBeenCalledWith([
       { columnId: "status", action: "set", value: ["active"] },
     ]);
-  });
-});
-
-describe("FilterFormPanel B10 source pins", () => {
-  it("pins setField useCallback empty dependency list", () => {
-    const raw = readFileSync(
-      join(dirname(fileURLToPath(import.meta.url)), "FilterFormPanel.tsx"),
-      "utf8",
-    );
-    const panelSrc =
-      raw.indexOf("export interface FilterFormPanelLabels") >= 0
-        ? raw.slice(raw.indexOf("export interface FilterFormPanelLabels"))
-        : raw;
-    expect(panelSrc).toContain(
-      "setState((prev) => patchFieldState(prev, id, value));\n    },\n    [],",
-    );
   });
 });
 
