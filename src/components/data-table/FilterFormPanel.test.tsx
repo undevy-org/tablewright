@@ -925,6 +925,34 @@ describe("FilterFormPanel multi-value guard", () => {
     expect((screen.getByRole("textbox", { name: "Title" }) as HTMLInputElement).value).toBe("t");
   });
 
+  it("keeps sibling compound sub-filter values when editing another sub-filter in the same compound field", () => {
+    const compoundTwoText: Record<string, ColumnFilterConfig> = {
+      bundle: {
+        type: "compound",
+        label: "Bundle",
+        subFilters: [
+          { key: "alpha", type: "text", label: "Alpha", field: "alpha" },
+          { key: "beta", type: "text", label: "Beta", field: "beta" },
+        ],
+      },
+    };
+    render(
+      <FilterFormPanel
+        filterConfigs={compoundTwoText}
+        fields={["bundle"]}
+        filters={[{ columnId: "bundle", value: { alpha: ["1"], beta: ["2"] } }]}
+        onApply={vi.fn()}
+        onClear={vi.fn()}
+      />,
+    );
+
+    fireEvent.change(screen.getByRole("textbox", { name: "Alpha" }), {
+      target: { value: "1-updated" },
+    });
+
+    expect((screen.getByRole("textbox", { name: "Beta" }) as HTMLInputElement).value).toBe("2");
+  });
+
   it("keeps independent draft state across two text fields", () => {
     const onApply = vi.fn();
     render(
