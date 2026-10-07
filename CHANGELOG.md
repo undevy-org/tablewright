@@ -1,5 +1,11 @@
 # @undevy-org/tablewright
 
+## 0.7.7
+
+### Patch Changes
+
+- [#62](https://github.com/undevy-org/tablewright/pull/62) [`a9e5d0c`](https://github.com/undevy-org/tablewright/commit/a9e5d0cae4c823022b1ea5308e0e14fc0368599e) Thanks [@undevy](https://github.com/undevy)! - Refactor filter form apply merge helpers (behaviour unchanged); strengthen apply regression tests.
+
 ## 0.7.6
 
 ### Patch Changes
