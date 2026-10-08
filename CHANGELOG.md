@@ -1,5 +1,11 @@
 # @undevy-org/tablewright
 
+## 0.7.9
+
+### Patch Changes
+
+- [#68](https://github.com/undevy-org/tablewright/pull/68) [`3746fc4`](https://github.com/undevy-org/tablewright/commit/3746fc4a7e517195f711814c682c2aa7ac1088bf) Thanks [@undevy](https://github.com/undevy)! - fix(SidebarAccountMenu): show keyboard focus on theme radio items
+
 ## 0.7.8
 
 ### Patch Changes
