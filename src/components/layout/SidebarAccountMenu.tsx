@@ -150,7 +150,7 @@ export function SidebarAccountMenu({
                     aria-label="Light"
                     onSelect={(event) => event.preventDefault()}
                     className={cn(
-                      "relative flex cursor-default select-none items-center justify-center rounded-md px-2 py-0 outline-none hover:bg-[var(--bg-hover)] data-[highlighted]:bg-[var(--bg-hover)] data-[state=checked]:bg-[var(--bg-secondary)] data-[state=checked]:text-[var(--text-primary)] text-[var(--text-secondary)]",
+                      "relative flex cursor-default select-none items-center justify-center rounded-md px-2 py-0 outline-none hover:bg-[var(--bg-hover)] data-[highlighted]:bg-[var(--bg-hover)] data-[state=checked]:bg-[var(--bg-secondary)] data-[highlighted]:data-[state=checked]:bg-[var(--bg-hover)] data-[state=checked]:text-[var(--text-primary)] text-[var(--text-secondary)]",
                     )}
                   >
                     <Sun className="h-4 w-4" />
@@ -160,7 +160,7 @@ export function SidebarAccountMenu({
                     aria-label="Dark"
                     onSelect={(event) => event.preventDefault()}
                     className={cn(
-                      "relative flex cursor-default select-none items-center justify-center rounded-md px-2 py-0 outline-none hover:bg-[var(--bg-hover)] data-[highlighted]:bg-[var(--bg-hover)] data-[state=checked]:bg-[var(--bg-secondary)] data-[state=checked]:text-[var(--text-primary)] text-[var(--text-secondary)]",
+                      "relative flex cursor-default select-none items-center justify-center rounded-md px-2 py-0 outline-none hover:bg-[var(--bg-hover)] data-[highlighted]:bg-[var(--bg-hover)] data-[state=checked]:bg-[var(--bg-secondary)] data-[highlighted]:data-[state=checked]:bg-[var(--bg-hover)] data-[state=checked]:text-[var(--text-primary)] text-[var(--text-secondary)]",
                     )}
                   >
                     <Moon className="h-4 w-4" />
