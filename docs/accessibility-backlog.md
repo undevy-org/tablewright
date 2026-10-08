@@ -112,6 +112,16 @@ Re-verified: full 136-story corpus (both themes) re-ran clean after the changes,
 
 **Fix (release 0.7.5, PR #54):** `transition-[background-color]` on nav rows only; label, icon, and border snap with the theme.
 
+## Fixed (2026-10-08)
+
+### Sidebar account menu — Theme radio keyboard focus not visible (WCAG 2.4.7)
+
+**Fix:** Theme `RadioItem`s in `SidebarAccountMenu.tsx` use `data-[highlighted]:bg-[var(--bg-hover)]` instead of `focus:bg-transparent`, matching other menu rows.
+
+**Repro:** `node .private/e2e/repro/2026-10-08-account-menu-theme-focus/theme-radio-focus.mjs`
+
+**Verified:** post-fix `darkFocused.bg` is `rgba(0, 0, 0, 0)` → `rgb(249, 250, 251)`.
+
 ## Open items
 
 None.
