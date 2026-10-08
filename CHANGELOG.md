@@ -1,5 +1,11 @@
 # @undevy-org/tablewright
 
+## 0.7.8
+
+### Patch Changes
+
+- [#66](https://github.com/undevy-org/tablewright/pull/66) [`85e3247`](https://github.com/undevy-org/tablewright/commit/85e32471226f35ff150264b23b5e273ade73346b) Thanks [@undevy](https://github.com/undevy)! - Fix SidebarAccountMenu dropdown header and theme keyboard accessibility.
+
 ## 0.7.7
 
 ### Patch Changes
