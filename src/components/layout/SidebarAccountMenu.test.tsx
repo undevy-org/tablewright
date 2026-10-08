@@ -152,6 +152,25 @@ describe("SidebarAccountMenu", () => {
     expect(screen.getByText("Theme")).toBeTruthy();
   });
 
+  it("styles theme radio items with a visible keyboard highlight", async () => {
+    render(
+      <SidebarAccountMenu
+        name="Priya Natarajan"
+        avatarUrl={AVATAR}
+        theme="light"
+        onThemeChange={vi.fn()}
+      />,
+    );
+
+    await openMenu();
+    const light = screen.getByRole("menuitemradio", { name: "Light" });
+    const dark = screen.getByRole("menuitemradio", { name: "Dark" });
+    for (const radio of [light, dark]) {
+      expect(radio.className).toContain("data-[highlighted]:bg-[var(--bg-hover)]");
+      expect(radio.className).not.toContain("focus:bg-transparent");
+    }
+  });
+
   it("uses a menu label for the account header instead of a disabled menuitem", async () => {
     render(
       <SidebarAccountMenu
