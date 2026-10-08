@@ -118,7 +118,7 @@ Re-verified: full 136-story corpus (both themes) re-ran clean after the changes,
 
 **Fix:** Theme `RadioItem`s in `SidebarAccountMenu.tsx` use `data-[highlighted]:bg-[var(--bg-hover)]` instead of `focus:bg-transparent`, matching other menu rows. Checked radios also use `data-[highlighted]:data-[state=checked]:bg-[var(--bg-hover)]` so keyboard highlight wins over `data-[state=checked]:bg-[var(--bg-secondary)]` (B15).
 
-**Repro:** `node $T/e2e/repro/2026-10-08-account-menu-theme-focus/theme-radio-focus.mjs storybook-static`
+**Repro:** `STORYBOOK_BASE_PATH=/ pnpm build-storybook`, then `node $T/e2e/repro/2026-10-08-account-menu-theme-focus/theme-radio-focus.mjs storybook-static`
 
 **Verified:** `lightFocused.bg` / `darkFocused.bg` both `rgb(249, 250, 251)` with checked+highlighted distinct from idle checked `rgb(243, 244, 246)`.
 
