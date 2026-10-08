@@ -141,7 +141,7 @@ export function SidebarAccountMenu({
               </DropdownMenuLabel>
               <DropdownMenuPrimitive.RadioGroup
                 value={theme}
-                onValueChange={onThemeChange}
+                onValueChange={(value) => onThemeChange(value as "light" | "dark")}
                 className="inline-flex h-[var(--size-control-md)] items-center gap-1 rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-surface)] px-1 py-1"
               >
                 <div className="inline-flex self-stretch items-center gap-1">
