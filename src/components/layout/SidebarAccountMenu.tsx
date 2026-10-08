@@ -1,13 +1,15 @@
+import * as DropdownMenuPrimitive from "@radix-ui/react-dropdown-menu";
 import type { LucideIcon } from "lucide-react";
-import { ChevronDown, LogOut, SunMoon } from "lucide-react";
+import { ChevronDown, LogOut, Moon, Sun, SunMoon } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuTrigger,
   DropdownMenuContent,
+  DropdownMenuGroup,
   DropdownMenuItem,
+  DropdownMenuLabel,
   DropdownMenuSeparator,
 } from "../ui/dropdown-menu";
-import { ThemeSwitch } from "../ui/theme-switch";
 import { cn } from "../../lib/utils";
 import { useAppShell } from "./app-shell-context";
 
@@ -100,9 +102,8 @@ export function SidebarAccountMenu({
         sideOffset={6}
         className="min-w-[220px]"
       >
-        <DropdownMenuItem
-          disabled
-          className="gap-2.5 px-2 py-2 opacity-100 focus:bg-transparent data-[disabled]:opacity-100"
+        <DropdownMenuLabel
+          className="flex cursor-default select-none items-center gap-2.5 px-2 py-2 font-normal"
         >
           {avatarUrl ? (
             <img
@@ -125,26 +126,48 @@ export function SidebarAccountMenu({
               </div>
             )}
           </div>
-        </DropdownMenuItem>
+        </DropdownMenuLabel>
 
         <DropdownMenuSeparator />
 
         {showTheme && (
           <>
-            <DropdownMenuItem
-              className="flex items-center justify-between px-3 py-2 focus:bg-transparent"
-              onSelect={(event) => event.preventDefault()}
-            >
-              <div className="flex items-center gap-2">
+            <DropdownMenuGroup className="flex items-center justify-between px-3 py-2">
+              <DropdownMenuLabel
+                className="flex cursor-default select-none items-center gap-2 p-0 font-normal"
+              >
                 <SunMoon className="h-4 w-4" />
                 <span className="text-[13px]">Theme</span>
-              </div>
-              <ThemeSwitch
-                variant="icon"
-                value={theme!}
+              </DropdownMenuLabel>
+              <DropdownMenuPrimitive.RadioGroup
+                value={theme}
                 onValueChange={onThemeChange}
-              />
-            </DropdownMenuItem>
+                className="inline-flex h-[var(--size-control-md)] items-center gap-1 rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-surface)] px-1 py-1"
+              >
+                <div className="inline-flex self-stretch items-center gap-1">
+                  <DropdownMenuPrimitive.RadioItem
+                    value="light"
+                    aria-label="Light"
+                    onSelect={(event) => event.preventDefault()}
+                    className={cn(
+                      "relative flex cursor-default select-none items-center justify-center rounded-md px-2 py-0 outline-none focus:bg-transparent hover:bg-[var(--bg-hover)] data-[state=checked]:bg-[var(--bg-secondary)] data-[state=checked]:text-[var(--text-primary)] text-[var(--text-secondary)]",
+                    )}
+                  >
+                    <Sun className="h-4 w-4" />
+                  </DropdownMenuPrimitive.RadioItem>
+                  <DropdownMenuPrimitive.RadioItem
+                    value="dark"
+                    aria-label="Dark"
+                    onSelect={(event) => event.preventDefault()}
+                    className={cn(
+                      "relative flex cursor-default select-none items-center justify-center rounded-md px-2 py-0 outline-none focus:bg-transparent hover:bg-[var(--bg-hover)] data-[state=checked]:bg-[var(--bg-secondary)] data-[state=checked]:text-[var(--text-primary)] text-[var(--text-secondary)]",
+                    )}
+                  >
+                    <Moon className="h-4 w-4" />
+                  </DropdownMenuPrimitive.RadioItem>
+                </div>
+              </DropdownMenuPrimitive.RadioGroup>
+            </DropdownMenuGroup>
             {hasItemsBelow && <DropdownMenuSeparator />}
           </>
         )}
