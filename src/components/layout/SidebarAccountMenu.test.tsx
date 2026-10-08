@@ -167,8 +167,13 @@ describe("SidebarAccountMenu", () => {
     const dark = screen.getByRole("menuitemradio", { name: "Dark" });
     for (const radio of [light, dark]) {
       expect(radio.className).toContain("data-[highlighted]:bg-[var(--bg-hover)]");
+      expect(radio.className).toContain(
+        "data-[highlighted]:data-[state=checked]:bg-[var(--bg-hover)]",
+      );
       expect(radio.className).not.toContain("focus:bg-transparent");
     }
+    expect(light.getAttribute("data-state")).toBe("checked");
+    expect(dark.getAttribute("data-state")).toBe("unchecked");
   });
 
   it("uses a menu label for the account header instead of a disabled menuitem", async () => {
