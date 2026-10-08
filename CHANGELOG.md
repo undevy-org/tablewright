@@ -1,5 +1,11 @@
 # @undevy-org/tablewright
 
+## 0.7.10
+
+### Patch Changes
+
+- [#70](https://github.com/undevy-org/tablewright/pull/70) [`4226f41`](https://github.com/undevy-org/tablewright/commit/4226f4139b5b47a4153e25d6b209c9d30bb4873e) Thanks [@undevy](https://github.com/undevy)! - Fix SidebarAccountMenu theme radio focus highlight on checked items (WCAG 2.4.7).
+
 ## 0.7.9
 
 ### Patch Changes
