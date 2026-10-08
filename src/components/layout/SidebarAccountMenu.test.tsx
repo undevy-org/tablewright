@@ -1,4 +1,4 @@
-import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { act, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { Settings } from "lucide-react";
 import { describe, expect, it, vi } from "vitest";
 import { SidebarAccountMenu } from "./SidebarAccountMenu";
@@ -152,7 +152,7 @@ describe("SidebarAccountMenu", () => {
     expect(screen.getByText("Theme")).toBeTruthy();
   });
 
-  it("uses only menuitem and separator roles as direct children of the open menu", async () => {
+  it("uses a menu label for the account header instead of a disabled menuitem", async () => {
     render(
       <SidebarAccountMenu
         name="Priya Natarajan"
@@ -160,20 +160,37 @@ describe("SidebarAccountMenu", () => {
         avatarUrl={AVATAR}
         theme="light"
         onThemeChange={vi.fn()}
-        menuItems={[
-          { key: "prefs", label: "Preferences", icon: Settings, onClick: vi.fn() },
-        ]}
-        onSignOut={vi.fn()}
       />,
     );
 
     const menu = await openMenu();
-    const roles = Array.from(menu.children)
-      .map((element) => element.getAttribute("role"))
-      .filter((role): role is string => role !== null);
+    expect(within(menu).getByText("Priya Natarajan")).toBeTruthy();
+    expect(screen.queryByRole("menuitem", { name: /Priya Natarajan/i })).toBeNull();
+    expect(
+      within(menu)
+        .queryAllByRole("menuitem")
+        .some((item) => item.hasAttribute("disabled") || item.getAttribute("aria-disabled") === "true"),
+    ).toBe(false);
+  });
 
-    expect(roles.length).toBeGreaterThan(0);
-    expect(roles.every((role) => role === "menuitem" || role === "separator")).toBe(true);
+  it("changes theme from the keyboard when theme controls are provided", async () => {
+    const onThemeChange = vi.fn();
+    render(
+      <SidebarAccountMenu
+        name="Priya Natarajan"
+        avatarUrl={AVATAR}
+        theme="light"
+        onThemeChange={onThemeChange}
+      />,
+    );
+
+    await openMenu();
+    const dark = screen.getByRole("menuitemradio", { name: "Dark" });
+    dark.focus();
+    fireEvent.keyDown(dark, { key: "Enter", code: "Enter" });
+    fireEvent.keyUp(dark, { key: "Enter", code: "Enter" });
+    fireEvent.click(dark);
+    expect(onThemeChange).toHaveBeenCalledWith("dark");
   });
 
   it("omits the separator after theme when no items or sign-out follow", async () => {
@@ -246,7 +263,7 @@ describe("SidebarAccountMenu", () => {
     expect(separatorsIn(menu)).toHaveLength(1);
   });
 
-  it("keeps the menu open when the theme row is activated", async () => {
+  it("keeps the menu open when either theme radio is activated", async () => {
     render(
       <SidebarAccountMenu
         name="Priya Natarajan"
@@ -257,7 +274,9 @@ describe("SidebarAccountMenu", () => {
     );
 
     await openMenu();
-    fireEvent.click(screen.getByRole("menuitem", { name: /Theme/i }));
+    fireEvent.click(screen.getByRole("menuitemradio", { name: "Light" }));
+    expect(screen.getByRole("menu")).toBeTruthy();
+    fireEvent.click(screen.getByRole("menuitemradio", { name: "Dark" }));
     expect(screen.getByRole("menu")).toBeTruthy();
   });
 });
