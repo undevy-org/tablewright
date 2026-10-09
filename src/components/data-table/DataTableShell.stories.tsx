@@ -5,6 +5,7 @@ import { getCoreRowModel, useReactTable } from '@tanstack/react-table';
 import { Landmark, Shield, Split } from 'lucide-react';
 
 import { DataTableShell } from './DataTableShell';
+import { TableCsvExportButton } from './TableCsvExportButton';
 import { CopyableText } from './CopyableText';
 import { RowControlCell, RowControlHeader } from './RowControlCell';
 import { SortableHeader } from './SortableHeader';
@@ -64,16 +65,35 @@ function formatUpdatedAt(value: string) {
 // flat props, so this demo owns real column-resize, sort, and selection
 // state and builds the table with `useReactTable` — the same shape a real
 // consumer of the shell would wire up.
+const workspaceExportColumnIds = ['workspace', 'status', 'tier', 'updatedAt'] as const;
+
+function workspaceExportCellText(row: WorkspaceRow, columnId: string): string {
+  switch (columnId) {
+    case 'workspace':
+      return `${row.name} ${row.id}`;
+    case 'status':
+      return row.status;
+    case 'tier':
+      return row.tier;
+    case 'updatedAt':
+      return row.updatedAt;
+    default:
+      return '';
+  }
+}
+
 function DataTableShellDemo({
   rows,
   dense,
   emptyMessage,
   initialDrawerRowId,
+  csvExportFilename,
 }: {
   rows: WorkspaceRow[];
   dense: boolean;
   emptyMessage: string;
   initialDrawerRowId?: string;
+  csvExportFilename?: string;
 }) {
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [selectedWorkspaceId, setSelectedWorkspaceId] = useState<string | null>(
@@ -255,6 +275,24 @@ function DataTableShellDemo({
 
   return (
     <div className="flex h-[480px] flex-col overflow-hidden rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-surface)]">
+      {csvExportFilename ? (
+        <div className="flex shrink-0 items-center justify-end gap-2 border-b border-[var(--border-subtle)] px-4 py-2">
+          <TableCsvExportButton
+            table={table}
+            filename={csvExportFilename}
+            columnIds={[...workspaceExportColumnIds]}
+            getCellText={workspaceExportCellText}
+            labels={{
+              columns: {
+                workspace: 'Workspace',
+                status: 'Status',
+                tier: 'Tier',
+                updatedAt: 'Updated',
+              },
+            }}
+          />
+        </div>
+      ) : null}
       <DataTableShell
         table={table}
         dense={dense}
@@ -272,7 +310,7 @@ function DataTableShellDemo({
             totalCount={sortedRows.length}
             onSelectAll={() => setSelectedIds(new Set(sortedRows.map((row) => row.id)))}
             onClearSelection={() => setSelectedIds(new Set())}
-            bulkActions={selectedIds.size > 0 ? [{ label: 'Export CSV', onClick: () => undefined }] : []}
+            bulkActions={[]}
             paginationVariant="perPage"
             rowsPerPage={rowsPerPage}
             onRowsPerPageChange={setRowsPerPage}
@@ -348,6 +386,7 @@ export const Default: Story = {
       rows={workspaceRows}
       dense={false}
       emptyMessage="No workspaces match the current search and filters."
+      csvExportFilename="workspaces"
     />
   ),
 };
