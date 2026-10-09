@@ -58,6 +58,8 @@ export { RowControlHeader } from "./components/data-table/RowControlCell";
 export type { RowControlHeaderProps } from "./components/data-table/RowControlCell";
 export { SortableHeader } from "./components/data-table/SortableHeader";
 export { TableFooter } from "./components/data-table/TableFooter";
+export { TableCsvExportButton } from "./components/data-table/TableCsvExportButton";
+export type { TableCsvExportButtonProps } from "./components/data-table/TableCsvExportButton";
 export { TableLayout } from "./components/data-table/TableLayout";
 export { useColumnResize } from "./components/data-table/hooks/use-column-resize";
 export { getVisiblePageNumbers } from "./components/data-table/hooks/use-table-pagination";
@@ -184,6 +186,14 @@ export { useRowDragOverride } from "./hooks/useRowDragOverride";
 export type { UseRowDragOverrideResult } from "./hooks/useRowDragOverride";
 
 // Utils
+export {
+  downloadCsvFile,
+  exportTableToCsv,
+} from "./lib/export-table-csv";
+export type {
+  DownloadCsvFileOptions,
+  ExportTableToCsvOptions,
+} from "./lib/export-table-csv";
 export { computeColumnGaps, gapColumnId } from "./lib/column-gaps";
 export { computeColumnStats } from "./lib/filter-stats";
 export { formatEnumLabel } from "./lib/format-enum";
