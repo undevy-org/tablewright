@@ -1,5 +1,11 @@
 # @undevy-org/tablewright
 
+## 0.8.0
+
+### Minor Changes
+
+- [#72](https://github.com/undevy-org/tablewright/pull/72) [`dba51ad`](https://github.com/undevy-org/tablewright/commit/dba51adce6b5b8f87023a70c85cf03e4c93ce994) Thanks [@undevy](https://github.com/undevy)! - Add `exportTableToCsv`, `downloadCsvFile`, and `TableCsvExportButton` for exporting TanStack table data to CSV.
+
 ## 0.7.10
 
 ### Patch Changes
