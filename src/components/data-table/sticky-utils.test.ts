@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { applyColumnPinningToMeta } from "./sticky-utils";
+import { applyColumnPinningToMeta, columnWidthPx } from "./sticky-utils";
 import type { ColumnMetaDef } from "./types";
 
 const baseMeta: Record<string, ColumnMetaDef> = {
@@ -11,6 +11,12 @@ const baseMeta: Record<string, ColumnMetaDef> = {
 };
 
 const columnOrder = ["rowControl", "name", "status", "actions"];
+
+describe("columnWidthPx", () => {
+  it("returns zero when the column id is missing from base meta", () => {
+    expect(columnWidthPx("missing", {})).toBe(0);
+  });
+});
 
 describe("applyColumnPinningToMeta", () => {
   it("pins left with increasing offsets after existing left-sticky columns", () => {
@@ -155,5 +161,50 @@ describe("applyColumnPinningToMeta", () => {
     );
 
     expect(merged.name?.sticky).toBeUndefined();
+  });
+
+  it("does not pin a sentinel column when pinning.left is omitted", () => {
+    const meta = {
+      "Stryker was here": { minW: 1 },
+      name: { minW: 10 },
+    };
+    const merged = applyColumnPinningToMeta(meta, {}, { columnOrder: ["Stryker was here", "name"] });
+
+    expect(merged["Stryker was here"]?.sticky).toBeUndefined();
+    expect(merged.name?.sticky).toBeUndefined();
+  });
+
+  it("does not pin a sentinel column when pinning.right is omitted", () => {
+    const meta = {
+      "Stryker was here": { minW: 1 },
+      name: { minW: 10 },
+    };
+    const merged = applyColumnPinningToMeta(
+      meta,
+      { left: [] },
+      { columnOrder: ["name", "Stryker was here"] },
+    );
+
+    expect(merged["Stryker was here"]?.sticky).toBeUndefined();
+  });
+
+  it("uses zero width when pinned column meta is missing minW and columnWidths", () => {
+    const merged = applyColumnPinningToMeta(
+      { lead: { minW: 40 }, tail: { minW: 0 } },
+      { left: ["lead", "tail"] },
+      { columnOrder: ["lead", "tail"] },
+    );
+
+    expect(merged.tail).toMatchObject({ sticky: "left", stickyOffset: 40 });
+  });
+
+  it("prefers columnWidths over minW when stacking left pin offsets", () => {
+    const merged = applyColumnPinningToMeta(
+      { gap: { minW: 1 }, name: { minW: 10 } },
+      { left: ["gap", "name"] },
+      { columnOrder: ["gap", "name"], columnWidths: { gap: 25 } },
+    );
+
+    expect(merged.name).toMatchObject({ sticky: "left", stickyOffset: 25 });
   });
 });

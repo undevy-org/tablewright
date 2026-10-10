@@ -9,7 +9,8 @@ export interface ApplyColumnPinningToMetaOptions {
   columnWidths?: Record<string, number>;
 }
 
-function columnWidthPx(
+/** @internal Exported for unit tests (not re-exported from package entry). */
+export function columnWidthPx(
   columnId: string,
   meta: Record<string, ColumnMetaDef>,
   columnWidths?: Record<string, number>,

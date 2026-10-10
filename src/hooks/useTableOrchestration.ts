@@ -26,6 +26,32 @@ import { useOrchestrationActions } from "./table-orchestration/use-orchestration
 import { useResponsiveColumns } from "./table-orchestration/use-responsive-columns";
 import { gapColumnId } from "../lib/column-gaps";
 
+/** @internal Exported for unit tests (not re-exported from package entry). */
+export function computeVisibleColumnOrder(input: {
+  columnMeta: Record<string, ColumnMetaDef>;
+  toggleableColumnIds: readonly string[];
+  columnVisibility: VisibilityState;
+  columnGaps: ColumnGap[];
+}): string[] {
+  const { columnMeta, toggleableColumnIds, columnVisibility, columnGaps } = input;
+  const order: string[] = [];
+  if (columnMeta.rowControl) order.push("rowControl");
+  for (const id of toggleableColumnIds) {
+    if (columnVisibility[id] !== false) order.push(id);
+  }
+  for (const gap of columnGaps) {
+    const gapId = gapColumnId(gap.afterColumnId);
+    if (gap.afterColumnId === null) {
+      order.unshift(gapId);
+    } else {
+      const afterIdx = order.indexOf(gap.afterColumnId);
+      if (afterIdx >= 0) order.splice(afterIdx + 1, 0, gapId);
+    }
+  }
+  if (columnMeta.actions) order.push("actions");
+  return order;
+}
+
 // ── Config ──────────────────────────────────────────────────────────────
 
 export interface TableOrchestrationConfig<TRow extends object, TViewKey extends string> {
@@ -330,24 +356,16 @@ export function useTableOrchestration<TRow extends object, TViewKey extends stri
     widths,
   });
 
-  const visibleColumnOrder = useMemo(() => {
-    const order: string[] = [];
-    if (columnMeta.rowControl) order.push("rowControl");
-    for (const id of toggleableColumnIds) {
-      if (columnVisibility[id] !== false) order.push(id);
-    }
-    for (const gap of columnGaps) {
-      const gapId = gapColumnId(gap.afterColumnId);
-      if (gap.afterColumnId === null) {
-        order.unshift(gapId);
-      } else {
-        const afterIdx = order.indexOf(gap.afterColumnId);
-        if (afterIdx >= 0) order.splice(afterIdx + 1, 0, gapId);
-      }
-    }
-    if (columnMeta.actions) order.push("actions");
-    return order;
-  }, [columnGaps, columnMeta, columnVisibility, toggleableColumnIds]);
+  const visibleColumnOrder = useMemo(
+    () =>
+      computeVisibleColumnOrder({
+        columnMeta,
+        toggleableColumnIds,
+        columnVisibility,
+        columnGaps,
+      }),
+    [columnGaps, columnMeta, columnVisibility, toggleableColumnIds],
+  );
 
   const extendedColumnMeta = useMemo(
     () =>
