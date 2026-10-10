@@ -4,6 +4,11 @@ export type ExportTableToCsvOptions<TRow> = {
   columns: { id: string; header: string }[];
   rows: TRow[];
   getCellText: (row: TRow, columnId: string) => string;
+  /**
+   * Prefix formula-triggering cell text with `'` so spreadsheet apps do not evaluate it.
+   * Plain decimal numbers (`-5`, `+3.2`) are left unchanged. @default true
+   */
+  escapeFormulas?: boolean;
 };
 
 export const DEFAULT_CSV_EXPORT_LABEL = "Export CSV";
@@ -29,6 +34,8 @@ export type DownloadCsvFileOptions = {
   utf8Bom?: boolean;
 };
 
+const PLAIN_DECIMAL_NUMBER = /^[+-]?(\d+(\.\d+)?|\.\d+)([eE][+-]?\d+)?$/;
+
 function escapeCsvField(value: string): string {
   if (/[",\r\n]/.test(value)) {
     return `"${value.replace(/"/g, '""')}"`;
@@ -36,11 +43,37 @@ function escapeCsvField(value: string): string {
   return value;
 }
 
+function shouldPrefixFormulaEscape(value: string): boolean {
+  if (value.length === 0) {
+    return false;
+  }
+  const first = value.charCodeAt(0);
+  const triggersFormula =
+    first === 0x3d /* = */ ||
+    first === 0x2b /* + */ ||
+    first === 0x2d /* - */ ||
+    first === 0x40 /* @ */ ||
+    first === 0x09 /* \t */ ||
+    first === 0x0d; /* \r */
+  if (!triggersFormula) {
+    return false;
+  }
+  return !PLAIN_DECIMAL_NUMBER.test(value);
+}
+
+function formatCsvField(value: string, escapeFormulas: boolean): string {
+  const prepared =
+    escapeFormulas && shouldPrefixFormulaEscape(value) ? `'${value}` : value;
+  return escapeCsvField(prepared);
+}
+
 export function exportTableToCsv<TRow>(options: ExportTableToCsvOptions<TRow>): string {
-  const { columns, rows, getCellText } = options;
-  const headerLine = columns.map((column) => escapeCsvField(column.header)).join(",");
+  const { columns, rows, getCellText, escapeFormulas = true } = options;
+  const headerLine = columns.map((column) => formatCsvField(column.header, escapeFormulas)).join(",");
   const bodyLines = rows.map((row) =>
-    columns.map((column) => escapeCsvField(getCellText(row, column.id))).join(","),
+    columns
+      .map((column) => formatCsvField(getCellText(row, column.id), escapeFormulas))
+      .join(","),
   );
   return [headerLine, ...bodyLines].join("\r\n");
 }

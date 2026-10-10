@@ -94,6 +94,61 @@ describe("exportTableToCsv", () => {
 
     expect(csv).toBe("Name,Note\r\nAlpha,");
   });
+
+  it("leaves plain decimal numbers unchanged when escaping formulas", () => {
+    const csv = exportTableToCsv({
+      columns: [{ id: "a", header: "A" }, { id: "b", header: "B" }, { id: "c", header: "C" }],
+      rows: [{ a: "-5", b: "+3.2", c: "-1e3" }],
+      getCellText: (row, columnId) => row[columnId as keyof typeof row],
+    });
+
+    expect(csv).toBe("A,B,C\r\n-5,+3.2,-1e3");
+  });
+
+  it("prefixes formula-triggering body cells and quotes when needed", () => {
+    const csv = exportTableToCsv({
+      columns: [
+        { id: "formula", header: "Formula" },
+        { id: "at", header: "At" },
+        { id: "tab", header: "Tab" },
+        { id: "comma", header: "Comma" },
+      ],
+      rows: [
+        {
+          formula: "=SUM(A1)",
+          at: "@x",
+          tab: "\tx",
+          comma: "=1,2",
+        },
+      ],
+      getCellText: (row, columnId) => row[columnId as keyof typeof row],
+    });
+
+    expect(csv).toBe(
+      "Formula,At,Tab,Comma\r\n'=SUM(A1),'@x,'\tx,\"'=1,2\"",
+    );
+  });
+
+  it("escapes header cells that start with formula triggers", () => {
+    const csv = exportTableToCsv({
+      columns: [{ id: "x", header: "=Title" }],
+      rows: [{ x: "ok" }],
+      getCellText: (row) => row.x,
+    });
+
+    expect(csv).toBe("'=Title\r\nok");
+  });
+
+  it("restores pre-fix output when escapeFormulas is false", () => {
+    const csv = exportTableToCsv({
+      columns: [{ id: "x", header: "X" }],
+      rows: [{ x: "=SUM(A1)" }],
+      getCellText: (row) => row.x,
+      escapeFormulas: false,
+    });
+
+    expect(csv).toBe("X\r\n=SUM(A1)");
+  });
 });
 
 describe("downloadCsvFile", () => {
