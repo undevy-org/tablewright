@@ -8,7 +8,16 @@ import {
 } from "../ui/dropdown-menu";
 import type { SortDirection } from "./types";
 
-import { ArrowUp, ArrowDown, ChevronDown, ListFilter, EyeOff, Check } from "lucide-react";
+import {
+  ArrowUp,
+  ArrowDown,
+  ChevronDown,
+  ListFilter,
+  EyeOff,
+  Check,
+  Pin,
+  PinOff,
+} from "lucide-react";
 
 export interface ColumnHeaderMenuLabels {
   sort: string;
@@ -17,6 +26,9 @@ export interface ColumnHeaderMenuLabels {
   descending: string;
   filterByColumn: string;
   hideColumn: string;
+  pinLeft: string;
+  pinRight: string;
+  unpin: string;
 }
 
 const DEFAULT_LABELS: ColumnHeaderMenuLabels = {
@@ -26,6 +38,9 @@ const DEFAULT_LABELS: ColumnHeaderMenuLabels = {
   descending: "Descending",
   filterByColumn: "Filter by this column",
   hideColumn: "Hide column",
+  pinLeft: "Pin left",
+  pinRight: "Pin right",
+  unpin: "Unpin",
 };
 
 interface ColumnHeaderMenuProps {
@@ -50,6 +65,12 @@ interface ColumnHeaderMenuProps {
 
   // Hide action
   onHide?: () => void;
+
+  // Pin actions
+  pinSide?: "left" | "right" | false;
+  onPinLeft?: () => void;
+  onPinRight?: () => void;
+  onUnpin?: () => void;
 
   // Customization
   labels?: Partial<ColumnHeaderMenuLabels>;
@@ -110,6 +131,10 @@ export function ColumnHeaderMenu({
   hasFilter,
   onFilterClick,
   onHide,
+  pinSide = false,
+  onPinLeft,
+  onPinRight,
+  onUnpin,
   labels: labelOverrides,
   menuWidth = "w-[200px]",
 }: ColumnHeaderMenuProps) {
@@ -118,7 +143,15 @@ export function ColumnHeaderMenu({
   const isStacked = !!primaryLabel;
   const isSingleSortable = !!label && !!onSort;
   const isSortable = isStacked || isSingleSortable;
-  const hasActions = hasFilter || !!onHide;
+  const showFilterItem = Boolean(hasFilter && onFilterClick);
+  const showHideItem = Boolean(onHide);
+  const showPinLeftItem = Boolean(onPinLeft);
+  const showPinRightItem = Boolean(onPinRight);
+  const showUnpinItem = Boolean(onUnpin && pinSide);
+  const hasPinSection = showPinLeftItem || showPinRightItem || showUnpinItem;
+  const hasFilterOrHide = showFilterItem || showHideItem;
+  const showSeparatorAfterSort = isSortable && (hasFilterOrHide || hasPinSection);
+  const showSeparatorBeforePin = hasPinSection && hasFilterOrHide;
 
   const labelContent = isStacked ? (
     <span className="flex flex-col leading-none">
@@ -185,22 +218,49 @@ export function ColumnHeaderMenu({
         )}
 
         {/* Separator */}
-        {isSortable && hasActions && (
+        {showSeparatorAfterSort && (
           <div className="my-1 border-t border-[var(--border-subtle)]" />
         )}
 
         {/* Filter + Hide section */}
-        {hasFilter && onFilterClick && (
+        {showFilterItem && (
           <DropdownMenuItem className={itemClass} onClick={onFilterClick}>
             <ListFilter className={iconClass} />
             {labels.filterByColumn}
           </DropdownMenuItem>
         )}
 
-        {onHide && (
+        {showHideItem && (
           <DropdownMenuItem className={itemClass} onClick={onHide}>
             <EyeOff className={iconClass} />
             {labels.hideColumn}
+          </DropdownMenuItem>
+        )}
+
+        {showSeparatorBeforePin && (
+          <div className="my-1 border-t border-[var(--border-subtle)]" />
+        )}
+
+        {showPinLeftItem && (
+          <DropdownMenuItem className={itemClass} onClick={onPinLeft}>
+            <Pin className={iconClass} />
+            {labels.pinLeft}
+            {pinSide === "left" && <Check className="ml-auto h-3 w-3 text-[var(--text-tertiary)]" />}
+          </DropdownMenuItem>
+        )}
+
+        {showPinRightItem && (
+          <DropdownMenuItem className={itemClass} onClick={onPinRight}>
+            <Pin className={`${iconClass} rotate-90`} />
+            {labels.pinRight}
+            {pinSide === "right" && <Check className="ml-auto h-3 w-3 text-[var(--text-tertiary)]" />}
+          </DropdownMenuItem>
+        )}
+
+        {showUnpinItem && (
+          <DropdownMenuItem className={itemClass} onClick={onUnpin}>
+            <PinOff className={iconClass} />
+            {labels.unpin}
           </DropdownMenuItem>
         )}
       </DropdownMenuContent>

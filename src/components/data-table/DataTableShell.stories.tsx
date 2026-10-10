@@ -1,6 +1,6 @@
-import { useMemo, useState } from 'react';
+import { useLayoutEffect, useMemo, useRef, useState } from 'react';
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import type { ColumnDef } from '@tanstack/react-table';
+import type { ColumnDef, ColumnPinningState } from '@tanstack/react-table';
 import { getCoreRowModel, useReactTable } from '@tanstack/react-table';
 import { Landmark, Shield, Split } from 'lucide-react';
 
@@ -13,6 +13,9 @@ import { RowActionsMenu } from './RowActionsMenu';
 import { TableFooter } from './TableFooter';
 import { DrawerSection } from './DrawerSection';
 import { DrawerField } from './DrawerField';
+import { ColumnHeaderMenu } from './ColumnHeaderMenu';
+import type { ViewPreset } from './filter-types';
+import { useTableOrchestration } from '../../hooks/useTableOrchestration';
 import { useColumnResize } from './hooks/use-column-resize';
 import { useTableSort } from './hooks/use-table-sort';
 import { Badge } from '../ui/badge';
@@ -420,4 +423,207 @@ export const WithDrawerOpen: Story = {
       initialDrawerRowId={workspaceRows[0].id}
     />
   ),
+};
+
+type WorkspaceViewKey = 'all';
+
+const workspaceViewPresets: ViewPreset<WorkspaceRow, WorkspaceViewKey>[] = [
+  { key: 'all', label: 'All', filters: [], sort: null },
+];
+
+function pinSideForColumn(
+  columnId: string,
+  pinning: ColumnPinningState,
+): 'left' | 'right' | false {
+  if (pinning.left?.includes(columnId)) return 'left';
+  if (pinning.right?.includes(columnId)) return 'right';
+  return false;
+}
+
+function DataTableShellColumnPinningDemo() {
+  const orch = useTableOrchestration<WorkspaceRow, WorkspaceViewKey>({
+    rows: workspaceRows,
+    getRowId: (row) => row.id,
+    filterRow: () => true,
+    getSortValue: (row, columnId) => {
+      switch (columnId) {
+        case 'status':
+          return row.status;
+        case 'tier':
+          return row.tier;
+        case 'updatedAt':
+          return row.updatedAt;
+        case 'workspace':
+          return row.name;
+        default:
+          return row.name;
+      }
+    },
+    getSearchText: (row) => `${row.name} ${row.id}`.toLowerCase(),
+    filterConfigs: {},
+    columnMeta,
+    toggleableColumnIds: ['workspace', 'status', 'tier', 'updatedAt'],
+    rowsPerPageOptions: [15],
+    viewPresets: workspaceViewPresets,
+    defaultViewKey: 'all',
+  });
+
+  const {
+    columnPinning,
+    sortState,
+    handleHeaderSort,
+    pinColumn,
+    unpinColumn,
+    getSelectedIds,
+    handleToggleRowSelection,
+    getHeaderCheckState,
+    handleToggleHeaderCheck,
+    paginatedRows,
+    extendedColumnMeta,
+    extendedWidths,
+    onPointerDown,
+  } = orch;
+
+  const initialPinsApplied = useRef(false);
+  useLayoutEffect(() => {
+    if (initialPinsApplied.current) return;
+    initialPinsApplied.current = true;
+    pinColumn('workspace', 'left');
+    pinColumn('tier', 'right');
+  }, [pinColumn]);
+
+  const columns = useMemo<ColumnDef<WorkspaceRow>[]>(
+    () => [
+      {
+        id: 'rowControl',
+        enableResizing: false,
+        header: () => (
+          <RowControlHeader
+            checked={getHeaderCheckState()}
+            onToggle={handleToggleHeaderCheck}
+          />
+        ),
+        cell: ({ row }) => (
+          <RowControlCell
+            rowNumber={row.index + 1}
+            selected={getSelectedIds().has(row.original.id)}
+            onSelectToggle={() => handleToggleRowSelection(row.original.id)}
+          />
+        ),
+      },
+      {
+        id: 'workspace',
+        accessorFn: (row) => row.name,
+        header: () => (
+          <ColumnHeaderMenu
+            label="Workspace"
+            onPinLeft={() => pinColumn('workspace', 'left')}
+            onPinRight={() => pinColumn('workspace', 'right')}
+            onUnpin={() => unpinColumn('workspace')}
+            pinSide={pinSideForColumn('workspace', columnPinning)}
+          />
+        ),
+        cell: ({ row }) => (
+          <span className="font-semibold text-[var(--text-primary)]">{row.original.name}</span>
+        ),
+      },
+      {
+        id: 'status',
+        accessorFn: (row) => row.status,
+        header: () => (
+          <ColumnHeaderMenu
+            label="Status"
+            sorted={sortState.status ?? false}
+            onSort={(direction) => handleHeaderSort('status', direction)}
+            onPinLeft={() => pinColumn('status', 'left')}
+            onPinRight={() => pinColumn('status', 'right')}
+            onUnpin={() => unpinColumn('status')}
+            pinSide={pinSideForColumn('status', columnPinning)}
+          />
+        ),
+        cell: ({ row }) => (
+          <Badge variant={row.original.status === 'ACTIVE' ? 'success' : 'danger'}>
+            {row.original.status}
+          </Badge>
+        ),
+      },
+      {
+        id: 'tier',
+        accessorFn: (row) => row.tier,
+        header: () => (
+          <ColumnHeaderMenu
+            label="Tier"
+            onPinLeft={() => pinColumn('tier', 'left')}
+            onPinRight={() => pinColumn('tier', 'right')}
+            onUnpin={() => unpinColumn('tier')}
+            pinSide={pinSideForColumn('tier', columnPinning)}
+          />
+        ),
+        cell: ({ row }) => <span>{row.original.tier}</span>,
+      },
+      {
+        id: 'updatedAt',
+        accessorFn: (row) => row.updatedAt,
+        header: () => (
+          <ColumnHeaderMenu
+            label="Updated"
+            onPinLeft={() => pinColumn('updatedAt', 'left')}
+            onPinRight={() => pinColumn('updatedAt', 'right')}
+            onUnpin={() => unpinColumn('updatedAt')}
+            pinSide={pinSideForColumn('updatedAt', columnPinning)}
+          />
+        ),
+        cell: ({ row }) => <span className="font-mono text-[13px]">{row.original.updatedAt}</span>,
+      },
+      {
+        id: 'actions',
+        enableResizing: false,
+        header: () => (
+          <span className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--text-primary)]">
+            Actions
+          </span>
+        ),
+        cell: () => (
+          <div className="flex justify-end">
+            <RowActionsMenu sections={groupedActions} triggerClassName="opacity-100" />
+          </div>
+        ),
+      },
+    ],
+    [
+      columnPinning,
+      sortState,
+      handleHeaderSort,
+      pinColumn,
+      unpinColumn,
+      getSelectedIds,
+      handleToggleRowSelection,
+      getHeaderCheckState,
+      handleToggleHeaderCheck,
+    ],
+  );
+
+  const table = useReactTable({
+    data: paginatedRows,
+    columns,
+    getCoreRowModel: getCoreRowModel(),
+    getRowId: (row) => row.id,
+  });
+
+  return (
+    <div className="h-[480px] overflow-hidden rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-surface)]">
+      <DataTableShell
+        table={table}
+        dense={false}
+        emptyMessage="No workspaces."
+        columnMeta={extendedColumnMeta}
+        columnWidths={extendedWidths}
+        onColumnResizeStart={onPointerDown}
+      />
+    </div>
+  );
+}
+
+export const WithColumnPinning: Story = {
+  render: () => <DataTableShellColumnPinningDemo />,
 };
