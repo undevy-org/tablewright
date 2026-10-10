@@ -1,5 +1,11 @@
 # @undevy-org/tablewright
 
+## 0.9.1
+
+### Patch Changes
+
+- [#78](https://github.com/undevy-org/tablewright/pull/78) [`1e81d47`](https://github.com/undevy-org/tablewright/commit/1e81d473382432044a5ae71b46eddcc2d8d3e615) Thanks [@undevy](https://github.com/undevy)! - Fix `applyColumnPinningToMeta` rewriting static sticky offsets when column pinning is empty; only pinned columns get recomputed offsets.
+
 ## 0.9.0
 
 ### Minor Changes
