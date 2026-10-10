@@ -194,6 +194,8 @@ export type {
   DownloadCsvFileOptions,
   ExportTableToCsvOptions,
 } from "./lib/export-table-csv";
+export { applyColumnPinningToMeta } from "./components/data-table/sticky-utils";
+export type { ApplyColumnPinningToMetaOptions } from "./components/data-table/sticky-utils";
 export { computeColumnGaps, gapColumnId } from "./lib/column-gaps";
 export { computeColumnStats } from "./lib/filter-stats";
 export { formatEnumLabel } from "./lib/format-enum";

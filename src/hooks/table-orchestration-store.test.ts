@@ -191,4 +191,131 @@ describe("createTableOrchestrationStore", () => {
     expect(store.getState().searchQuery).toBe("find me");
     expect(store.getState().page).toBe(1);
   });
+
+  it("starts with empty column pinning lists", () => {
+    const store = makeStore();
+    expect(store.getState().columnPinning).toEqual({ left: [], right: [] });
+  });
+
+  it("pin and unpin update columnPinning without changing activeView", () => {
+    const store = makeStore("all");
+
+    store.getState().pinColumn("name", "left");
+    expect(store.getState().columnPinning).toEqual({ left: ["name"], right: [] });
+    expect(store.getState().activeView).toBe("all");
+
+    store.getState().pinColumn("status", "right");
+    expect(store.getState().columnPinning).toEqual({ left: ["name"], right: ["status"] });
+
+    store.getState().pinColumn("name", "right");
+    expect(store.getState().columnPinning).toEqual({ left: [], right: ["status", "name"] });
+
+    store.getState().unpinColumn("name");
+    expect(store.getState().columnPinning).toEqual({ left: [], right: ["status"] });
+
+    store.getState().unpinColumn("missing");
+    expect(store.getState().columnPinning).toEqual({ left: [], right: ["status"] });
+    expect(store.getState().activeView).toBe("all");
+  });
+
+  it("pinColumn appends to the right list when side is right", () => {
+    const store = makeStore();
+    store.getState().pinColumn("a", "right");
+    store.getState().pinColumn("b", "right");
+    expect(store.getState().columnPinning).toEqual({ left: [], right: ["a", "b"] });
+  });
+
+  it("unpinColumn removes only the matching column id", () => {
+    const store = makeStore();
+    store.getState().pinColumn("keep", "left");
+    store.getState().pinColumn("drop", "left");
+    store.getState().unpinColumn("drop");
+    expect(store.getState().columnPinning).toEqual({ left: ["keep"], right: [] });
+  });
+
+  it("pinColumn does not change activeView when already on custom (hideColumn regression)", () => {
+    const store = makeStore("all");
+    store.getState().toggleSort("name", "asc");
+    expect(store.getState().activeView).toBe("custom");
+
+    store.getState().hideColumn("other");
+    expect(store.getState().activeView).toBe("custom");
+
+    store.getState().pinColumn("col", "left");
+    expect(store.getState().activeView).toBe("custom");
+  });
+
+  it("pinColumn and unpinColumn tolerate partial columnPinning state", () => {
+    const store = makeStore();
+    store.setState({ columnPinning: { right: ["status"] } });
+
+    store.getState().pinColumn("name", "left");
+    expect(store.getState().columnPinning).toEqual({
+      left: ["name"],
+      right: ["status"],
+    });
+
+    store.setState({ columnPinning: { left: ["name"] } });
+    store.getState().unpinColumn("name");
+    expect(store.getState().columnPinning).toEqual({ left: [], right: [] });
+  });
+
+  it("pinColumn to the right removes the column from the left list", () => {
+    const store = makeStore();
+    store.getState().pinColumn("name", "left");
+    store.getState().pinColumn("name", "right");
+
+    expect(store.getState().columnPinning).toEqual({ left: [], right: ["name"] });
+  });
+
+  it("pinColumn with a missing left list only records the new left pin", () => {
+    const store = makeStore();
+    store.setState({ columnPinning: { right: [] } });
+
+    store.getState().pinColumn("name", "left");
+    expect(store.getState().columnPinning.left).toEqual(["name"]);
+  });
+
+  it("pinColumn to the right keeps existing left pins", () => {
+    const store = makeStore();
+    store.getState().pinColumn("a", "left");
+    store.getState().pinColumn("b", "right");
+
+    expect(store.getState().columnPinning).toEqual({ left: ["a"], right: ["b"] });
+  });
+
+  it("pinColumn moves a column from right to left", () => {
+    const store = makeStore();
+    store.getState().pinColumn("name", "right");
+    store.getState().pinColumn("name", "left");
+
+    expect(store.getState().columnPinning).toEqual({ left: ["name"], right: [] });
+  });
+
+  it("pinColumn to the right with a missing right list only records the new right pin", () => {
+    const store = makeStore();
+    store.setState({ columnPinning: { left: ["keep"] } });
+
+    store.getState().pinColumn("name", "right");
+    expect(store.getState().columnPinning).toEqual({
+      left: ["keep"],
+      right: ["name"],
+    });
+  });
+
+  it("unpinColumn clears the column from both pinning lists", () => {
+    const store = makeStore();
+    store.setState({ columnPinning: { left: ["name"], right: ["name"] } });
+    store.getState().unpinColumn("name");
+
+    expect(store.getState().columnPinning).toEqual({ left: [], right: [] });
+  });
+
+  it("unpinColumn with a missing left list leaves left empty", () => {
+    const store = makeStore();
+    store.setState({ columnPinning: { right: ["status"] } });
+    store.getState().unpinColumn("status");
+
+    expect(store.getState().columnPinning).toEqual({ left: [], right: [] });
+  });
 });

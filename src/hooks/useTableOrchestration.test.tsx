@@ -199,6 +199,48 @@ describe("useTableOrchestration", () => {
     }
   });
 
+  it("exposes pinColumn and unpinColumn from the store", () => {
+    const { result } = renderHook(() => useTableOrchestration(baseConfig));
+
+    act(() => {
+      result.current.pinColumn("name", "right");
+    });
+    expect(result.current.columnPinning).toEqual({ left: [], right: ["name"] });
+
+    act(() => {
+      result.current.unpinColumn("name");
+    });
+    expect(result.current.columnPinning).toEqual({ left: [], right: [] });
+  });
+
+  it("merges column pinning into extendedColumnMeta", () => {
+    const { result } = renderHook(() =>
+      useTableOrchestration(
+        makeConfig({
+          columnMeta: {
+            rowControl: { minW: 48, sticky: "left", stickyOffset: 0, variant: "control" },
+            ...columnMeta,
+            actions: { minW: 64, sticky: "right", stickyOffset: 0 },
+          },
+        }),
+      ),
+    );
+
+    act(() => {
+      result.current.pinColumn("name", "left");
+    });
+
+    expect(result.current.columnPinning).toEqual({ left: ["name"], right: [] });
+    expect(result.current.extendedColumnMeta.name).toMatchObject({
+      sticky: "left",
+      stickyOffset: 48,
+    });
+    expect(result.current.extendedColumnMeta.rowControl).toMatchObject({
+      sticky: "left",
+      stickyOffset: 0,
+    });
+  });
+
   it("exposes gap columns in extended meta and widths", () => {
     const { result } = renderHook(() => useTableOrchestration(baseConfig));
 
@@ -210,6 +252,129 @@ describe("useTableOrchestration", () => {
     expect(result.current.columnGaps).toEqual([{ afterColumnId: "name", hiddenIds: ["status"] }]);
     expect(result.current.extendedColumnMeta[gapId]).toEqual({ minW: 32 });
     expect(result.current.extendedWidths[gapId]).toBe(32);
+  });
+
+  it("recomputes extendedColumnMeta when visibility changes after pinning", () => {
+    const { result } = renderHook(() =>
+      useTableOrchestration(
+        makeConfig({
+          columnMeta: {
+            rowControl: { minW: 48, sticky: "left", stickyOffset: 0, variant: "control" },
+            ...columnMeta,
+          },
+        }),
+      ),
+    );
+
+    act(() => {
+      result.current.pinColumn("name", "left");
+    });
+    expect(result.current.extendedColumnMeta.name).toMatchObject({
+      sticky: "left",
+      stickyOffset: 48,
+    });
+
+    act(() => {
+      result.current.handleHideColumn("status");
+    });
+
+    const gapId = gapColumnId("name");
+    expect(result.current.extendedColumnMeta[gapId]).toEqual({ minW: 32 });
+    expect(result.current.extendedColumnMeta.name).toMatchObject({
+      sticky: "left",
+      stickyOffset: 48,
+    });
+  });
+
+  it("drops hidden columns from visible order when stacking left pin offsets", () => {
+    const { result } = renderHook(() =>
+      useTableOrchestration(
+        makeConfig({
+          columnMeta: {
+            rowControl: { minW: 48, sticky: "left", stickyOffset: 0, variant: "control" },
+            ...columnMeta,
+          },
+        }),
+      ),
+    );
+
+    act(() => {
+      result.current.pinColumn("status", "left");
+      result.current.pinColumn("score", "left");
+    });
+    expect(result.current.extendedColumnMeta.score).toMatchObject({
+      sticky: "left",
+      stickyOffset: 48 + 100,
+    });
+
+    act(() => {
+      result.current.handleHideColumn("status");
+    });
+    expect(result.current.extendedColumnMeta.score).toMatchObject({
+      sticky: "left",
+      stickyOffset: 48,
+    });
+  });
+
+  it("stacks left pin offsets using visible column order", () => {
+    const { result } = renderHook(() =>
+      useTableOrchestration(
+        makeConfig({
+          columnMeta: {
+            rowControl: { minW: 48, sticky: "left", stickyOffset: 0, variant: "control" },
+            ...columnMeta,
+          },
+        }),
+      ),
+    );
+
+    act(() => {
+      result.current.pinColumn("name", "left");
+      result.current.pinColumn("score", "left");
+    });
+
+    expect(result.current.extendedColumnMeta.name).toMatchObject({
+      sticky: "left",
+      stickyOffset: 48,
+    });
+    expect(result.current.extendedColumnMeta.score).toMatchObject({
+      sticky: "left",
+      stickyOffset: 48 + 120,
+    });
+  });
+
+  it("includes actions in visible column order for right pinning offsets", () => {
+    const { result } = renderHook(() =>
+      useTableOrchestration(
+        makeConfig({
+          columnMeta: {
+            ...columnMeta,
+            actions: { minW: 64, sticky: "right", stickyOffset: 0 },
+          },
+        }),
+      ),
+    );
+
+    act(() => {
+      result.current.pinColumn("score", "right");
+    });
+
+    expect(result.current.extendedColumnMeta.score).toMatchObject({
+      sticky: "right",
+      stickyOffset: 64,
+    });
+    expect(result.current.extendedColumnMeta.actions).toMatchObject({
+      sticky: "right",
+      stickyOffset: 0,
+    });
+  });
+
+  it("leaves extendedColumnMeta unchanged when columnPinning is empty", () => {
+    const { result } = renderHook(() => useTableOrchestration(baseConfig));
+
+    expect(result.current.columnPinning).toEqual({ left: [], right: [] });
+    expect(result.current.extendedColumnMeta.name).toEqual(columnMeta.name);
+    expect(result.current.extendedColumnMeta.status).toEqual(columnMeta.status);
   });
 
   it("only refreshes handleToggleHeaderCheck when selection or page changes", () => {
