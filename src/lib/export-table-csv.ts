@@ -34,7 +34,8 @@ export type DownloadCsvFileOptions = {
   utf8Bom?: boolean;
 };
 
-const PLAIN_DECIMAL_NUMBER = /^[+-]?(\d+(\.\d+)?|\.\d+)([eE][+-]?\d+)?$/;
+const PLAIN_DECIMAL_CORE = /^(\d+(\.\d+)?|\.\d+)([eE][+-]?\d+)?$/;
+const FORMULA_TRIGGER_PREFIX = /^[=+\-@\t\r]/;
 
 function escapeCsvField(value: string): string {
   if (/[",\r\n]/.test(value)) {
@@ -43,22 +44,22 @@ function escapeCsvField(value: string): string {
   return value;
 }
 
+function isSignedPlainDecimal(value: string): boolean {
+  const first = value[0];
+  if (first !== "+" && first !== "-") {
+    return false;
+  }
+  return PLAIN_DECIMAL_CORE.test(value.slice(1));
+}
+
 function shouldPrefixFormulaEscape(value: string): boolean {
-  if (value.length === 0) {
+  if (!FORMULA_TRIGGER_PREFIX.test(value)) {
     return false;
   }
-  const first = value.charCodeAt(0);
-  const triggersFormula =
-    first === 0x3d /* = */ ||
-    first === 0x2b /* + */ ||
-    first === 0x2d /* - */ ||
-    first === 0x40 /* @ */ ||
-    first === 0x09 /* \t */ ||
-    first === 0x0d; /* \r */
-  if (!triggersFormula) {
+  if (isSignedPlainDecimal(value)) {
     return false;
   }
-  return !PLAIN_DECIMAL_NUMBER.test(value);
+  return true;
 }
 
 function formatCsvField(value: string, escapeFormulas: boolean): string {
