@@ -207,4 +207,105 @@ describe("applyColumnPinningToMeta", () => {
 
     expect(merged.name).toMatchObject({ sticky: "left", stickyOffset: 25 });
   });
+
+  it("empty pinning deep-equals base meta when static left stickies have custom offsets (B21)", () => {
+    const reproMeta: Record<string, ColumnMetaDef> = {
+      rowControl: { minW: 60, sticky: "left", stickyOffset: 0 },
+      name: { minW: 100, sticky: "left", stickyOffset: 72 },
+      amount: { minW: 120 },
+      actions: { minW: 72, sticky: "right", stickyOffset: 0 },
+    };
+    const reproOrder = ["rowControl", "name", "amount", "actions"];
+
+    const merged = applyColumnPinningToMeta(
+      reproMeta,
+      { left: [], right: [] },
+      { columnOrder: reproOrder },
+    );
+
+    expect(merged).toEqual(reproMeta);
+    expect(merged.name.stickyOffset).toBe(72);
+  });
+
+  it("undefined pinning lists deep-equal base meta (B21)", () => {
+    const reproMeta: Record<string, ColumnMetaDef> = {
+      rowControl: { minW: 60, sticky: "left", stickyOffset: 0 },
+      name: { minW: 100, sticky: "left", stickyOffset: 72 },
+      amount: { minW: 120 },
+      actions: { minW: 72, sticky: "right", stickyOffset: 0 },
+    };
+
+    const merged = applyColumnPinningToMeta(reproMeta, {}, { columnOrder: ["rowControl", "name", "amount", "actions"] });
+
+    expect(merged).toEqual(reproMeta);
+  });
+
+  it("leaves unpinned columns unchanged when a sibling is pinned (B21)", () => {
+    const meta: Record<string, ColumnMetaDef> = {
+      rowControl: { minW: 60, sticky: "left", stickyOffset: 0, variant: "control" },
+      name: { minW: 100, sticky: "left", stickyOffset: 72 },
+      amount: { minW: 120 },
+      actions: { minW: 72, sticky: "right", stickyOffset: 0 },
+    };
+    const order = ["rowControl", "name", "amount", "actions"];
+
+    const merged = applyColumnPinningToMeta(meta, { left: ["amount"] }, { columnOrder: order });
+
+    expect(merged.rowControl).toEqual(meta.rowControl);
+    expect(merged.name).toEqual(meta.name);
+    expect(merged.actions).toEqual(meta.actions);
+    expect(merged.amount).toMatchObject({ sticky: "left", stickyOffset: 172 });
+  });
+
+  it("pinned left offset uses static stickyOffset plus width for preceding stickies (B21)", () => {
+    const meta: Record<string, ColumnMetaDef> = {
+      rowControl: { minW: 60, sticky: "left", stickyOffset: 0 },
+      name: { minW: 100, sticky: "left", stickyOffset: 72 },
+      amount: { minW: 120 },
+    };
+
+    const merged = applyColumnPinningToMeta(
+      meta,
+      { left: ["amount"] },
+      { columnOrder: ["rowControl", "name", "amount"] },
+    );
+
+    expect(merged.name.stickyOffset).toBe(72);
+    expect(merged.amount).toMatchObject({ sticky: "left", stickyOffset: 172 });
+  });
+
+  it("two static right stickies unchanged under empty pinning (B21)", () => {
+    const meta: Record<string, ColumnMetaDef> = {
+      amount: { minW: 120 },
+      status: { minW: 80, sticky: "right", stickyOffset: 72 },
+      actions: { minW: 72, sticky: "right", stickyOffset: 0 },
+    };
+
+    const merged = applyColumnPinningToMeta(
+      meta,
+      { left: [], right: [] },
+      { columnOrder: ["amount", "status", "actions"] },
+    );
+
+    expect(merged).toEqual(meta);
+  });
+
+  it("pinned right offset walks from end with static right stickies (B21)", () => {
+    const meta: Record<string, ColumnMetaDef> = {
+      name: { minW: 100 },
+      amount: { minW: 120 },
+      status: { minW: 80, sticky: "right", stickyOffset: 72 },
+      actions: { minW: 72, sticky: "right", stickyOffset: 0 },
+    };
+
+    const merged = applyColumnPinningToMeta(
+      meta,
+      { right: ["amount"] },
+      { columnOrder: ["name", "amount", "status", "actions"] },
+    );
+
+    expect(merged.status).toEqual(meta.status);
+    expect(merged.actions).toEqual(meta.actions);
+    expect(merged.amount).toMatchObject({ sticky: "right", stickyOffset: 152 });
+  });
 });
