@@ -94,6 +94,127 @@ describe("exportTableToCsv", () => {
 
     expect(csv).toBe("Name,Note\r\nAlpha,");
   });
+
+  it("leaves plain decimal numbers unchanged when escaping formulas", () => {
+    const csv = exportTableToCsv({
+      columns: [
+        { id: "a", header: "A" },
+        { id: "b", header: "B" },
+        { id: "c", header: "C" },
+        { id: "d", header: "D" },
+        { id: "e", header: "E" },
+        { id: "f", header: "F" },
+        { id: "g", header: "G" },
+        { id: "h", header: "H" },
+        { id: "i", header: "I" },
+        { id: "j", header: "J" },
+      ],
+      rows: [
+        {
+          a: "-5",
+          b: "+3.2",
+          c: "-1e3",
+          d: ".5",
+          e: "+.5",
+          f: "-1.2e10",
+          g: "-10",
+          h: "+3.21",
+          i: "-.99",
+          j: "-1e+10",
+        },
+      ],
+      getCellText: (row, columnId) => row[columnId as keyof typeof row],
+    });
+
+    expect(csv).toBe(
+      "A,B,C,D,E,F,G,H,I,J\r\n-5,+3.2,-1e3,.5,+.5,-1.2e10,-10,+3.21,-.99,-1e+10",
+    );
+  });
+
+  it("escapes body cells that start with carriage return", () => {
+    const csv = exportTableToCsv({
+      columns: [{ id: "x", header: "X" }],
+      rows: [{ x: "\rx" }],
+      getCellText: (row) => row.x,
+    });
+
+    expect(csv).toBe("X\r\n\"'\rx\"");
+  });
+
+  it("escapes signed text that is not a plain decimal number", () => {
+    const csv = exportTableToCsv({
+      columns: [{ id: "plus", header: "Plus" }, { id: "minus", header: "Minus" }],
+      rows: [{ plus: "+SUM(A1)", minus: "-cmd/calc" }],
+      getCellText: (row, columnId) => row[columnId as keyof typeof row],
+    });
+
+    expect(csv).toBe("Plus,Minus\r\n'+SUM(A1),'-cmd/calc");
+  });
+
+  it("escapes locale-formatted numbers and signed tokens with numeric prefixes", () => {
+    const csv = exportTableToCsv({
+      columns: [{ id: "locale", header: "Locale" }, { id: "suffix", header: "Suffix" }],
+      rows: [{ locale: "-1 234,50", suffix: "-5abc" }],
+      getCellText: (row, columnId) => row[columnId as keyof typeof row],
+    });
+
+    expect(csv).toBe("Locale,Suffix\r\n\"'-1 234,50\",'-5abc");
+  });
+
+  it("escapes non-signed formula triggers even when the remainder looks numeric", () => {
+    const csv = exportTableToCsv({
+      columns: [{ id: "eq", header: "Eq" }, { id: "tab", header: "Tab" }],
+      rows: [{ eq: "=5", tab: "\t5" }],
+      getCellText: (row, columnId) => row[columnId as keyof typeof row],
+    });
+
+    expect(csv).toBe("Eq,Tab\r\n'=5,'\t5");
+  });
+
+  it("prefixes formula-triggering body cells and quotes when needed", () => {
+    const csv = exportTableToCsv({
+      columns: [
+        { id: "formula", header: "Formula" },
+        { id: "at", header: "At" },
+        { id: "tab", header: "Tab" },
+        { id: "comma", header: "Comma" },
+      ],
+      rows: [
+        {
+          formula: "=SUM(A1)",
+          at: "@x",
+          tab: "\tx",
+          comma: "=1,2",
+        },
+      ],
+      getCellText: (row, columnId) => row[columnId as keyof typeof row],
+    });
+
+    expect(csv).toBe(
+      "Formula,At,Tab,Comma\r\n'=SUM(A1),'@x,'\tx,\"'=1,2\"",
+    );
+  });
+
+  it("escapes header cells that start with formula triggers", () => {
+    const csv = exportTableToCsv({
+      columns: [{ id: "x", header: "=Title" }],
+      rows: [{ x: "ok" }],
+      getCellText: (row) => row.x,
+    });
+
+    expect(csv).toBe("'=Title\r\nok");
+  });
+
+  it("restores pre-fix output when escapeFormulas is false", () => {
+    const csv = exportTableToCsv({
+      columns: [{ id: "x", header: "X" }],
+      rows: [{ x: "=SUM(A1)" }],
+      getCellText: (row) => row.x,
+      escapeFormulas: false,
+    });
+
+    expect(csv).toBe("X\r\n=SUM(A1)");
+  });
 });
 
 describe("downloadCsvFile", () => {
