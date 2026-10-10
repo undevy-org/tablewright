@@ -1,5 +1,11 @@
 # @undevy-org/tablewright
 
+## 0.9.0
+
+### Minor Changes
+
+- [#76](https://github.com/undevy-org/tablewright/pull/76) [`d14a994`](https://github.com/undevy-org/tablewright/commit/d14a99488d564c6a7c288a03e8667cc92569a69d) Thanks [@undevy](https://github.com/undevy)! - Add column pinning orchestration state (`columnPinning`, `pinColumn`, `unpinColumn`) and `applyColumnPinningToMeta` for merging pin positions into extended column meta.
+
 ## 0.8.1
 
 ### Patch Changes
