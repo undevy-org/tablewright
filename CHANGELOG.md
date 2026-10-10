@@ -1,5 +1,11 @@
 # @undevy-org/tablewright
 
+## 0.8.1
+
+### Patch Changes
+
+- [#74](https://github.com/undevy-org/tablewright/pull/74) [`6c2390e`](https://github.com/undevy-org/tablewright/commit/6c2390e9bd65671503ffc7aa3df167782f10d62c) Thanks [@undevy](https://github.com/undevy)! - Security: CSV export prefixes formula-triggering cell values by default so spreadsheet apps do not evaluate them. Set `escapeFormulas: false` on `exportTableToCsv` to restore the previous output.
+
 ## 0.8.0
 
 ### Minor Changes
