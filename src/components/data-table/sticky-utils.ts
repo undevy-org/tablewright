@@ -43,16 +43,26 @@ export function applyColumnPinningToMeta(
   for (const id of order) {
     const meta = result[id];
     if (meta?.sticky !== "left") continue;
-    result[id] = { ...meta, stickyOffset: leftOffset };
-    leftOffset += columnWidthPx(id, baseMeta, options?.columnWidths);
+    const width = columnWidthPx(id, baseMeta, options?.columnWidths);
+    if (pinnedLeft.has(id)) {
+      result[id] = { ...meta, stickyOffset: leftOffset };
+      leftOffset += width;
+    } else {
+      leftOffset = (meta.stickyOffset ?? 0) + width;
+    }
   }
 
   let rightOffset = 0;
   for (const id of [...order].reverse()) {
     const meta = result[id];
     if (meta?.sticky !== "right") continue;
-    result[id] = { ...meta, stickyOffset: rightOffset };
-    rightOffset += columnWidthPx(id, baseMeta, options?.columnWidths);
+    const width = columnWidthPx(id, baseMeta, options?.columnWidths);
+    if (pinnedRight.has(id)) {
+      result[id] = { ...meta, stickyOffset: rightOffset };
+      rightOffset += width;
+    } else {
+      rightOffset = (meta.stickyOffset ?? 0) + width;
+    }
   }
 
   return result;
