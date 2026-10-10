@@ -1,5 +1,11 @@
 # @undevy-org/tablewright
 
+## 0.10.0
+
+### Minor Changes
+
+- [#80](https://github.com/undevy-org/tablewright/pull/80) [`38b98c1`](https://github.com/undevy-org/tablewright/commit/38b98c15cc7482af12654640795e0413963c1e40) Thanks [@undevy](https://github.com/undevy)! - Add column header menu pin actions and a DataTableShell Storybook demo wired through table orchestration.
+
 ## 0.9.1
 
 ### Patch Changes
