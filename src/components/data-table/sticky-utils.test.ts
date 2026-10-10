@@ -308,4 +308,40 @@ describe("applyColumnPinningToMeta", () => {
     expect(merged.actions).toEqual(meta.actions);
     expect(merged.amount).toMatchObject({ sticky: "right", stickyOffset: 152 });
   });
+
+  it("keeps custom static right stickyOffset when a column is pinned on the right (B21)", () => {
+    const meta: Record<string, ColumnMetaDef> = {
+      name: { minW: 100 },
+      amount: { minW: 120 },
+      status: { minW: 80, sticky: "right", stickyOffset: 100 },
+      actions: { minW: 72, sticky: "right", stickyOffset: 0 },
+    };
+
+    const merged = applyColumnPinningToMeta(
+      meta,
+      { right: ["amount"] },
+      { columnOrder: ["name", "amount", "status", "actions"] },
+    );
+
+    expect(merged.status.stickyOffset).toBe(100);
+    expect(merged.amount).toMatchObject({ sticky: "right", stickyOffset: 180 });
+  });
+
+  it("stacks multiple right pins using running offset after static stickies (B21)", () => {
+    const meta: Record<string, ColumnMetaDef> = {
+      lead: { minW: 50 },
+      mid: { minW: 40 },
+      tail: { minW: 30, sticky: "right", stickyOffset: 0 },
+    };
+
+    const merged = applyColumnPinningToMeta(
+      meta,
+      { right: ["lead", "mid"] },
+      { columnOrder: ["lead", "mid", "tail"] },
+    );
+
+    expect(merged.tail).toEqual(meta.tail);
+    expect(merged.mid).toMatchObject({ sticky: "right", stickyOffset: 30 });
+    expect(merged.lead).toMatchObject({ sticky: "right", stickyOffset: 70 });
+  });
 });
