@@ -1,5 +1,5 @@
 import { createStore } from "zustand/vanilla";
-import type { VisibilityState } from "@tanstack/react-table";
+import type { ColumnPinningState, VisibilityState } from "@tanstack/react-table";
 import type {
   ActiveFilter,
   ActiveFilterValue,
@@ -16,6 +16,7 @@ export interface TableOrchestrationState<TViewKey extends string = string> {
   requestOpenFilterId: string | null;
   currentSort: { columnId: string; direction: "asc" | "desc" } | null;
   columnVisibility: VisibilityState;
+  columnPinning: ColumnPinningState;
   page: number;
   rowsPerPage: number;
   density: "normal" | "dense";
@@ -50,6 +51,8 @@ export interface TableOrchestrationActions<TViewKey extends string = string> {
   hideColumn: (columnId: string) => void;
   showColumns: (columnIds: string[]) => void;
   resetColumns: () => void;
+  pinColumn: (columnId: string, side: "left" | "right") => void;
+  unpinColumn: (columnId: string) => void;
 
   setPage: (p: number) => void;
   setRowsPerPage: (n: number) => void;
@@ -118,6 +121,7 @@ export function createTableOrchestrationStore<TViewKey extends string>({
       requestOpenFilterId: null,
       currentSort: null,
       columnVisibility: initialColumnVisibility ?? {},
+      columnPinning: { left: [], right: [] },
       page: 1,
       rowsPerPage: initialRowsPerPage,
       density: "normal",
@@ -215,6 +219,21 @@ export function createTableOrchestrationStore<TViewKey extends string>({
         set({ columnVisibility: {} });
         goCustom();
       },
+      pinColumn: (columnId, side) =>
+        set((s) => {
+          const left = (s.columnPinning.left ?? []).filter((id) => id !== columnId);
+          const right = (s.columnPinning.right ?? []).filter((id) => id !== columnId);
+          if (side === "left") left.push(columnId);
+          else right.push(columnId);
+          return { columnPinning: { left, right } };
+        }),
+      unpinColumn: (columnId) =>
+        set((s) => ({
+          columnPinning: {
+            left: (s.columnPinning.left ?? []).filter((id) => id !== columnId),
+            right: (s.columnPinning.right ?? []).filter((id) => id !== columnId),
+          },
+        })),
 
       setPage: (p) => set({ page: p }),
       setRowsPerPage: (n) => set({ rowsPerPage: n, page: 1 }),

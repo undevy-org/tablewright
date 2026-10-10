@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { useStore } from "zustand";
-import type { VisibilityState } from "@tanstack/react-table";
+import type { ColumnPinningState, VisibilityState } from "@tanstack/react-table";
 import { useColumnResize } from "../components/data-table/hooks/use-column-resize";
+import { applyColumnPinningToMeta } from "../components/data-table/sticky-utils";
 import { getVisiblePageNumbers } from "../components/data-table/hooks/use-table-pagination";
 import type { ColumnMetaDef, SortDirection } from "../components/data-table/types";
 
@@ -23,6 +24,7 @@ import { useColumnGaps } from "./table-orchestration/use-column-gaps";
 import { useFilteredRows } from "./table-orchestration/use-filtered-rows";
 import { useOrchestrationActions } from "./table-orchestration/use-orchestration-actions";
 import { useResponsiveColumns } from "./table-orchestration/use-responsive-columns";
+import { gapColumnId } from "../lib/column-gaps";
 
 // ── Config ──────────────────────────────────────────────────────────────
 
@@ -74,6 +76,9 @@ export interface TableOrchestrationReturn<TRow extends object, TViewKey extends 
   currentSort: { columnId: string; direction: "asc" | "desc" } | null;
   columnVisibility: VisibilityState;
   setColumnVisibility: React.Dispatch<React.SetStateAction<VisibilityState>>;
+  columnPinning: ColumnPinningState;
+  pinColumn: (columnId: string, side: "left" | "right") => void;
+  unpinColumn: (columnId: string) => void;
   page: number;
   rowsPerPage: number;
   density: "normal" | "dense";
@@ -196,6 +201,9 @@ export function useTableOrchestration<TRow extends object, TViewKey extends stri
   const requestOpenFilterId = useStore(store, (s) => s.requestOpenFilterId);
   const currentSort = useStore(store, (s) => s.currentSort);
   const columnVisibility = useStore(store, (s) => s.columnVisibility);
+  const columnPinning = useStore(store, (s) => s.columnPinning);
+  const pinColumn = useStore(store, (s) => s.pinColumn);
+  const unpinColumn = useStore(store, (s) => s.unpinColumn);
   const storedPage = useStore(store, (s) => s.page);
   const rowsPerPage = useStore(store, (s) => s.rowsPerPage);
   const density = useStore(store, (s) => s.density);
@@ -314,13 +322,41 @@ export function useTableOrchestration<TRow extends object, TViewKey extends stri
       : false;
 
   // ── Gap indicators ────────────────────────────────────────────────────
-  const { columnGaps, extendedColumnMeta, extendedWidths } = useColumnGaps({
+  const { columnGaps, extendedColumnMeta: gapExtendedColumnMeta, extendedWidths } = useColumnGaps({
     columnGroups,
     toggleableColumnIds,
     columnVisibility,
     columnMeta,
     widths,
   });
+
+  const visibleColumnOrder = useMemo(() => {
+    const order: string[] = [];
+    if (columnMeta.rowControl) order.push("rowControl");
+    for (const id of toggleableColumnIds) {
+      if (columnVisibility[id] !== false) order.push(id);
+    }
+    for (const gap of columnGaps) {
+      const gapId = gapColumnId(gap.afterColumnId);
+      if (gap.afterColumnId === null) {
+        order.unshift(gapId);
+      } else {
+        const afterIdx = order.indexOf(gap.afterColumnId);
+        if (afterIdx >= 0) order.splice(afterIdx + 1, 0, gapId);
+      }
+    }
+    if (columnMeta.actions) order.push("actions");
+    return order;
+  }, [columnGaps, columnMeta, columnVisibility, toggleableColumnIds]);
+
+  const extendedColumnMeta = useMemo(
+    () =>
+      applyColumnPinningToMeta(gapExtendedColumnMeta, columnPinning, {
+        columnOrder: visibleColumnOrder,
+        columnWidths: extendedWidths,
+      }),
+    [columnPinning, extendedWidths, gapExtendedColumnMeta, visibleColumnOrder],
+  );
 
   const hiddenColumnsCount = useMemo(() => {
     return toggleableColumnIds.filter((id) => columnVisibility[id] === false).length;
@@ -391,6 +427,9 @@ export function useTableOrchestration<TRow extends object, TViewKey extends stri
     currentSort,
     columnVisibility,
     setColumnVisibility,
+    columnPinning,
+    pinColumn,
+    unpinColumn,
     page,
     rowsPerPage,
     density,

@@ -199,6 +199,34 @@ describe("useTableOrchestration", () => {
     }
   });
 
+  it("merges column pinning into extendedColumnMeta", () => {
+    const { result } = renderHook(() =>
+      useTableOrchestration(
+        makeConfig({
+          columnMeta: {
+            rowControl: { minW: 48, sticky: "left", stickyOffset: 0, variant: "control" },
+            ...columnMeta,
+            actions: { minW: 64, sticky: "right", stickyOffset: 0 },
+          },
+        }),
+      ),
+    );
+
+    act(() => {
+      result.current.pinColumn("name", "left");
+    });
+
+    expect(result.current.columnPinning).toEqual({ left: ["name"], right: [] });
+    expect(result.current.extendedColumnMeta.name).toMatchObject({
+      sticky: "left",
+      stickyOffset: 48,
+    });
+    expect(result.current.extendedColumnMeta.rowControl).toMatchObject({
+      sticky: "left",
+      stickyOffset: 0,
+    });
+  });
+
   it("exposes gap columns in extended meta and widths", () => {
     const { result } = renderHook(() => useTableOrchestration(baseConfig));
 
