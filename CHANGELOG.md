@@ -1,5 +1,11 @@
 # @undevy-org/tablewright
 
+## 0.11.0
+
+### Minor Changes
+
+- [#82](https://github.com/undevy-org/tablewright/pull/82) [`32051e1`](https://github.com/undevy-org/tablewright/commit/32051e1f7ad331786be579de326a4b1233cc8b14) Thanks [@undevy](https://github.com/undevy)! - Add `DataTableShell` loading and error states with `TableErrorPanel`.
+
 ## 0.10.0
 
 ### Minor Changes
