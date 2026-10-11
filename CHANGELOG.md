@@ -1,5 +1,11 @@
 # @undevy-org/tablewright
 
+## 0.12.0
+
+### Minor Changes
+
+- [#84](https://github.com/undevy-org/tablewright/pull/84) [`809750b`](https://github.com/undevy-org/tablewright/commit/809750b2cb756f0e186e7c9eff43de122f2ea1b1) Thanks [@undevy](https://github.com/undevy)! - Add `usePersistedTableState` and versioned serialize/parse helpers for persisting table sort, filters, column visibility, and page size via `localStorage`, URL search params, or a custom storage adapter.
+
 ## 0.11.0
 
 ### Minor Changes
