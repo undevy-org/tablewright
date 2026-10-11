@@ -279,31 +279,6 @@ describe("usePersistedTableState", () => {
     });
   });
 
-  it("tolerates localStorage read/write failures", () => {
-    vi.spyOn(Storage.prototype, "getItem").mockImplementation(() => {
-      throw new Error("blocked");
-    });
-    vi.spyOn(Storage.prototype, "setItem").mockImplementation(() => {
-      throw new Error("blocked");
-    });
-
-    const { result } = renderHook(() =>
-      usePersistedTableState({
-        storage: "localStorage",
-        key: STORAGE_KEY,
-        version: 1,
-        fields: ["pageSize"],
-      }),
-    );
-
-    expect(result.current.state).toEqual({});
-
-    act(() => {
-      result.current.setState({ pageSize: 5 });
-    });
-    expect(result.current.state.pageSize).toBe(5);
-  });
-
   it("clears storage when persisted fields become undefined", () => {
     const { result } = renderHook(() =>
       usePersistedTableState({

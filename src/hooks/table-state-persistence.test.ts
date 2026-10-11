@@ -4,6 +4,7 @@ import {
   deserializePersistedTableState,
   serializePersistedTableState,
   type PersistedTableState,
+  type PersistedTableStateField,
 } from "./table-state-persistence";
 
 const allFields = [
@@ -13,7 +14,49 @@ const allFields = [
   "pageSize",
 ] as const;
 
+const fixtureCases: {
+  label: string;
+  blob: string | null;
+  version: number;
+  fields: readonly PersistedTableStateField[];
+  expected: PersistedTableState;
+}[] = [
+  { label: "null input", blob: null, version: 1, fields: ["pageSize"], expected: {} },
+  { label: "empty input", blob: "", version: 1, fields: ["pageSize"], expected: {} },
+  { label: "number root", blob: "12", version: 1, fields: ["pageSize"], expected: {} },
+  { label: "string version", blob: '{"version":"1","pageSize":10}', version: 1, fields: ["pageSize"], expected: {} },
+  {
+    label: "columnVisibility array",
+    blob: JSON.stringify({ version: 1, columnVisibility: [] }),
+    version: 1,
+    fields: ["columnVisibility"],
+    expected: {},
+  },
+  {
+    label: "columnFilters object",
+    blob: JSON.stringify({ version: 1, columnFilters: {} }),
+    version: 1,
+    fields: ["columnFilters"],
+    expected: {},
+  },
+  {
+    label: "pageSize only from multi-key blob",
+    blob: JSON.stringify({
+      version: 1,
+      sorting: { columnId: "n", direction: "asc" },
+      pageSize: 15,
+    }),
+    version: 1,
+    fields: ["pageSize"],
+    expected: { pageSize: 15 },
+  },
+];
+
 describe("serializePersistedTableState / deserializePersistedTableState", () => {
+  it.each(fixtureCases)("$label", ({ blob, version, fields, expected }) => {
+    expect(deserializePersistedTableState(blob, version, fields)).toEqual(expected);
+  });
+
   it("round-trips version and each field type", () => {
     const state: PersistedTableState = {
       sorting: { columnId: "name", direction: "desc" },

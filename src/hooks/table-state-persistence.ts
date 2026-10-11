@@ -28,71 +28,6 @@ type SerializedPayload = {
   pageSize?: number;
 };
 
-function readFieldValue(
-  field: PersistedTableStateField,
-  raw: unknown,
-): PersistedTableState[PersistedTableStateField] | undefined {
-  switch (field) {
-    case "sorting": {
-      if (raw === null) {
-        return null;
-      }
-      if (typeof raw !== "object" || raw === null || Array.isArray(raw)) {
-        return undefined;
-      }
-      const { columnId, direction } = raw as Record<string, unknown>;
-      if (typeof columnId !== "string") {
-        return undefined;
-      }
-      if (direction !== "asc" && direction !== "desc") {
-        return undefined;
-      }
-      return { columnId, direction };
-    }
-    case "columnFilters": {
-      if (!Array.isArray(raw)) {
-        return undefined;
-      }
-      const filters: ActiveFilter[] = [];
-      for (const item of raw) {
-        if (typeof item !== "object" || item === null || Array.isArray(item)) {
-          return undefined;
-        }
-        const record = item as Record<string, unknown>;
-        if (typeof record.columnId !== "string" || !("value" in record)) {
-          return undefined;
-        }
-        filters.push({
-          columnId: record.columnId,
-          value: record.value as ActiveFilter["value"],
-        });
-      }
-      return filters;
-    }
-    case "columnVisibility": {
-      if (typeof raw !== "object" || raw === null || Array.isArray(raw)) {
-        return undefined;
-      }
-      const out: VisibilityState = {};
-      for (const [key, visible] of Object.entries(raw)) {
-        if (typeof visible !== "boolean") {
-          return undefined;
-        }
-        out[key] = visible;
-      }
-      return out;
-    }
-    case "pageSize": {
-      if (typeof raw !== "number" || !Number.isFinite(raw) || raw <= 0) {
-        return undefined;
-      }
-      return raw;
-    }
-    default:
-      return undefined;
-  }
-}
-
 /**
  * Parse a versioned JSON blob into a partial table state. Only keys listed in `fields` are returned.
  * Returns `{}` when JSON is invalid, `version` is missing, or stored `version` ≠ `expectedVersion`.
@@ -106,18 +41,17 @@ export function deserializePersistedTableState(
     return {};
   }
 
-  let parsed: unknown;
+  let root: Record<string, unknown>;
   try {
-    parsed = JSON.parse(serialized);
+    const parsed: unknown = JSON.parse(serialized);
+    if (typeof parsed !== "object" || parsed === null || Array.isArray(parsed)) {
+      return {};
+    }
+    root = parsed as Record<string, unknown>;
   } catch {
     return {};
   }
 
-  if (typeof parsed !== "object" || parsed === null || Array.isArray(parsed)) {
-    return {};
-  }
-
-  const root = parsed as Record<string, unknown>;
   if (typeof root.version !== "number" || root.version !== expectedVersion) {
     return {};
   }
@@ -128,9 +62,78 @@ export function deserializePersistedTableState(
     if (!Object.hasOwn(root, field)) {
       continue;
     }
-    const value = readFieldValue(field, root[field]);
-    if (value !== undefined) {
-      state[field] = value;
+    const raw = root[field];
+
+    if (field === "sorting") {
+      if (raw === null) {
+        state.sorting = null;
+        continue;
+      }
+      if (typeof raw !== "object" || raw === null || Array.isArray(raw)) {
+        continue;
+      }
+      const { columnId, direction } = raw as Record<string, unknown>;
+      if (typeof columnId !== "string") {
+        continue;
+      }
+      if (direction !== "asc" && direction !== "desc") {
+        continue;
+      }
+      state.sorting = { columnId, direction };
+      continue;
+    }
+
+    if (field === "columnFilters") {
+      if (!Array.isArray(raw)) {
+        continue;
+      }
+      const filters: ActiveFilter[] = [];
+      let valid = true;
+      for (const item of raw) {
+        if (typeof item !== "object" || item === null || Array.isArray(item)) {
+          valid = false;
+          break;
+        }
+        const record = item as Record<string, unknown>;
+        if (typeof record.columnId !== "string" || !("value" in record)) {
+          valid = false;
+          break;
+        }
+        filters.push({
+          columnId: record.columnId,
+          value: record.value as ActiveFilter["value"],
+        });
+      }
+      if (valid) {
+        state.columnFilters = filters;
+      }
+      continue;
+    }
+
+    if (field === "columnVisibility") {
+      if (typeof raw !== "object" || raw === null || Array.isArray(raw)) {
+        continue;
+      }
+      const out: VisibilityState = {};
+      let valid = true;
+      for (const [key, visible] of Object.entries(raw)) {
+        if (typeof visible !== "boolean") {
+          valid = false;
+          break;
+        }
+        out[key] = visible;
+      }
+      if (valid) {
+        state.columnVisibility = out;
+      }
+      continue;
+    }
+
+    if (field === "pageSize") {
+      if (typeof raw !== "number" || !Number.isFinite(raw) || raw <= 0) {
+        continue;
+      }
+      state.pageSize = raw;
     }
   }
 

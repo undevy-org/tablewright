@@ -38,22 +38,12 @@ const LOCAL_STORAGE_PREFIX = "tablewright:";
 function createLocalStorageAdapter(key: string): TableStateStorageAdapter {
   const storageKey = `${LOCAL_STORAGE_PREFIX}${key}`;
   return {
-    read: () => {
-      try {
-        return window.localStorage.getItem(storageKey);
-      } catch {
-        return null;
-      }
-    },
+    read: () => window.localStorage.getItem(storageKey),
     write: (serialized) => {
-      try {
-        if (serialized === null) {
-          window.localStorage.removeItem(storageKey);
-        } else {
-          window.localStorage.setItem(storageKey, serialized);
-        }
-      } catch {
-        // Storage may be unavailable (private mode, quota).
+      if (serialized === null) {
+        window.localStorage.removeItem(storageKey);
+      } else {
+        window.localStorage.setItem(storageKey, serialized);
       }
     },
   };
