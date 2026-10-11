@@ -2,9 +2,11 @@ import type { ReactNode } from "react";
 import type { ColumnDef } from "@tanstack/react-table";
 import { getCoreRowModel, useReactTable } from "@tanstack/react-table";
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 
 import { DataTableShell } from "./DataTableShell";
+import { TableErrorPanel } from "./TableErrorPanel";
 import type { UseRowDragResult } from "./hooks/use-row-drag";
 import type { ColumnMetaDef } from "./types";
 
@@ -249,7 +251,8 @@ describe("DataTableShell", () => {
     expect(screen.getByRole("button", { name: "Retry" })).toBeTruthy();
   });
 
-  it("renders retry only when onRetry is provided and handles click and keyboard", () => {
+  it("renders retry only when onRetry is provided and handles click and keyboard", async () => {
+    const user = userEvent.setup();
     const onRetry = vi.fn();
 
     render(
@@ -262,20 +265,16 @@ describe("DataTableShell", () => {
     );
 
     const retryButton = screen.getByRole("button", { name: "Try again" });
-    fireEvent.click(retryButton);
+    await user.click(retryButton);
     expect(onRetry).toHaveBeenCalledTimes(1);
 
     onRetry.mockClear();
     retryButton.focus();
-    fireEvent.keyDown(retryButton, { key: "Enter", code: "Enter" });
-    fireEvent.keyUp(retryButton, { key: "Enter", code: "Enter" });
-    fireEvent.click(retryButton);
+    await user.keyboard("{Enter}");
     expect(onRetry).toHaveBeenCalledTimes(1);
 
     onRetry.mockClear();
-    fireEvent.keyDown(retryButton, { key: " ", code: "Space" });
-    fireEvent.keyUp(retryButton, { key: " ", code: "Space" });
-    fireEvent.click(retryButton);
+    await user.keyboard(" ");
     expect(onRetry).toHaveBeenCalledTimes(1);
 
     cleanup();
@@ -374,6 +373,27 @@ describe("DataTableShell", () => {
     expect(rows[1].className).not.toContain("opacity-40");
   });
 
+  it("does not mark a drop target when dragRowIdx is null", () => {
+    const rowDrag: UseRowDragResult = {
+      dragRowIdx: null,
+      dropTargetIdx: 1,
+      getDragProps: () => noopDragProps(),
+    };
+
+    const { container } = render(
+      <TableHarness
+        data={[
+          { id: "1", name: "Alpha" },
+          { id: "2", name: "Beta" },
+        ]}
+        rowDrag={rowDrag}
+      />,
+    );
+
+    const rows = container.querySelectorAll("tbody tr");
+    expect(rows[1].className).not.toContain("border-t-2");
+  });
+
   it("does not apply drag styling when rowDrag is omitted", () => {
     const { container } = render(
       <TableHarness data={[{ id: "1", name: "Alpha" }]} />,
@@ -413,5 +433,38 @@ describe("DataTableShell", () => {
     const cell = screen.getByText("Alpha").closest("td");
     expect(cell?.className).toContain("py-1");
     expect(cell?.className).toContain("text-xs");
+  });
+});
+
+describe("TableErrorPanel", () => {
+  it("renders the message inside role alert", () => {
+    render(<TableErrorPanel message="Load failed" colSpan={3} />);
+
+    expect(screen.getByRole("alert").textContent).toBe("Load failed");
+  });
+
+  it("uses the default Retry label when onRetry is provided", () => {
+    render(<TableErrorPanel message="Error" colSpan={1} onRetry={() => undefined} />);
+
+    expect(screen.getByRole("button", { name: "Retry" })).toBeTruthy();
+  });
+
+  it("calls onRetry from the button and omits the button without onRetry", () => {
+    const onRetry = vi.fn();
+    render(
+      <TableErrorPanel
+        message="Error"
+        colSpan={1}
+        onRetry={onRetry}
+        retryLabel="Try again"
+      />,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "Try again" }));
+    expect(onRetry).toHaveBeenCalledTimes(1);
+
+    cleanup();
+    render(<TableErrorPanel message="Error" colSpan={1} />);
+    expect(screen.queryByRole("button")).toBeNull();
   });
 });
