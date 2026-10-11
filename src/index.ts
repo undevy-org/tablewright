@@ -186,6 +186,20 @@ export type {
 } from "./hooks/table-orchestration-store";
 export { useRowDragOverride } from "./hooks/useRowDragOverride";
 export type { UseRowDragOverrideResult } from "./hooks/useRowDragOverride";
+export {
+  deserializePersistedTableState,
+  serializePersistedTableState,
+} from "./hooks/table-state-persistence";
+export type {
+  PersistedTableState,
+  PersistedTableStateField,
+} from "./hooks/table-state-persistence";
+export { usePersistedTableState } from "./hooks/usePersistedTableState";
+export type {
+  TableStateStorageAdapter,
+  UsePersistedTableStateOptions,
+  UsePersistedTableStateResult,
+} from "./hooks/usePersistedTableState";
 
 // Utils
 export {
