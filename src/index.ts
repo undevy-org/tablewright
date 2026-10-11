@@ -44,6 +44,8 @@ export { DrawerSummaryCard } from "./components/data-table/DrawerSummaryCard";
 export { useDrawerExpanded } from "./context/drawer-expand-context";
 export { DRAWER_SIZE } from "./constants/drawer";
 export { EmptyState } from "./components/data-table/EmptyState";
+export { TableErrorPanel } from "./components/data-table/TableErrorPanel";
+export type { TableErrorPanelProps } from "./components/data-table/TableErrorPanel";
 export { FilterChip } from "./components/data-table/FilterChip";
 export type { FilterChipProps } from "./components/data-table/FilterChip";
 export { ViewChip } from "./components/data-table/ViewChip";
