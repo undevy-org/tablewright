@@ -200,6 +200,91 @@ describe("usePersistedTableState", () => {
     expect(window.localStorage.getItem(PREFIXED_KEY)).toBeNull();
   });
 
+  it("only serializes keys listed in fields", () => {
+    const { result } = renderHook(() =>
+      usePersistedTableState({
+        storage: "localStorage",
+        key: STORAGE_KEY,
+        version: 1,
+        fields: ["pageSize"],
+      }),
+    );
+
+    act(() => {
+      result.current.setState({
+        pageSize: 10,
+        sorting: { columnId: "name", direction: "asc" },
+      });
+    });
+
+    const stored = JSON.parse(window.localStorage.getItem(PREFIXED_KEY) ?? "{}") as Record<
+      string,
+      unknown
+    >;
+    expect(stored.pageSize).toBe(10);
+    expect(stored.sorting).toBeUndefined();
+  });
+
+  it("persists columnFilters and columnVisibility", () => {
+    const fields = ["columnFilters", "columnVisibility"] as const;
+    const { result, unmount } = renderHook(() =>
+      usePersistedTableState({
+        storage: "localStorage",
+        key: "cols",
+        version: 1,
+        fields,
+      }),
+    );
+
+    act(() => {
+      result.current.setState({
+        columnFilters: [{ columnId: "status", value: ["ON"] }],
+        columnVisibility: { status: false },
+      });
+    });
+
+    unmount();
+
+    const { result: restored } = renderHook(() =>
+      usePersistedTableState({
+        storage: "localStorage",
+        key: "cols",
+        version: 1,
+        fields,
+      }),
+    );
+
+    expect(restored.current.state).toEqual({
+      columnFilters: [{ columnId: "status", value: ["ON"] }],
+      columnVisibility: { status: false },
+    });
+  });
+
+  it("tolerates localStorage read/write failures", () => {
+    vi.spyOn(Storage.prototype, "getItem").mockImplementation(() => {
+      throw new Error("blocked");
+    });
+    vi.spyOn(Storage.prototype, "setItem").mockImplementation(() => {
+      throw new Error("blocked");
+    });
+
+    const { result } = renderHook(() =>
+      usePersistedTableState({
+        storage: "localStorage",
+        key: STORAGE_KEY,
+        version: 1,
+        fields: ["pageSize"],
+      }),
+    );
+
+    expect(result.current.state).toEqual({});
+
+    act(() => {
+      result.current.setState({ pageSize: 5 });
+    });
+    expect(result.current.state.pageSize).toBe(5);
+  });
+
   it("clears storage when persisted fields become undefined", () => {
     const { result } = renderHook(() =>
       usePersistedTableState({
@@ -278,6 +363,61 @@ describe("usePersistedTableState", () => {
     });
 
     expect(lastCallArg(replaceState, 2)).toBe("/list");
+  });
+
+  it("writes updated version after options.version changes", () => {
+    const { result, rerender } = renderHook(
+      ({ version }: { version: number }) =>
+        usePersistedTableState({
+          storage: "localStorage",
+          key: "versioned",
+          version,
+          fields: ["pageSize"],
+        }),
+      { initialProps: { version: 1 } },
+    );
+
+    act(() => {
+      result.current.setState({ pageSize: 5 });
+    });
+
+    rerender({ version: 2 });
+
+    act(() => {
+      result.current.setState({ pageSize: 6 });
+    });
+
+    const stored = JSON.parse(
+      window.localStorage.getItem("tablewright:versioned") ?? "{}",
+    ) as { version: number; pageSize: number };
+    expect(stored.version).toBe(2);
+    expect(stored.pageSize).toBe(6);
+  });
+
+  it("uses a new storage key when options.key changes", () => {
+    const { result, rerender } = renderHook(
+      ({ key }: { key: string }) =>
+        usePersistedTableState({
+          storage: "localStorage",
+          key,
+          version: 1,
+          fields: ["pageSize"],
+        }),
+      { initialProps: { key: "table-a" } },
+    );
+
+    act(() => {
+      result.current.setState({ pageSize: 3 });
+    });
+    expect(window.localStorage.getItem("tablewright:table-a")).not.toBeNull();
+
+    rerender({ key: "table-b" });
+
+    act(() => {
+      result.current.setState({ pageSize: 4 });
+    });
+
+    expect(window.localStorage.getItem("tablewright:table-b")).toContain('"pageSize":4');
   });
 
   it("supports functional setState updates", () => {

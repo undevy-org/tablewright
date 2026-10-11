@@ -170,6 +170,36 @@ describe("serializePersistedTableState / deserializePersistedTableState", () => 
     expect(deserializePersistedTableState(blob, 1, ["sorting"])).toEqual({});
   });
 
+  it("does not assign sorting when parseSorting fails", () => {
+    const blob = JSON.stringify({ version: 1, sorting: ["array"] });
+    const result = deserializePersistedTableState(blob, 1, ["sorting"]);
+    expect(result).toEqual({});
+    expect("sorting" in result).toBe(false);
+  });
+
+  it("serialize omits state keys not listed in fields", () => {
+    const serialized = serializePersistedTableState(
+      {
+        pageSize: 10,
+        sorting: { columnId: "n", direction: "asc" },
+        columnFilters: [{ columnId: "c", value: "v" }],
+        columnVisibility: { hidden: true },
+      },
+      1,
+      ["pageSize"],
+    );
+    const parsed = JSON.parse(serialized) as Record<string, unknown>;
+    expect(parsed).toEqual({ version: 1, pageSize: 10 });
+    expect(parsed.sorting).toBeUndefined();
+    expect(parsed.columnFilters).toBeUndefined();
+    expect(parsed.columnVisibility).toBeUndefined();
+  });
+
+  it("serialize omits undefined optional fields from payload", () => {
+    const serialized = serializePersistedTableState({}, 3, allFields);
+    expect(JSON.parse(serialized)).toEqual({ version: 3 });
+  });
+
   it("serializes each field only when present in state", () => {
     expect(
       JSON.parse(serializePersistedTableState({ sorting: null }, 1, ["sorting"])),
