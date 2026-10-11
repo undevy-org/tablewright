@@ -134,7 +134,7 @@ export function DataTableShell<TData>({
                   key={`loading-${rowIndex}`}
                   className="group border-b border-[var(--border-subtle)]"
                 >
-                  {table.getVisibleLeafColumns().map((column, cellIndex) => {
+                  {table.getVisibleLeafColumns().map((column) => {
                     const meta = columnMeta[column.id];
                     const isActionsColumn = meta?.sticky === "right";
                     const isControlColumn = meta?.variant === "control";
@@ -159,8 +159,7 @@ export function DataTableShell<TData>({
                       >
                         <div
                           aria-hidden
-                          className="mx-auto h-4 max-w-full animate-pulse rounded bg-[var(--bg-tertiary)]"
-                          style={{ width: cellIndex % 2 === 0 ? "72%" : "48%" }}
+                          className="mx-auto h-4 w-[72%] max-w-full animate-pulse rounded bg-[var(--bg-tertiary)]"
                         />
                       </td>
                     );
