@@ -151,11 +151,27 @@ export function serializePersistedTableState(
   const payload: SerializedPayload = { version };
 
   for (const field of fields) {
-    const value = state[field];
-    if (value === undefined) {
+    if (field === "sorting") {
+      if (state.sorting !== undefined) {
+        payload.sorting = state.sorting;
+      }
       continue;
     }
-    payload[field] = value;
+    if (field === "columnFilters") {
+      if (state.columnFilters !== undefined) {
+        payload.columnFilters = state.columnFilters;
+      }
+      continue;
+    }
+    if (field === "columnVisibility") {
+      if (state.columnVisibility !== undefined) {
+        payload.columnVisibility = state.columnVisibility;
+      }
+      continue;
+    }
+    if (field === "pageSize" && state.pageSize !== undefined) {
+      payload.pageSize = state.pageSize;
+    }
   }
 
   return JSON.stringify(payload);
