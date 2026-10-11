@@ -303,6 +303,23 @@ describe("serializePersistedTableState / deserializePersistedTableState", () => 
     ).toBe('{"version":1,"pageSize":10}');
   });
 
+  it("serialize excludes pageSize when only sorting is in fields", () => {
+    const serialized = serializePersistedTableState(
+      {
+        sorting: { columnId: "name", direction: "asc" },
+        pageSize: 25,
+      },
+      1,
+      ["sorting"],
+    );
+    const parsed = JSON.parse(serialized) as Record<string, unknown>;
+    expect(parsed).toEqual({
+      version: 1,
+      sorting: { columnId: "name", direction: "asc" },
+    });
+    expect(parsed.pageSize).toBeUndefined();
+  });
+
   it("serializes each field only when present in state", () => {
     expect(
       JSON.parse(serializePersistedTableState({ sorting: null }, 1, ["sorting"])),
