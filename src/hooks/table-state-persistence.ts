@@ -28,70 +28,70 @@ type SerializedPayload = {
   pageSize?: number;
 };
 
-function isPlainObject(value: unknown): value is Record<string, unknown> {
-  return typeof value === "object" && value !== null && !Array.isArray(value);
-}
-
-function parseSorting(value: unknown): PersistedTableSorting | undefined {
-  if (value === null) {
-    return null;
-  }
-  if (!isPlainObject(value)) {
-    return undefined;
-  }
-  const { columnId, direction } = value;
-  if (typeof columnId !== "string") {
-    return undefined;
-  }
-  if (direction !== "asc" && direction !== "desc") {
-    return undefined;
-  }
-  return { columnId, direction };
-}
-
-function parseColumnFilters(value: unknown): ActiveFilter[] | undefined {
-  if (!Array.isArray(value)) {
-    return undefined;
-  }
-  const filters: ActiveFilter[] = [];
-  for (const item of value) {
-    if (!isPlainObject(item) || typeof item.columnId !== "string" || !("value" in item)) {
-      return undefined;
+function readFieldValue(
+  field: PersistedTableStateField,
+  raw: unknown,
+): PersistedTableState[PersistedTableStateField] | undefined {
+  switch (field) {
+    case "sorting": {
+      if (raw === null) {
+        return null;
+      }
+      if (typeof raw !== "object" || raw === null || Array.isArray(raw)) {
+        return undefined;
+      }
+      const { columnId, direction } = raw as Record<string, unknown>;
+      if (typeof columnId !== "string") {
+        return undefined;
+      }
+      if (direction !== "asc" && direction !== "desc") {
+        return undefined;
+      }
+      return { columnId, direction };
     }
-    filters.push({ columnId: item.columnId, value: item.value as ActiveFilter["value"] });
-  }
-  return filters;
-}
-
-function parseColumnVisibility(value: unknown): VisibilityState | undefined {
-  if (!isPlainObject(value)) {
-    return undefined;
-  }
-  const out: VisibilityState = {};
-  for (const [key, visible] of Object.entries(value)) {
-    if (typeof visible !== "boolean") {
-      return undefined;
+    case "columnFilters": {
+      if (!Array.isArray(raw)) {
+        return undefined;
+      }
+      const filters: ActiveFilter[] = [];
+      for (const item of raw) {
+        if (typeof item !== "object" || item === null || Array.isArray(item)) {
+          return undefined;
+        }
+        const record = item as Record<string, unknown>;
+        if (typeof record.columnId !== "string" || !("value" in record)) {
+          return undefined;
+        }
+        filters.push({
+          columnId: record.columnId,
+          value: record.value as ActiveFilter["value"],
+        });
+      }
+      return filters;
     }
-    out[key] = visible;
+    case "columnVisibility": {
+      if (typeof raw !== "object" || raw === null || Array.isArray(raw)) {
+        return undefined;
+      }
+      const out: VisibilityState = {};
+      for (const [key, visible] of Object.entries(raw)) {
+        if (typeof visible !== "boolean") {
+          return undefined;
+        }
+        out[key] = visible;
+      }
+      return out;
+    }
+    case "pageSize": {
+      if (typeof raw !== "number" || !Number.isFinite(raw) || raw <= 0) {
+        return undefined;
+      }
+      return raw;
+    }
+    default:
+      return undefined;
   }
-  return out;
 }
-
-function parsePageSize(value: unknown): number | undefined {
-  if (typeof value !== "number" || !Number.isFinite(value) || value <= 0) {
-    return undefined;
-  }
-  return value;
-}
-
-const FIELD_PARSERS: {
-  [K in PersistedTableStateField]: (value: unknown) => PersistedTableState[K] | undefined;
-} = {
-  sorting: parseSorting,
-  columnFilters: parseColumnFilters,
-  columnVisibility: parseColumnVisibility,
-  pageSize: parsePageSize,
-};
 
 /**
  * Parse a versioned JSON blob into a partial table state. Only keys listed in `fields` are returned.
@@ -102,7 +102,7 @@ export function deserializePersistedTableState(
   expectedVersion: number,
   fields: readonly PersistedTableStateField[],
 ): PersistedTableState {
-  if (serialized === null || serialized === "") {
+  if (!serialized) {
     return {};
   }
 
@@ -113,23 +113,24 @@ export function deserializePersistedTableState(
     return {};
   }
 
-  if (!isPlainObject(parsed) || typeof parsed.version !== "number") {
+  if (typeof parsed !== "object" || parsed === null || Array.isArray(parsed)) {
     return {};
   }
 
-  if (parsed.version !== expectedVersion) {
+  const root = parsed as Record<string, unknown>;
+  if (typeof root.version !== "number" || root.version !== expectedVersion) {
     return {};
   }
 
   const state: PersistedTableState = {};
 
   for (const field of fields) {
-    if (!(field in parsed)) {
+    if (!Object.hasOwn(root, field)) {
       continue;
     }
-    const parsedValue = FIELD_PARSERS[field](parsed[field]);
-    if (parsedValue !== undefined) {
-      state[field] = parsedValue;
+    const value = readFieldValue(field, root[field]);
+    if (value !== undefined) {
+      state[field] = value;
     }
   }
 
@@ -148,9 +149,10 @@ export function serializePersistedTableState(
 
   for (const field of fields) {
     const value = state[field];
-    if (value !== undefined) {
-      payload[field] = value;
+    if (value === undefined) {
+      continue;
     }
+    payload[field] = value;
   }
 
   return JSON.stringify(payload);

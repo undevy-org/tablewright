@@ -200,6 +200,25 @@ describe("usePersistedTableState", () => {
     expect(window.localStorage.getItem(PREFIXED_KEY)).toBeNull();
   });
 
+  it("persists when only one of several configured fields is set", () => {
+    const { result } = renderHook(() =>
+      usePersistedTableState({
+        storage: "localStorage",
+        key: "partial-fields",
+        version: 1,
+        fields: ["pageSize", "sorting"],
+      }),
+    );
+
+    act(() => {
+      result.current.setState({ pageSize: 25 });
+    });
+
+    expect(window.localStorage.getItem("tablewright:partial-fields")).toContain(
+      '"pageSize":25',
+    );
+  });
+
   it("only serializes keys listed in fields", () => {
     const { result } = renderHook(() =>
       usePersistedTableState({

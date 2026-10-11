@@ -62,16 +62,10 @@ function createLocalStorageAdapter(key: string): TableStateStorageAdapter {
 function createUrlStorageAdapter(paramName: string): TableStateStorageAdapter {
   return {
     read: () => {
-      if (typeof window === "undefined") {
-        return null;
-      }
       const params = new URLSearchParams(window.location.search);
       return params.get(paramName);
     },
     write: (serialized) => {
-      if (typeof window === "undefined") {
-        return;
-      }
       const params = new URLSearchParams(window.location.search);
       if (serialized === null) {
         params.delete(paramName);

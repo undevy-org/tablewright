@@ -199,6 +199,17 @@ describe("serializePersistedTableState / deserializePersistedTableState", () => 
     expect(deserializePersistedTableState(blob, 1, ["columnFilters"])).toEqual({});
   });
 
+  it("rejects columnVisibility arrays", () => {
+    const blob = JSON.stringify({ version: 1, columnVisibility: [] });
+    expect(deserializePersistedTableState(blob, 1, ["columnVisibility"])).toEqual({});
+  });
+
+  it("does not throw on malformed JSON", () => {
+    expect(() =>
+      deserializePersistedTableState("{bad", 1, ["pageSize"]),
+    ).not.toThrow();
+  });
+
   it("rejects non-finite pageSize values", () => {
     const blob = JSON.stringify({ version: 1, pageSize: Number.NaN });
     expect(deserializePersistedTableState(blob, 1, ["pageSize"])).toEqual({});
@@ -241,6 +252,12 @@ describe("serializePersistedTableState / deserializePersistedTableState", () => 
   it("serialize omits undefined optional fields from payload", () => {
     const serialized = serializePersistedTableState({}, 3, allFields);
     expect(JSON.parse(serialized)).toEqual({ version: 3 });
+  });
+
+  it("serialize writes only requested keys with stable JSON shape", () => {
+    expect(
+      serializePersistedTableState({ pageSize: 10 }, 1, ["pageSize", "sorting"]),
+    ).toBe('{"version":1,"pageSize":10}');
   });
 
   it("serializes each field only when present in state", () => {
