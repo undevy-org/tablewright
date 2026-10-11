@@ -2,7 +2,7 @@ import type { ReactNode } from "react";
 import type { ColumnDef } from "@tanstack/react-table";
 import { getCoreRowModel, useReactTable } from "@tanstack/react-table";
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
-import userEvent from "@testing-library/user-event";
+import { userEvent } from "storybook/test";
 import { describe, expect, it, vi } from "vitest";
 
 import { DataTableShell } from "./DataTableShell";
@@ -252,7 +252,6 @@ describe("DataTableShell", () => {
   });
 
   it("renders retry only when onRetry is provided and handles click and keyboard", async () => {
-    const user = userEvent.setup();
     const onRetry = vi.fn();
 
     render(
@@ -265,16 +264,16 @@ describe("DataTableShell", () => {
     );
 
     const retryButton = screen.getByRole("button", { name: "Try again" });
-    await user.click(retryButton);
+    await userEvent.click(retryButton);
     expect(onRetry).toHaveBeenCalledTimes(1);
 
     onRetry.mockClear();
     retryButton.focus();
-    await user.keyboard("{Enter}");
+    await userEvent.keyboard("{Enter}");
     expect(onRetry).toHaveBeenCalledTimes(1);
 
     onRetry.mockClear();
-    await user.keyboard(" ");
+    await userEvent.keyboard(" ");
     expect(onRetry).toHaveBeenCalledTimes(1);
 
     cleanup();
@@ -371,6 +370,27 @@ describe("DataTableShell", () => {
     expect(rows[0].className).toContain("opacity-40");
     expect(rows[1].className).toContain("border-t-2");
     expect(rows[1].className).not.toContain("opacity-40");
+  });
+
+  it("only marks the row at dropTargetIdx as the drop target", () => {
+    const rowDrag: UseRowDragResult = {
+      dragRowIdx: 0,
+      dropTargetIdx: 0,
+      getDragProps: () => noopDragProps(),
+    };
+
+    const { container } = render(
+      <TableHarness
+        data={[
+          { id: "1", name: "Alpha" },
+          { id: "2", name: "Beta" },
+        ]}
+        rowDrag={rowDrag}
+      />,
+    );
+
+    const rows = container.querySelectorAll("tbody tr");
+    expect(rows[1].className).not.toContain("border-t-2");
   });
 
   it("does not mark a drop target when dragRowIdx is null", () => {
