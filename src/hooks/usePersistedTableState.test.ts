@@ -77,6 +77,36 @@ describe("usePersistedTableState", () => {
     expect(result.current.state).toEqual({});
   });
 
+  it("persists explicit null sorting and restores on remount", () => {
+    const fields = ["sorting"] as const;
+
+    const first = renderHook(() =>
+      usePersistedTableState({
+        storage: "localStorage",
+        key: STORAGE_KEY,
+        version: 1,
+        fields,
+      }),
+    );
+
+    act(() => {
+      first.result.current.setState({ sorting: null });
+    });
+
+    first.unmount();
+
+    const second = renderHook(() =>
+      usePersistedTableState({
+        storage: "localStorage",
+        key: STORAGE_KEY,
+        version: 1,
+        fields,
+      }),
+    );
+
+    expect(second.result.current.state).toEqual({ sorting: null });
+  });
+
   it("persists via built-in url mode and restores on remount", () => {
     const replaceState = vi.spyOn(window.history, "replaceState");
     const param = "twState";
