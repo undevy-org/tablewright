@@ -121,6 +121,14 @@ describe("serializePersistedTableState / deserializePersistedTableState", () => 
     expect(deserializePersistedTableState(blob, 1, ["sorting"])).toEqual({});
   });
 
+  it("does not throw when columnFilters contains null entries", () => {
+    const blob = JSON.stringify({ version: 1, columnFilters: [null] });
+    expect(() =>
+      deserializePersistedTableState(blob, 1, ["columnFilters"]),
+    ).not.toThrow();
+    expect(deserializePersistedTableState(blob, 1, ["columnFilters"])).toEqual({});
+  });
+
   it("drops columnFilters when an item lacks columnId", () => {
     const blob = JSON.stringify({
       version: 1,
