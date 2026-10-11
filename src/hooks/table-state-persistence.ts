@@ -28,7 +28,7 @@ type SerializedPayload = {
   pageSize?: number;
 };
 
-function isRecord(value: unknown): value is Record<string, unknown> {
+function isPlainObject(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
@@ -36,7 +36,7 @@ function parseSorting(value: unknown): PersistedTableSorting | undefined {
   if (value === null) {
     return null;
   }
-  if (!isRecord(value)) {
+  if (!isPlainObject(value)) {
     return undefined;
   }
   const { columnId, direction } = value;
@@ -55,7 +55,7 @@ function parseColumnFilters(value: unknown): ActiveFilter[] | undefined {
   }
   const filters: ActiveFilter[] = [];
   for (const item of value) {
-    if (!isRecord(item) || typeof item.columnId !== "string" || !("value" in item)) {
+    if (!isPlainObject(item) || typeof item.columnId !== "string" || !("value" in item)) {
       return undefined;
     }
     filters.push({ columnId: item.columnId, value: item.value as ActiveFilter["value"] });
@@ -64,7 +64,7 @@ function parseColumnFilters(value: unknown): ActiveFilter[] | undefined {
 }
 
 function parseColumnVisibility(value: unknown): VisibilityState | undefined {
-  if (!isRecord(value)) {
+  if (!isPlainObject(value)) {
     return undefined;
   }
   const out: VisibilityState = {};
@@ -83,6 +83,15 @@ function parsePageSize(value: unknown): number | undefined {
   }
   return value;
 }
+
+const FIELD_PARSERS: {
+  [K in PersistedTableStateField]: (value: unknown) => PersistedTableState[K] | undefined;
+} = {
+  sorting: parseSorting,
+  columnFilters: parseColumnFilters,
+  columnVisibility: parseColumnVisibility,
+  pageSize: parsePageSize,
+};
 
 /**
  * Parse a versioned JSON blob into a partial table state. Only keys listed in `fields` are returned.
@@ -104,7 +113,7 @@ export function deserializePersistedTableState(
     return {};
   }
 
-  if (!isRecord(parsed) || typeof parsed.version !== "number") {
+  if (!isPlainObject(parsed) || typeof parsed.version !== "number") {
     return {};
   }
 
@@ -114,31 +123,13 @@ export function deserializePersistedTableState(
 
   const state: PersistedTableState = {};
 
-  if (fields.includes("sorting") && "sorting" in parsed) {
-    const sorting = parseSorting(parsed.sorting);
-    if (sorting !== undefined) {
-      state.sorting = sorting;
+  for (const field of fields) {
+    if (!(field in parsed)) {
+      continue;
     }
-  }
-
-  if (fields.includes("columnFilters") && "columnFilters" in parsed) {
-    const columnFilters = parseColumnFilters(parsed.columnFilters);
-    if (columnFilters !== undefined) {
-      state.columnFilters = columnFilters;
-    }
-  }
-
-  if (fields.includes("columnVisibility") && "columnVisibility" in parsed) {
-    const columnVisibility = parseColumnVisibility(parsed.columnVisibility);
-    if (columnVisibility !== undefined) {
-      state.columnVisibility = columnVisibility;
-    }
-  }
-
-  if (fields.includes("pageSize") && "pageSize" in parsed) {
-    const pageSize = parsePageSize(parsed.pageSize);
-    if (pageSize !== undefined) {
-      state.pageSize = pageSize;
+    const parsedValue = FIELD_PARSERS[field](parsed[field]);
+    if (parsedValue !== undefined) {
+      state[field] = parsedValue;
     }
   }
 
@@ -155,17 +146,11 @@ export function serializePersistedTableState(
 ): string {
   const payload: SerializedPayload = { version };
 
-  if (fields.includes("sorting") && state.sorting !== undefined) {
-    payload.sorting = state.sorting;
-  }
-  if (fields.includes("columnFilters") && state.columnFilters !== undefined) {
-    payload.columnFilters = state.columnFilters;
-  }
-  if (fields.includes("columnVisibility") && state.columnVisibility !== undefined) {
-    payload.columnVisibility = state.columnVisibility;
-  }
-  if (fields.includes("pageSize") && state.pageSize !== undefined) {
-    payload.pageSize = state.pageSize;
+  for (const field of fields) {
+    const value = state[field];
+    if (value !== undefined) {
+      payload[field] = value;
+    }
   }
 
   return JSON.stringify(payload);

@@ -178,6 +178,19 @@ describe("serializePersistedTableState / deserializePersistedTableState", () => 
     expect(deserializePersistedTableState(blob, 1, ["sorting"])).toEqual({});
   });
 
+  it("returns empty object for empty serialized string", () => {
+    expect(deserializePersistedTableState("", 1, ["pageSize"])).toEqual({});
+  });
+
+  it("ignores sorting in blob when sorting is not a requested field", () => {
+    const blob = JSON.stringify({
+      version: 1,
+      sorting: { columnId: "n", direction: "asc" },
+      pageSize: 5,
+    });
+    expect(deserializePersistedTableState(blob, 1, ["pageSize"])).toEqual({ pageSize: 5 });
+  });
+
   it("does not assign sorting when parseSorting fails", () => {
     const blob = JSON.stringify({ version: 1, sorting: ["array"] });
     const result = deserializePersistedTableState(blob, 1, ["sorting"]);

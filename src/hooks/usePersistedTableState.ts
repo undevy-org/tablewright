@@ -118,18 +118,9 @@ export function usePersistedTableState(
 
   const persist = useCallback(
     (next: PersistedTableState) => {
-      const hasAnyField =
-        (fields.includes("sorting") && next.sorting !== undefined) ||
-        (fields.includes("columnFilters") && next.columnFilters !== undefined) ||
-        (fields.includes("columnVisibility") && next.columnVisibility !== undefined) ||
-        (fields.includes("pageSize") && next.pageSize !== undefined);
-
-      if (!hasAnyField) {
-        adapter.write(null);
-        return;
-      }
-
-      adapter.write(serializePersistedTableState(next, version, fields));
+      const serialized = serializePersistedTableState(next, version, fields);
+      const hasPayloadField = fields.some((field) => next[field] !== undefined);
+      adapter.write(hasPayloadField ? serialized : null);
     },
     [adapter, fields, version],
   );

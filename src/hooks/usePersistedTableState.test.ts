@@ -394,6 +394,70 @@ describe("usePersistedTableState", () => {
     expect(stored.pageSize).toBe(6);
   });
 
+  it("reset clears the active storage key after key changes", () => {
+    const { result, rerender } = renderHook(
+      ({ key }: { key: string }) =>
+        usePersistedTableState({
+          storage: "localStorage",
+          key,
+          version: 1,
+          fields: ["pageSize"],
+        }),
+      { initialProps: { key: "table-a" } },
+    );
+
+    act(() => {
+      result.current.setState({ pageSize: 3 });
+    });
+    expect(window.localStorage.getItem("tablewright:table-a")).not.toBeNull();
+
+    rerender({ key: "table-b" });
+
+    act(() => {
+      result.current.setState({ pageSize: 4 });
+    });
+    expect(window.localStorage.getItem("tablewright:table-b")).not.toBeNull();
+
+    act(() => {
+      result.current.reset();
+    });
+
+    expect(window.localStorage.getItem("tablewright:table-b")).toBeNull();
+    expect(window.localStorage.getItem("tablewright:table-a")).not.toBeNull();
+  });
+
+  it("persists explicit null sorting when sorting is in fields", () => {
+    const { result, unmount } = renderHook(() =>
+      usePersistedTableState({
+        storage: "localStorage",
+        key: "sort-null",
+        version: 1,
+        fields: ["sorting"],
+      }),
+    );
+
+    act(() => {
+      result.current.setState({ sorting: null });
+    });
+
+    const stored = JSON.parse(
+      window.localStorage.getItem("tablewright:sort-null") ?? "{}",
+    ) as { sorting: null };
+    expect(stored.sorting).toBeNull();
+
+    unmount();
+
+    const { result: restored } = renderHook(() =>
+      usePersistedTableState({
+        storage: "localStorage",
+        key: "sort-null",
+        version: 1,
+        fields: ["sorting"],
+      }),
+    );
+    expect(restored.current.state.sorting).toBeNull();
+  });
+
   it("uses a new storage key when options.key changes", () => {
     const { result, rerender } = renderHook(
       ({ key }: { key: string }) =>
