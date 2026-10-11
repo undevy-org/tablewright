@@ -389,11 +389,11 @@ describe("DataTableShell", () => {
     expect(cell?.className).not.toContain("before:bg-[var(--accent-primary)]");
   });
 
-  it("falls back to a 36px min width when column meta omits minW", () => {
+  it("falls back to a 36px min width when column meta is missing", () => {
     const { container } = render(
       <TableHarness
         data={[{ id: "1", name: "Alpha" }]}
-        harnessColumnMeta={{ name: {} }}
+        harnessColumnMeta={{}}
         harnessColumnWidths={{ name: 200 }}
       />,
     );
