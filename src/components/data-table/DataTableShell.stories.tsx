@@ -1,4 +1,4 @@
-import { useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { useLayoutEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import type { ColumnDef, ColumnPinningState } from '@tanstack/react-table';
 import { getCoreRowModel, useReactTable } from '@tanstack/react-table';
@@ -91,12 +91,22 @@ function DataTableShellDemo({
   emptyMessage,
   initialDrawerRowId,
   csvExportFilename,
+  status,
+  loadingRowCount,
+  errorMessage,
+  onRetry,
+  retryLabel,
 }: {
   rows: WorkspaceRow[];
   dense: boolean;
   emptyMessage: string;
   initialDrawerRowId?: string;
   csvExportFilename?: string;
+  status?: 'idle' | 'loading' | 'error';
+  loadingRowCount?: number;
+  errorMessage?: ReactNode;
+  onRetry?: () => void;
+  retryLabel?: string;
 }) {
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [selectedWorkspaceId, setSelectedWorkspaceId] = useState<string | null>(
@@ -303,6 +313,11 @@ function DataTableShellDemo({
         columnMeta={columnMeta}
         columnWidths={widths}
         onColumnResizeStart={onPointerDown}
+        status={status}
+        loadingRowCount={loadingRowCount}
+        errorMessage={errorMessage}
+        onRetry={onRetry}
+        retryLabel={retryLabel}
         onRowClick={(workspace) =>
           setSelectedWorkspaceId((current) => (current === workspace.id ? null : workspace.id))
         }
@@ -626,4 +641,41 @@ function DataTableShellColumnPinningDemo() {
 
 export const WithColumnPinning: Story = {
   render: () => <DataTableShellColumnPinningDemo />,
+};
+
+export const Loading: Story = {
+  render: () => (
+    <DataTableShellDemo
+      rows={workspaceRows}
+      dense={false}
+      emptyMessage="No workspaces match the current search and filters."
+      status="loading"
+    />
+  ),
+};
+
+export const ErrorWithRetry: Story = {
+  name: 'Error (with retry)',
+  render: () => (
+    <DataTableShellDemo
+      rows={workspaceRows}
+      dense={false}
+      emptyMessage="No workspaces match the current search and filters."
+      status="error"
+      errorMessage="We could not load workspaces. Check your connection and try again."
+      onRetry={() => undefined}
+    />
+  ),
+};
+
+export const ErrorWithoutRetry: Story = {
+  render: () => (
+    <DataTableShellDemo
+      rows={workspaceRows}
+      dense={false}
+      emptyMessage="No workspaces match the current search and filters."
+      status="error"
+      errorMessage="You do not have permission to view this table."
+    />
+  ),
 };

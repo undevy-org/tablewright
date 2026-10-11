@@ -5,6 +5,7 @@ import { cn } from "../../lib/utils";
 
 import { DrawerShell, type DrawerMode } from "./DrawerShell";
 import { EmptyState } from "./EmptyState";
+import { TableErrorPanel } from "./TableErrorPanel";
 import { TableLayout } from "./TableLayout";
 import { stickyBorderClass, stickyStyle } from "./sticky-utils";
 import type { UseRowDragResult } from "./hooks/use-row-drag";
@@ -34,6 +35,15 @@ export interface DataTableShellProps<TData> {
   footer?: ReactNode;
   drawer?: DataTableDrawer;
   className?: string;
+  /** @default "idle" */
+  status?: "idle" | "loading" | "error";
+  /** @default 8 */
+  loadingRowCount?: number;
+  /** @default "Something went wrong" */
+  errorMessage?: ReactNode;
+  onRetry?: () => void;
+  /** @default "Retry" */
+  retryLabel?: string;
 }
 
 export function DataTableShell<TData>({
@@ -49,6 +59,11 @@ export function DataTableShell<TData>({
   footer,
   drawer,
   className,
+  status = "idle",
+  loadingRowCount = 8,
+  errorMessage = "Something went wrong",
+  onRetry,
+  retryLabel = "Retry",
 }: DataTableShellProps<TData>) {
   const visibleTableWidth = table
     .getVisibleLeafColumns()
@@ -58,12 +73,18 @@ export function DataTableShell<TData>({
       0,
     );
 
+  const isLoading = status === "loading";
+  const isError = status === "error";
+  const dataRows = table.getRowModel().rows;
+  const visibleColumnCount = table.getVisibleLeafColumns().length;
+
   return (
     <TableLayout className={cn("min-h-0", className)}>
       <TableLayout.ScrollArea className="[scrollbar-gutter:stable]">
         <table
           className="w-full border-collapse"
           style={{ tableLayout: "fixed", minWidth: `${visibleTableWidth}px` }}
+          {...(isLoading ? { "aria-busy": true } : {})}
         >
           <thead className="sticky top-0 z-10 bg-[var(--bg-surface)]">
             {table.getHeaderGroups().map((headerGroup) => (
@@ -107,73 +128,123 @@ export function DataTableShell<TData>({
           </thead>
 
           <tbody>
-            {table.getRowModel().rows.map((row) => {
-              const isActive = getRowIsActive?.(row.original) ?? false;
-              const dragProps = rowDrag?.getDragProps(row.index);
-              const isDragged = rowDrag?.dragRowIdx === row.index;
-              const isDropTarget =
-                rowDrag != null &&
-                rowDrag.dropTargetIdx === row.index &&
-                rowDrag.dragRowIdx !== null &&
-                rowDrag.dragRowIdx !== row.index;
-
-              return (
+            {isLoading ? (
+              Array.from({ length: loadingRowCount }, (_, rowIndex) => (
                 <tr
-                  key={row.id}
-                  {...dragProps}
-                  onClick={onRowClick ? () => onRowClick(row.original) : undefined}
-                  className={cn(
-                    "group border-b border-[var(--border-subtle)] transition-colors",
-                    onRowClick && "cursor-pointer hover:bg-[var(--bg-hover)]",
-                    isActive && "bg-[var(--bg-hover)]",
-                    rowDrag && "cursor-grab active:cursor-grabbing",
-                    isDragged && "opacity-40",
-                    isDropTarget && "border-t-2 border-t-[var(--border-focus)]",
-                  )}
+                  key={`loading-${rowIndex}`}
+                  className="group border-b border-[var(--border-subtle)]"
                 >
-                  {row.getVisibleCells().map((cell, cellIndex) => {
-                    const meta = columnMeta[cell.column.id];
+                  {table.getVisibleLeafColumns().map((column, cellIndex) => {
+                    const meta = columnMeta[column.id];
                     const isActionsColumn = meta?.sticky === "right";
                     const isControlColumn = meta?.variant === "control";
 
                     return (
                       <td
-                        key={cell.id}
+                        key={column.id}
                         className={cn(
                           "overflow-hidden px-4 text-[var(--text-primary)]",
                           dense ? "py-1 text-xs leading-tight" : "py-4 text-sm",
-                          meta?.sticky &&
-                            (isActive
-                              ? "bg-[var(--bg-hover)]"
-                              : "bg-[var(--bg-surface)] group-hover:bg-[var(--bg-hover)]"),
+                          meta?.sticky && "bg-[var(--bg-surface)]",
                           isActionsColumn && "px-3 align-middle text-right",
                           isControlColumn && "px-1 text-center",
-                          cellIndex === 0 &&
-                            isActive &&
-                            "relative before:absolute before:bottom-0 before:left-0 before:top-0 before:w-[3px] before:bg-[var(--accent-primary)] before:content-['']",
                           stickyBorderClass(meta),
                         )}
                         style={{
-                          width: columnWidths[cell.column.id],
+                          width: columnWidths[column.id],
                           minWidth: meta?.minW ?? 36,
-                          maxWidth: columnWidths[cell.column.id],
+                          maxWidth: columnWidths[column.id],
                           ...stickyStyle(meta, false),
                         }}
                       >
-                        {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                        <div
+                          aria-hidden
+                          className="mx-auto h-4 max-w-full animate-pulse rounded bg-[var(--bg-tertiary)]"
+                          style={{ width: cellIndex % 2 === 0 ? "72%" : "48%" }}
+                        />
                       </td>
                     );
                   })}
                 </tr>
-              );
-            })}
-
-            {table.getRowModel().rows.length === 0 ? (
-              <EmptyState
-                message={emptyMessage}
-                colSpan={table.getVisibleLeafColumns().length}
+              ))
+            ) : isError ? (
+              <TableErrorPanel
+                message={errorMessage}
+                colSpan={visibleColumnCount}
+                onRetry={onRetry}
+                retryLabel={retryLabel}
               />
-            ) : null}
+            ) : (
+              <>
+                {dataRows.map((row) => {
+                  const isActive = getRowIsActive?.(row.original) ?? false;
+                  const dragProps = rowDrag?.getDragProps(row.index);
+                  const isDragged = rowDrag?.dragRowIdx === row.index;
+                  const isDropTarget =
+                    rowDrag != null &&
+                    rowDrag.dropTargetIdx === row.index &&
+                    rowDrag.dragRowIdx !== null &&
+                    rowDrag.dragRowIdx !== row.index;
+
+                  return (
+                    <tr
+                      key={row.id}
+                      {...dragProps}
+                      onClick={onRowClick ? () => onRowClick(row.original) : undefined}
+                      className={cn(
+                        "group border-b border-[var(--border-subtle)] transition-colors",
+                        onRowClick && "cursor-pointer hover:bg-[var(--bg-hover)]",
+                        isActive && "bg-[var(--bg-hover)]",
+                        rowDrag && "cursor-grab active:cursor-grabbing",
+                        isDragged && "opacity-40",
+                        isDropTarget && "border-t-2 border-t-[var(--border-focus)]",
+                      )}
+                    >
+                      {row.getVisibleCells().map((cell, cellIndex) => {
+                        const meta = columnMeta[cell.column.id];
+                        const isActionsColumn = meta?.sticky === "right";
+                        const isControlColumn = meta?.variant === "control";
+
+                        return (
+                          <td
+                            key={cell.id}
+                            className={cn(
+                              "overflow-hidden px-4 text-[var(--text-primary)]",
+                              dense ? "py-1 text-xs leading-tight" : "py-4 text-sm",
+                              meta?.sticky &&
+                                (isActive
+                                  ? "bg-[var(--bg-hover)]"
+                                  : "bg-[var(--bg-surface)] group-hover:bg-[var(--bg-hover)]"),
+                              isActionsColumn && "px-3 align-middle text-right",
+                              isControlColumn && "px-1 text-center",
+                              cellIndex === 0 &&
+                                isActive &&
+                                "relative before:absolute before:bottom-0 before:left-0 before:top-0 before:w-[3px] before:bg-[var(--accent-primary)] before:content-['']",
+                              stickyBorderClass(meta),
+                            )}
+                            style={{
+                              width: columnWidths[cell.column.id],
+                              minWidth: meta?.minW ?? 36,
+                              maxWidth: columnWidths[cell.column.id],
+                              ...stickyStyle(meta, false),
+                            }}
+                          >
+                            {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                          </td>
+                        );
+                      })}
+                    </tr>
+                  );
+                })}
+
+                {dataRows.length === 0 ? (
+                  <EmptyState
+                    message={emptyMessage}
+                    colSpan={visibleColumnCount}
+                  />
+                ) : null}
+              </>
+            )}
           </tbody>
         </table>
       </TableLayout.ScrollArea>
