@@ -182,6 +182,28 @@ describe("serializePersistedTableState / deserializePersistedTableState", () => 
     expect(deserializePersistedTableState("", 1, ["pageSize"])).toEqual({});
   });
 
+  it("returns empty object for null serialized input", () => {
+    expect(deserializePersistedTableState(null, 1, ["pageSize"])).toEqual({});
+  });
+
+  it("rejects sorting with non-string columnId", () => {
+    const blob = JSON.stringify({
+      version: 1,
+      sorting: { columnId: 42, direction: "asc" },
+    });
+    expect(deserializePersistedTableState(blob, 1, ["sorting"])).toEqual({});
+  });
+
+  it("rejects columnFilters when value is a plain object", () => {
+    const blob = JSON.stringify({ version: 1, columnFilters: {} });
+    expect(deserializePersistedTableState(blob, 1, ["columnFilters"])).toEqual({});
+  });
+
+  it("rejects non-finite pageSize values", () => {
+    const blob = JSON.stringify({ version: 1, pageSize: Number.NaN });
+    expect(deserializePersistedTableState(blob, 1, ["pageSize"])).toEqual({});
+  });
+
   it("ignores sorting in blob when sorting is not a requested field", () => {
     const blob = JSON.stringify({
       version: 1,

@@ -331,6 +331,8 @@ describe("usePersistedTableState", () => {
       result.current.setState({ pageSize: 10 });
     });
 
+    expect(lastCallArg(replaceState, 1)).toBe("");
+
     const url = lastCallArg(replaceState, 2) as string;
     expect(url).toContain("foo=bar");
     expect(url).toContain("table=");
