@@ -3,6 +3,11 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { usePersistedTableState } from "./usePersistedTableState";
 
+function lastCallArg(spy: ReturnType<typeof vi.spyOn>, index: number): unknown {
+  const call = spy.mock.calls.at(-1);
+  return call?.[index];
+}
+
 const STORAGE_KEY = "demo-table";
 const PREFIXED_KEY = `tablewright:${STORAGE_KEY}`;
 
@@ -193,6 +198,86 @@ describe("usePersistedTableState", () => {
       result.current.reset();
     });
     expect(window.localStorage.getItem(PREFIXED_KEY)).toBeNull();
+  });
+
+  it("clears storage when persisted fields become undefined", () => {
+    const { result } = renderHook(() =>
+      usePersistedTableState({
+        storage: "localStorage",
+        key: STORAGE_KEY,
+        version: 1,
+        fields: ["pageSize"],
+      }),
+    );
+
+    act(() => {
+      result.current.setState({ pageSize: 20 });
+    });
+    expect(window.localStorage.getItem(PREFIXED_KEY)).not.toBeNull();
+
+    act(() => {
+      result.current.setState({ pageSize: undefined });
+    });
+    expect(window.localStorage.getItem(PREFIXED_KEY)).toBeNull();
+  });
+
+  it("merges other URL search params when writing url storage", () => {
+    const replaceState = vi.spyOn(window.history, "replaceState");
+    Object.defineProperty(window, "location", {
+      value: {
+        pathname: "/list",
+        search: "?foo=bar",
+        hash: "#section",
+      },
+      writable: true,
+      configurable: true,
+    });
+
+    const { result } = renderHook(() =>
+      usePersistedTableState({
+        storage: "url",
+        key: "table",
+        version: 1,
+        fields: ["pageSize"],
+      }),
+    );
+
+    act(() => {
+      result.current.setState({ pageSize: 10 });
+    });
+
+    const url = lastCallArg(replaceState, 2) as string;
+    expect(url).toContain("foo=bar");
+    expect(url).toContain("table=");
+    expect(url).toContain("#section");
+  });
+
+  it("uses pathname-only URL when url param is cleared", () => {
+    const replaceState = vi.spyOn(window.history, "replaceState");
+    Object.defineProperty(window, "location", {
+      value: {
+        pathname: "/list",
+        search: "?table=%7B%22version%22%3A1%7D",
+        hash: "",
+      },
+      writable: true,
+      configurable: true,
+    });
+
+    const { result } = renderHook(() =>
+      usePersistedTableState({
+        storage: "url",
+        key: "table",
+        version: 1,
+        fields: ["pageSize"],
+      }),
+    );
+
+    act(() => {
+      result.current.reset();
+    });
+
+    expect(lastCallArg(replaceState, 2)).toBe("/list");
   });
 
   it("supports functional setState updates", () => {

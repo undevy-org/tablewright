@@ -83,4 +83,117 @@ describe("serializePersistedTableState / deserializePersistedTableState", () => 
     });
     expect(deserializePersistedTableState(blob, 1, allFields)).toEqual({});
   });
+
+  it("rejects non-object JSON root", () => {
+    expect(deserializePersistedTableState("[1,2]", 1, ["pageSize"])).toEqual({});
+  });
+
+  it("rejects non-number version", () => {
+    expect(
+      deserializePersistedTableState('{"version":"1","pageSize":10}', 1, ["pageSize"]),
+    ).toEqual({});
+  });
+
+  it("parses valid columnFilters only", () => {
+    const filters = [{ columnId: "status", value: ["A"] }];
+    const blob = JSON.stringify({ version: 1, columnFilters: filters });
+    expect(deserializePersistedTableState(blob, 1, ["columnFilters"])).toEqual({
+      columnFilters: filters,
+    });
+  });
+
+  it("drops invalid sorting but keeps other valid fields", () => {
+    const blob = JSON.stringify({
+      version: 1,
+      sorting: "not-an-object",
+      pageSize: 25,
+    });
+    expect(deserializePersistedTableState(blob, 1, ["sorting", "pageSize"])).toEqual({
+      pageSize: 25,
+    });
+  });
+
+  it("drops sorting with invalid direction", () => {
+    const blob = JSON.stringify({
+      version: 1,
+      sorting: { columnId: "a", direction: "sideways" },
+    });
+    expect(deserializePersistedTableState(blob, 1, ["sorting"])).toEqual({});
+  });
+
+  it("drops columnFilters when an item lacks columnId", () => {
+    const blob = JSON.stringify({
+      version: 1,
+      columnFilters: [{ value: ["x"] }],
+    });
+    expect(deserializePersistedTableState(blob, 1, ["columnFilters"])).toEqual({});
+  });
+
+  it("drops columnVisibility when a value is not boolean", () => {
+    const blob = JSON.stringify({
+      version: 1,
+      columnVisibility: { a: true, b: 1 },
+    });
+    expect(deserializePersistedTableState(blob, 1, ["columnVisibility"])).toEqual({});
+  });
+
+  it("rejects non-positive pageSize", () => {
+    expect(
+      deserializePersistedTableState(
+        JSON.stringify({ version: 1, pageSize: 0 }),
+        1,
+        ["pageSize"],
+      ),
+    ).toEqual({});
+    expect(
+      deserializePersistedTableState(
+        JSON.stringify({ version: 1, pageSize: -5 }),
+        1,
+        ["pageSize"],
+      ),
+    ).toEqual({});
+  });
+
+  it("does not read columnFilters when field is omitted", () => {
+    const blob = JSON.stringify({
+      version: 1,
+      columnFilters: [{ columnId: "x", value: [] }],
+    });
+    expect(deserializePersistedTableState(blob, 1, ["pageSize"])).toEqual({});
+  });
+
+  it("does not read columnVisibility when field is omitted", () => {
+    const blob = JSON.stringify({
+      version: 1,
+      columnVisibility: { hidden: false },
+    });
+    expect(deserializePersistedTableState(blob, 1, ["sorting"])).toEqual({});
+  });
+
+  it("serializes each field only when present in state", () => {
+    expect(
+      JSON.parse(serializePersistedTableState({ sorting: null }, 1, ["sorting"])),
+    ).toEqual({ version: 1, sorting: null });
+
+    expect(
+      JSON.parse(
+        serializePersistedTableState(
+          { columnFilters: [{ columnId: "a", value: "x" }] },
+          1,
+          ["columnFilters"],
+        ),
+      ),
+    ).toEqual({
+      version: 1,
+      columnFilters: [{ columnId: "a", value: "x" }],
+    });
+
+    expect(
+      JSON.parse(
+        serializePersistedTableState({ columnVisibility: { a: false } }, 1, [
+          "columnVisibility",
+        ]),
+      ),
+    ).toEqual({ version: 1, columnVisibility: { a: false } });
+  });
 });
