@@ -1,6 +1,12 @@
 import type { VisibilityState } from "@tanstack/react-table";
 
-import type { ActiveFilter } from "../components/data-table/filter-types";
+import type {
+  ActiveFilter,
+  ActiveFilterValue,
+  CompoundFilterValue,
+  DateRangeValue,
+  NumberRangeValue,
+} from "../components/data-table/filter-types";
 
 export type PersistedTableStateField =
   | "sorting"
@@ -49,6 +55,66 @@ function parseSorting(value: unknown): PersistedTableSorting | undefined {
   return { columnId, direction };
 }
 
+function parseActiveFilterValue(value: unknown): ActiveFilterValue | undefined {
+  if (typeof value === "string") {
+    return value;
+  }
+  if (Array.isArray(value)) {
+    if (value.every((element) => typeof element === "string")) {
+      return value;
+    }
+    return undefined;
+  }
+  if (!isRecord(value)) {
+    return undefined;
+  }
+
+  const keys = Object.keys(value);
+
+  const onlyFromTo = keys.every((key) => key === "from" || key === "to");
+  if (onlyFromTo) {
+    let sawDateBound = false;
+    let sawNumberBound = false;
+    const numberRange: NumberRangeValue = {};
+    const dateRange: DateRangeValue = {};
+
+    for (const key of ["from", "to"] as const) {
+      if (!(key in value)) {
+        continue;
+      }
+      const bound = value[key];
+      if (typeof bound === "string") {
+        if (sawNumberBound) {
+          return undefined;
+        }
+        sawDateBound = true;
+        dateRange[key] = bound;
+        continue;
+      }
+      if (!Number.isFinite(bound)) {
+        return undefined;
+      }
+      if (sawDateBound) {
+        return undefined;
+      }
+      sawNumberBound = true;
+      numberRange[key] = bound;
+    }
+
+    return sawNumberBound ? numberRange : sawDateBound ? dateRange : {};
+  }
+
+  const compound: CompoundFilterValue = {};
+  for (const key of keys) {
+    const nested = parseActiveFilterValue(value[key]);
+    if (nested === undefined) {
+      return undefined;
+    }
+    compound[key] = nested;
+  }
+  return compound;
+}
+
 function parseColumnFilters(value: unknown): ActiveFilter[] | undefined {
   if (!Array.isArray(value)) {
     return undefined;
@@ -58,7 +124,11 @@ function parseColumnFilters(value: unknown): ActiveFilter[] | undefined {
     if (!isRecord(item) || typeof item.columnId !== "string" || !("value" in item)) {
       return undefined;
     }
-    filters.push({ columnId: item.columnId, value: item.value as ActiveFilter["value"] });
+    const parsedValue = parseActiveFilterValue(item.value);
+    if (parsedValue === undefined) {
+      return undefined;
+    }
+    filters.push({ columnId: item.columnId, value: parsedValue });
   }
   return filters;
 }
