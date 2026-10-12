@@ -14,6 +14,14 @@ const allFields = [
   "pageSize",
 ] as const;
 
+function deserializeColumnFilterValue(value: unknown) {
+  const blob = JSON.stringify({
+    version: 1,
+    columnFilters: [{ columnId: "c", value }],
+  });
+  return deserializePersistedTableState(blob, 1, ["columnFilters"]).columnFilters;
+}
+
 const fixtureCases: {
   label: string;
   blob: string | null;
@@ -143,6 +151,148 @@ describe("serializePersistedTableState / deserializePersistedTableState", () => 
     expect(deserializePersistedTableState(blob, 1, ["columnFilters"])).toEqual({
       columnFilters: filters,
     });
+  });
+
+  it("parses partial number and date ranges without extra keys", () => {
+    const fromOnlyNumber = deserializeColumnFilterValue({ from: 1 });
+    expect(fromOnlyNumber).toStrictEqual([{ columnId: "c", value: { from: 1 } }]);
+    expect(Object.keys(fromOnlyNumber![0].value)).toEqual(["from"]);
+
+    const toOnlyNumber = deserializeColumnFilterValue({ to: 2 });
+    expect(toOnlyNumber).toStrictEqual([{ columnId: "c", value: { to: 2 } }]);
+    expect(Object.keys(toOnlyNumber![0].value)).toEqual(["to"]);
+
+    const fromOnlyDate = deserializeColumnFilterValue({ from: "2024-01-01" });
+    expect(fromOnlyDate).toStrictEqual([{ columnId: "c", value: { from: "2024-01-01" } }]);
+    expect(Object.keys(fromOnlyDate![0].value)).toEqual(["from"]);
+
+    const toOnlyDate = deserializeColumnFilterValue({ to: "2024-12-31" });
+    expect(toOnlyDate).toStrictEqual([{ columnId: "c", value: { to: "2024-12-31" } }]);
+    expect(Object.keys(toOnlyDate![0].value)).toEqual(["to"]);
+  });
+
+  it("treats objects with from/to plus other keys as compound filters", () => {
+    expect(deserializeColumnFilterValue({ from: "2024-01-01", status: ["OPEN"] })).toEqual([
+      { columnId: "c", value: { from: "2024-01-01", status: ["OPEN"] } },
+    ]);
+  });
+
+  it("rejects from/to-only objects with mixed bound types or invalid bounds", () => {
+    const rejected = [
+      { from: 1, to: "x" },
+      { from: "x", to: 2 },
+      { from: "not-a-date", to: 1 },
+      { from: null, to: 2 },
+      { from: 1, to: null },
+      { from: true },
+      { from: {} },
+    ];
+    for (const value of rejected) {
+      expect(deserializeColumnFilterValue(value)).toBeUndefined();
+    }
+  });
+
+  it("parses full number and date ranges with exact keys", () => {
+    const numberRange = deserializeColumnFilterValue({ from: 1, to: 2 });
+    expect(numberRange).toStrictEqual([{ columnId: "c", value: { from: 1, to: 2 } }]);
+    expect(Object.keys(numberRange![0].value).sort()).toEqual(["from", "to"]);
+
+    const dateRange = deserializeColumnFilterValue({
+      from: "2024-01-01",
+      to: "2024-12-31",
+    });
+    expect(dateRange).toStrictEqual([
+      { columnId: "c", value: { from: "2024-01-01", to: "2024-12-31" } },
+    ]);
+    expect(Object.keys(dateRange![0].value).sort()).toEqual(["from", "to"]);
+  });
+
+  it("rejects non-finite number bounds in JSON number ranges", () => {
+    const blob = '{"version":1,"columnFilters":[{"columnId":"c","value":{"from":1e400}}]}';
+    const restored = deserializePersistedTableState(blob, 1, ["columnFilters"]);
+    expect(restored.columnFilters).toBeUndefined();
+    expect(restored).toEqual({});
+    expect(restored).not.toEqual({
+      columnFilters: [{ columnId: "c", value: {} }],
+    });
+  });
+
+  it("accepts empty object filter values as compound roots", () => {
+    expect(deserializeColumnFilterValue({})).toStrictEqual([{ columnId: "c", value: {} }]);
+    expect(deserializeColumnFilterValue({ nested: {} })).toStrictEqual([
+      { columnId: "c", value: { nested: {} } },
+    ]);
+  });
+
+  it("parses valid ActiveFilterValue shapes in columnFilters", () => {
+    const filters = [
+      { columnId: "text", value: "single" },
+      { columnId: "enum", value: ["A", "B"] },
+      { columnId: "created", value: { from: "2024-01-01", to: "2024-12-31" } },
+      { columnId: "amount", value: { from: 1, to: 99.5 } },
+      { columnId: "compound", value: { status: ["OPEN"], note: "x" } },
+      { columnId: "emptyCompound", value: {} },
+    ];
+    const blob = JSON.stringify({ version: 1, columnFilters: filters });
+    expect(deserializePersistedTableState(blob, 1, ["columnFilters"])).toEqual({
+      columnFilters: filters,
+    });
+  });
+
+  it("drops columnFilters when filter value is not a valid ActiveFilterValue", () => {
+    const invalidValues = [
+      42,
+      null,
+      true,
+      ["A", 1],
+      { from: "not-a-date", to: 1 },
+      { evil: { nested: true } },
+      { from: Number.NaN },
+      { to: Number.POSITIVE_INFINITY },
+    ];
+    for (const value of invalidValues) {
+      const blob = JSON.stringify({
+        version: 1,
+        columnFilters: [{ columnId: "c", value }],
+      });
+      expect(deserializePersistedTableState(blob, 1, ["columnFilters"])).toEqual({});
+    }
+  });
+
+  it("drops columnFilters when one item is invalid but others are valid", () => {
+    const blob = JSON.stringify({
+      version: 1,
+      columnFilters: [
+        { columnId: "ok", value: ["A"] },
+        { columnId: "bad", value: 42 },
+      ],
+    });
+    expect(deserializePersistedTableState(blob, 1, ["columnFilters"])).toEqual({});
+  });
+
+  it("drops columnFilters when value key is missing on an item", () => {
+    const blob = JSON.stringify({
+      version: 1,
+      columnFilters: [{ columnId: "c" }],
+    });
+    expect(deserializePersistedTableState(blob, 1, ["columnFilters"])).toEqual({});
+  });
+
+  it("rejects non-finite positive pageSize including Infinity", () => {
+    expect(
+      deserializePersistedTableState(
+        JSON.stringify({ version: 1, pageSize: Number.POSITIVE_INFINITY }),
+        1,
+        ["pageSize"],
+      ),
+    ).toEqual({});
+    expect(
+      deserializePersistedTableState(
+        JSON.stringify({ version: 1, pageSize: Number.NEGATIVE_INFINITY }),
+        1,
+        ["pageSize"],
+      ),
+    ).toEqual({});
   });
 
   it("drops invalid sorting but keeps other valid fields", () => {
