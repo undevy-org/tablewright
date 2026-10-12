@@ -1,5 +1,11 @@
 # @undevy-org/tablewright
 
+## 0.12.1
+
+### Patch Changes
+
+- [#86](https://github.com/undevy-org/tablewright/pull/86) [`f7f907e`](https://github.com/undevy-org/tablewright/commit/f7f907e7f545fd82dbdd94ca8169f75fea9bfde1) Thanks [@undevy](https://github.com/undevy)! - Validate persisted column filter values on deserialize so crafted storage/URL JSON cannot inject non-ActiveFilterValue shapes.
+
 ## 0.12.0
 
 ### Minor Changes
