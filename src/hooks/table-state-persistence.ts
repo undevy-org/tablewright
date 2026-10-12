@@ -98,7 +98,7 @@ function parseActiveFilterValue(value: unknown): ActiveFilterValue | undefined {
         return undefined;
       }
       sawNumberBound = true;
-      numberRange[key] = bound;
+      numberRange[key] = bound as number;
     }
 
     return sawNumberBound ? numberRange : sawDateBound ? dateRange : {};
