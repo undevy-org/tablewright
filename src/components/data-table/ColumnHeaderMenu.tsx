@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useId, useState } from "react";
+import * as DropdownMenuPrimitive from "@radix-ui/react-dropdown-menu";
 
 import {
   DropdownMenu,
@@ -6,6 +7,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "../ui/dropdown-menu";
+import { cn } from "../../lib/utils";
 import type { SortDirection } from "./types";
 
 import {
@@ -84,6 +86,9 @@ const itemClass = "gap-2.5 rounded-md px-2.5 py-2";
 
 const iconClass = "h-3.5 w-3.5 shrink-0 text-[var(--text-secondary)]";
 
+const radioItemClass =
+  "relative flex cursor-default select-none items-center rounded-sm px-2 py-1.5 text-[13px] outline-none hover:bg-[var(--bg-hover)]";
+
 function SortItems({
   label,
   sorted,
@@ -95,26 +100,44 @@ function SortItems({
   onSort: (direction: "asc" | "desc") => void;
   labels: ColumnHeaderMenuLabels;
 }) {
+  const labelId = useId();
+  const groupLabel = label ? labels.sortByColumn(label) : labels.sort;
+  const radioValue = sorted === false ? "" : sorted;
+
   return (
-    <>
-      <div className={sectionLabelClass}>{label ? labels.sortByColumn(label) : labels.sort}</div>
-      <DropdownMenuItem
-        className={`${itemClass}${sorted === "asc" ? " bg-[var(--bg-tertiary)]" : ""}`}
-        onClick={() => onSort("asc")}
-      >
-        <ArrowUp className={iconClass} />
-        {labels.ascending}
-        {sorted === "asc" && <Check className="ml-auto h-3 w-3 text-[var(--text-tertiary)]" />}
-      </DropdownMenuItem>
-      <DropdownMenuItem
-        className={`${itemClass}${sorted === "desc" ? " bg-[var(--bg-tertiary)]" : ""}`}
-        onClick={() => onSort("desc")}
-      >
-        <ArrowDown className={iconClass} />
-        {labels.descending}
-        {sorted === "desc" && <Check className="ml-auto h-3 w-3 text-[var(--text-tertiary)]" />}
-      </DropdownMenuItem>
-    </>
+    <div role="group" aria-labelledby={labelId}>
+      <div id={labelId} className={sectionLabelClass}>
+        {groupLabel}
+      </div>
+      <DropdownMenuPrimitive.RadioGroup value={radioValue}>
+        <DropdownMenuPrimitive.RadioItem
+          value="asc"
+          className={cn(
+            radioItemClass,
+            itemClass,
+            sorted === "asc" ? "bg-[var(--bg-tertiary)]" : "",
+          )}
+          onSelect={() => onSort("asc")}
+        >
+          <ArrowUp className={iconClass} />
+          {labels.ascending}
+          {sorted === "asc" && <Check className="ml-auto h-3 w-3 text-[var(--text-tertiary)]" />}
+        </DropdownMenuPrimitive.RadioItem>
+        <DropdownMenuPrimitive.RadioItem
+          value="desc"
+          className={cn(
+            radioItemClass,
+            itemClass,
+            sorted === "desc" ? "bg-[var(--bg-tertiary)]" : "",
+          )}
+          onSelect={() => onSort("desc")}
+        >
+          <ArrowDown className={iconClass} />
+          {labels.descending}
+          {sorted === "desc" && <Check className="ml-auto h-3 w-3 text-[var(--text-tertiary)]" />}
+        </DropdownMenuPrimitive.RadioItem>
+      </DropdownMenuPrimitive.RadioGroup>
+    </div>
   );
 }
 
@@ -152,6 +175,7 @@ export function ColumnHeaderMenu({
   const hasFilterOrHide = showFilterItem || showHideItem;
   const showSeparatorAfterSort = isSortable && (hasFilterOrHide || hasPinSection);
   const showSeparatorBeforePin = hasPinSection && hasFilterOrHide;
+  const pinRadioValue = pinSide === false ? "" : pinSide;
 
   const labelContent = isStacked ? (
     <span className="flex flex-col leading-none">
@@ -241,20 +265,37 @@ export function ColumnHeaderMenu({
           <div className="my-1 border-t border-[var(--border-subtle)]" />
         )}
 
-        {showPinLeftItem && (
-          <DropdownMenuItem className={itemClass} onClick={onPinLeft}>
-            <Pin className={iconClass} />
-            {labels.pinLeft}
-            {pinSide === "left" && <Check className="ml-auto h-3 w-3 text-[var(--text-tertiary)]" />}
-          </DropdownMenuItem>
-        )}
-
-        {showPinRightItem && (
-          <DropdownMenuItem className={itemClass} onClick={onPinRight}>
-            <Pin className={`${iconClass} rotate-90`} />
-            {labels.pinRight}
-            {pinSide === "right" && <Check className="ml-auto h-3 w-3 text-[var(--text-tertiary)]" />}
-          </DropdownMenuItem>
+        {(showPinLeftItem || showPinRightItem) && (
+          <div role="group">
+            <DropdownMenuPrimitive.RadioGroup value={pinRadioValue}>
+              {showPinLeftItem && (
+                <DropdownMenuPrimitive.RadioItem
+                  value="left"
+                  className={cn(radioItemClass, itemClass)}
+                  onSelect={() => onPinLeft?.()}
+                >
+                  <Pin className={iconClass} />
+                  {labels.pinLeft}
+                  {pinSide === "left" && (
+                    <Check className="ml-auto h-3 w-3 text-[var(--text-tertiary)]" />
+                  )}
+                </DropdownMenuPrimitive.RadioItem>
+              )}
+              {showPinRightItem && (
+                <DropdownMenuPrimitive.RadioItem
+                  value="right"
+                  className={cn(radioItemClass, itemClass)}
+                  onSelect={() => onPinRight?.()}
+                >
+                  <Pin className={`${iconClass} rotate-90`} />
+                  {labels.pinRight}
+                  {pinSide === "right" && (
+                    <Check className="ml-auto h-3 w-3 text-[var(--text-tertiary)]" />
+                  )}
+                </DropdownMenuPrimitive.RadioItem>
+              )}
+            </DropdownMenuPrimitive.RadioGroup>
+          </div>
         )}
 
         {showUnpinItem && (
