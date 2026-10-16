@@ -1,5 +1,11 @@
 # @undevy-org/tablewright
 
+## 0.12.3
+
+### Patch Changes
+
+- [#90](https://github.com/undevy-org/tablewright/pull/90) [`e4d2121`](https://github.com/undevy-org/tablewright/commit/e4d212161bcf6784524fcc3fbb3b3a7b25cd1228) Thanks [@undevy](https://github.com/undevy)! - Document stable callback requirement on TableOrchestrationConfig and fix WithColumnPinning story render loop.
+
 ## 0.12.2
 
 ### Patch Changes
