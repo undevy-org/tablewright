@@ -89,6 +89,18 @@ const iconClass = "h-3.5 w-3.5 shrink-0 text-[var(--text-secondary)]";
 const radioItemClass =
   "relative flex cursor-default select-none items-center rounded-sm px-2 py-1.5 text-[13px] outline-none hover:bg-[var(--bg-hover)]";
 
+function sortDirectionRadioValue(sorted: SortDirection): "" | "asc" | "desc" {
+  if (sorted === "asc") return "asc";
+  if (sorted === "desc") return "desc";
+  return "";
+}
+
+function pinSideRadioValue(pinSide: "left" | "right" | false): "" | "left" | "right" {
+  if (pinSide === "left") return "left";
+  if (pinSide === "right") return "right";
+  return "";
+}
+
 function SortItems({
   label,
   sorted,
@@ -102,7 +114,7 @@ function SortItems({
 }) {
   const labelId = useId();
   const groupLabel = label ? labels.sortByColumn(label) : labels.sort;
-  const radioValue = sorted === false ? "" : sorted;
+  const radioValue = sortDirectionRadioValue(sorted);
 
   return (
     <div role="group" aria-labelledby={labelId}>
@@ -175,7 +187,7 @@ export function ColumnHeaderMenu({
   const hasFilterOrHide = showFilterItem || showHideItem;
   const showSeparatorAfterSort = isSortable && (hasFilterOrHide || hasPinSection);
   const showSeparatorBeforePin = hasPinSection && hasFilterOrHide;
-  const pinRadioValue = pinSide === false ? "" : pinSide;
+  const pinRadioValue = pinSideRadioValue(pinSide);
 
   const labelContent = isStacked ? (
     <span className="flex flex-col leading-none">
@@ -272,7 +284,7 @@ export function ColumnHeaderMenu({
                 <DropdownMenuPrimitive.RadioItem
                   value="left"
                   className={cn(radioItemClass, itemClass)}
-                  onSelect={() => onPinLeft?.()}
+                  onSelect={() => onPinLeft()}
                 >
                   <Pin className={iconClass} />
                   {labels.pinLeft}
@@ -285,7 +297,7 @@ export function ColumnHeaderMenu({
                 <DropdownMenuPrimitive.RadioItem
                   value="right"
                   className={cn(radioItemClass, itemClass)}
-                  onSelect={() => onPinRight?.()}
+                  onSelect={() => onPinRight()}
                 >
                   <Pin className={`${iconClass} rotate-90`} />
                   {labels.pinRight}

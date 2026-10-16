@@ -111,6 +111,7 @@ describe("ColumnHeaderMenu", () => {
 
     openMenu();
     expect(screen.queryByRole("menuitemradio", { name: /Pin left/i })).toBeNull();
+    expect(screen.queryByRole("group")).toBeNull();
   });
 
   it("does not render unpin when pinSide is false", () => {
@@ -341,6 +342,24 @@ describe("ColumnHeaderMenu", () => {
       expect(onSort).toHaveBeenCalledTimes(1);
       expect(onSort).toHaveBeenCalledWith("asc");
     });
+
+    it("updates sort aria-checked when sorted changes from false to asc", () => {
+      const { rerender } = render(
+        <ColumnHeaderMenu label="Status" sorted={false} onSort={vi.fn()} />,
+      );
+      openMenu();
+      expect(screen.getByRole("menuitemradio", { name: /Ascending/i }).getAttribute("aria-checked")).toBe(
+        "false",
+      );
+
+      rerender(<ColumnHeaderMenu label="Status" sorted="asc" onSort={vi.fn()} />);
+      expect(screen.getByRole("menuitemradio", { name: /Ascending/i }).getAttribute("aria-checked")).toBe(
+        "true",
+      );
+      expect(screen.getByRole("menuitemradio", { name: /Descending/i }).getAttribute("aria-checked")).toBe(
+        "false",
+      );
+    });
   });
 
   describe("stacked sort radio accessibility", () => {
@@ -456,6 +475,36 @@ describe("ColumnHeaderMenu", () => {
       openMenu();
       const pinLeft = screen.getByRole("menuitemradio", { name: /Pin left/i });
       expect(pinLeft.closest('[role="group"]')).toBeTruthy();
+    });
+
+    it("updates pin aria-checked when pinSide changes from false to left", () => {
+      const { rerender } = render(
+        <ColumnHeaderMenu
+          label="Status"
+          onPinLeft={vi.fn()}
+          onPinRight={vi.fn()}
+          pinSide={false}
+        />,
+      );
+      openMenu();
+      expect(screen.getByRole("menuitemradio", { name: /Pin left/i }).getAttribute("aria-checked")).toBe(
+        "false",
+      );
+
+      rerender(
+        <ColumnHeaderMenu
+          label="Status"
+          onPinLeft={vi.fn()}
+          onPinRight={vi.fn()}
+          pinSide="left"
+        />,
+      );
+      expect(screen.getByRole("menuitemradio", { name: /Pin left/i }).getAttribute("aria-checked")).toBe(
+        "true",
+      );
+      expect(screen.getByRole("menuitemradio", { name: /Pin right/i }).getAttribute("aria-checked")).toBe(
+        "false",
+      );
     });
 
     it("calls onPinLeft when the already-checked pin left item is activated", () => {
