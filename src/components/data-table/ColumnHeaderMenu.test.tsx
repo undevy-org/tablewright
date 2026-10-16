@@ -284,6 +284,44 @@ describe("ColumnHeaderMenu", () => {
       );
     });
 
+    it("marks both sort radios unchecked when sorted is false", () => {
+      render(<ColumnHeaderMenu label="Status" sorted={false} onSort={vi.fn()} />);
+      openMenu();
+      expect(screen.getByRole("menuitemradio", { name: /Ascending/i }).getAttribute("aria-checked")).toBe(
+        "false",
+      );
+      expect(screen.getByRole("menuitemradio", { name: /Descending/i }).getAttribute("aria-checked")).toBe(
+        "false",
+      );
+    });
+
+    it("calls onSort with desc when Descending is clicked", () => {
+      const onSort = vi.fn();
+      render(<ColumnHeaderMenu label="Status" onSort={onSort} />);
+      openMenu();
+      fireEvent.click(screen.getByRole("menuitemradio", { name: /Descending/i }));
+      expect(onSort).toHaveBeenCalledTimes(1);
+      expect(onSort).toHaveBeenCalledWith("desc");
+    });
+
+    it("shows the check only on descending when sorted desc", () => {
+      render(<ColumnHeaderMenu label="Status" sorted="desc" onSort={vi.fn()} />);
+      openMenu();
+      const ascending = screen.getByRole("menuitemradio", { name: /Ascending/i });
+      const descending = screen.getByRole("menuitemradio", { name: /Descending/i });
+      expect(ascending.querySelector("svg.lucide-check")).toBeNull();
+      expect(descending.querySelector("svg.lucide-check")).toBeTruthy();
+    });
+
+    it("calls onSort with desc when the already-checked descending item is activated", () => {
+      const onSort = vi.fn();
+      render(<ColumnHeaderMenu label="Status" sorted="desc" onSort={onSort} />);
+      openMenu();
+      fireEvent.click(screen.getByRole("menuitemradio", { name: /Descending/i }));
+      expect(onSort).toHaveBeenCalledTimes(1);
+      expect(onSort).toHaveBeenCalledWith("desc");
+    });
+
     it("calls onSort when the already-checked ascending item is activated", () => {
       const onSort = vi.fn();
       render(<ColumnHeaderMenu label="Status" sorted="asc" onSort={onSort} />);
@@ -369,6 +407,55 @@ describe("ColumnHeaderMenu", () => {
       expect(screen.getByRole("menuitemradio", { name: /Pin right/i }).getAttribute("aria-checked")).toBe(
         "false",
       );
+    });
+
+    it("marks both pin radios unchecked when pinSide is false", () => {
+      render(
+        <ColumnHeaderMenu
+          label="Status"
+          onPinLeft={vi.fn()}
+          onPinRight={vi.fn()}
+          pinSide={false}
+        />,
+      );
+      openMenu();
+      expect(screen.getByRole("menuitemradio", { name: /Pin left/i }).getAttribute("aria-checked")).toBe(
+        "false",
+      );
+      expect(screen.getByRole("menuitemradio", { name: /Pin right/i }).getAttribute("aria-checked")).toBe(
+        "false",
+      );
+    });
+
+    it("exposes pin right as checked when pinSide is right", () => {
+      render(
+        <ColumnHeaderMenu label="Status" onPinRight={vi.fn()} pinSide="right" />,
+      );
+      openMenu();
+      expect(screen.getByRole("menuitemradio", { name: /Pin right/i }).getAttribute("aria-checked")).toBe(
+        "true",
+      );
+    });
+
+    it("calls onPinRight when the already-checked pin right item is activated", () => {
+      const onPinRight = vi.fn();
+      render(
+        <ColumnHeaderMenu
+          label="Status"
+          onPinRight={onPinRight}
+          pinSide="right"
+        />,
+      );
+      openMenu();
+      fireEvent.click(screen.getByRole("menuitemradio", { name: /Pin right/i }));
+      expect(onPinRight).toHaveBeenCalledTimes(1);
+    });
+
+    it("wraps a single pin action in the pin radio group", () => {
+      render(<ColumnHeaderMenu label="Status" onPinLeft={vi.fn()} />);
+      openMenu();
+      const pinLeft = screen.getByRole("menuitemradio", { name: /Pin left/i });
+      expect(pinLeft.closest('[role="group"]')).toBeTruthy();
     });
 
     it("calls onPinLeft when the already-checked pin left item is activated", () => {
