@@ -1,5 +1,11 @@
 # @undevy-org/tablewright
 
+## 0.12.2
+
+### Patch Changes
+
+- [#88](https://github.com/undevy-org/tablewright/pull/88) [`d235f8f`](https://github.com/undevy-org/tablewright/commit/d235f8f871a072307ef0423fa7cb81e7b95be427) Thanks [@undevy](https://github.com/undevy)! - Expose column header menu sort direction and pin side to assistive tech via menuitemradio and labelled groups.
+
 ## 0.12.1
 
 ### Patch Changes
