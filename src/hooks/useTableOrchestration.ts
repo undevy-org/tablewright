@@ -56,9 +56,33 @@ export function computeVisibleColumnOrder(input: {
 
 export interface TableOrchestrationConfig<TRow extends object, TViewKey extends string> {
   rows: TRow[];
+  /**
+   * Must be referentially stable across renders (module-level function or `useCallback`).
+   * A new function identity recomputes filtered/sorted rows on every render; feeding that
+   * into `useReactTable` with default `autoResetPageIndex` yields a new `data` array each
+   * time and can cause an endless render loop after the first sort, pin, or filter action.
+   */
   getRowId: (row: TRow) => string;
+  /**
+   * Must be referentially stable across renders (module-level function or `useCallback`).
+   * A new function identity recomputes filtered/sorted rows on every render; feeding that
+   * into `useReactTable` with default `autoResetPageIndex` yields a new `data` array each
+   * time and can cause an endless render loop after the first sort, pin, or filter action.
+   */
   filterRow: (row: TRow, filter: ActiveFilter) => boolean;
+  /**
+   * Must be referentially stable across renders (module-level function or `useCallback`).
+   * A new function identity recomputes filtered/sorted rows on every render; feeding that
+   * into `useReactTable` with default `autoResetPageIndex` yields a new `data` array each
+   * time and can cause an endless render loop after the first sort, pin, or filter action.
+   */
   getSortValue: (row: TRow, columnId: string) => string | number;
+  /**
+   * Must be referentially stable across renders (module-level function or `useCallback`).
+   * A new function identity recomputes filtered/sorted rows on every render; feeding that
+   * into `useReactTable` with default `autoResetPageIndex` yields a new `data` array each
+   * time and can cause an endless render loop after the first sort, pin, or filter action.
+   */
   getSearchText: (row: TRow) => string;
   filterConfigs: Record<string, ColumnFilterConfig>;
   columnMeta: Record<string, ColumnMetaDef>;

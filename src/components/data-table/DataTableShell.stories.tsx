@@ -455,26 +455,40 @@ function pinSideForColumn(
   return false;
 }
 
+function columnPinningGetRowId(row: WorkspaceRow) {
+  return row.id;
+}
+
+function columnPinningFilterRow() {
+  return true;
+}
+
+function columnPinningGetSortValue(row: WorkspaceRow, columnId: string) {
+  switch (columnId) {
+    case 'status':
+      return row.status;
+    case 'tier':
+      return row.tier;
+    case 'updatedAt':
+      return row.updatedAt;
+    case 'workspace':
+      return row.name;
+    default:
+      return row.name;
+  }
+}
+
+function columnPinningGetSearchText(row: WorkspaceRow) {
+  return `${row.name} ${row.id}`.toLowerCase();
+}
+
 function DataTableShellColumnPinningDemo() {
   const orch = useTableOrchestration<WorkspaceRow, WorkspaceViewKey>({
     rows: workspaceRows,
-    getRowId: (row) => row.id,
-    filterRow: () => true,
-    getSortValue: (row, columnId) => {
-      switch (columnId) {
-        case 'status':
-          return row.status;
-        case 'tier':
-          return row.tier;
-        case 'updatedAt':
-          return row.updatedAt;
-        case 'workspace':
-          return row.name;
-        default:
-          return row.name;
-      }
-    },
-    getSearchText: (row) => `${row.name} ${row.id}`.toLowerCase(),
+    getRowId: columnPinningGetRowId,
+    filterRow: columnPinningFilterRow,
+    getSortValue: columnPinningGetSortValue,
+    getSearchText: columnPinningGetSearchText,
     filterConfigs: {},
     columnMeta,
     toggleableColumnIds: ['workspace', 'status', 'tier', 'updatedAt'],
