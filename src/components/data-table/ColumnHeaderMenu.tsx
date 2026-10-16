@@ -102,7 +102,12 @@ function SortItems({
 }) {
   const labelId = useId();
   const groupLabel = label ? labels.sortByColumn(label) : labels.sort;
-  const radioValue = sorted === "asc" || sorted === "desc" ? sorted : "";
+  let radioValue: "" | "asc" | "desc" = "";
+  if (sorted === "asc") {
+    radioValue = "asc";
+  } else if (sorted === "desc") {
+    radioValue = "desc";
+  }
 
   return (
     <div role="group" aria-labelledby={labelId}>
@@ -175,7 +180,12 @@ export function ColumnHeaderMenu({
   const hasFilterOrHide = showFilterItem || showHideItem;
   const showSeparatorAfterSort = isSortable && (hasFilterOrHide || hasPinSection);
   const showSeparatorBeforePin = hasPinSection && hasFilterOrHide;
-  const pinRadioValue = pinSide === "left" || pinSide === "right" ? pinSide : "";
+  let pinRadioValue: "" | "left" | "right" = "";
+  if (pinSide === "left") {
+    pinRadioValue = "left";
+  } else if (pinSide === "right") {
+    pinRadioValue = "right";
+  }
 
   const labelContent = isStacked ? (
     <span className="flex flex-col leading-none">
