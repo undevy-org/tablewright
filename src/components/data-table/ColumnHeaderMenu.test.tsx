@@ -12,6 +12,18 @@ function openMenu(triggerName = "Status") {
   });
 }
 
+function expectSingleGroupAncestor(radio: Element) {
+  const menu = document.querySelector('[role="menu"]');
+  expect(menu).toBeTruthy();
+  const group = radio.closest('[role="group"]');
+  expect(group).toBeTruthy();
+  let ancestor = group?.parentElement;
+  while (ancestor && ancestor !== menu) {
+    expect(ancestor.getAttribute("role")).not.toBe("group");
+    ancestor = ancestor.parentElement;
+  }
+}
+
 describe("ColumnHeaderMenu", () => {
   it("renders pin actions when callbacks are provided", () => {
     render(
@@ -259,6 +271,8 @@ describe("ColumnHeaderMenu", () => {
       expect(group.contains(descending)).toBe(true);
       expect(ascending.getAttribute("aria-checked")).toBe("true");
       expect(descending.getAttribute("aria-checked")).toBe("false");
+      expect(ascending.getAttribute("data-state")).toBe("checked");
+      expect(descending.getAttribute("data-state")).toBe("unchecked");
       expect(ascending.querySelector("svg.lucide-check")).toBeTruthy();
       expect(descending.querySelector("svg.lucide-check")).toBeNull();
     });
@@ -277,12 +291,12 @@ describe("ColumnHeaderMenu", () => {
     it("marks both sort radios unchecked when sorted is unset", () => {
       render(<ColumnHeaderMenu label="Status" onSort={vi.fn()} />);
       openMenu();
-      expect(screen.getByRole("menuitemradio", { name: /Ascending/i }).getAttribute("aria-checked")).toBe(
-        "false",
-      );
-      expect(screen.getByRole("menuitemradio", { name: /Descending/i }).getAttribute("aria-checked")).toBe(
-        "false",
-      );
+      const ascending = screen.getByRole("menuitemradio", { name: /Ascending/i });
+      const descending = screen.getByRole("menuitemradio", { name: /Descending/i });
+      expect(ascending.getAttribute("aria-checked")).toBe("false");
+      expect(descending.getAttribute("aria-checked")).toBe("false");
+      expect(ascending.getAttribute("data-state")).toBe("unchecked");
+      expect(descending.getAttribute("data-state")).toBe("unchecked");
     });
 
     it("marks both sort radios unchecked when sorted is false", () => {
@@ -394,6 +408,23 @@ describe("ColumnHeaderMenu", () => {
       expect(secondaryAscending.getAttribute("aria-checked")).toBe("false");
       expect(secondaryDescending.getAttribute("aria-checked")).toBe("true");
     });
+
+    it("does not nest role=group ancestors for any sort menuitemradio", () => {
+      render(
+        <ColumnHeaderMenu
+          primaryLabel="Merchant Name"
+          secondaryLabel="Merchant ID"
+          primarySorted="asc"
+          secondarySorted="desc"
+          onPrimarySort={vi.fn()}
+          onSecondarySort={vi.fn()}
+        />,
+      );
+      openMenu("Merchant Name Merchant ID");
+      for (const radio of screen.getAllByRole("menuitemradio", { name: /Ascending|Descending/i })) {
+        expectSingleGroupAncestor(radio);
+      }
+    });
   });
 
   describe("pin radio accessibility", () => {
@@ -413,6 +444,8 @@ describe("ColumnHeaderMenu", () => {
       expect(pinRight.closest('[role="group"]')).toBe(pinLeft.closest('[role="group"]'));
       expect(pinLeft.getAttribute("aria-checked")).toBe("true");
       expect(pinRight.getAttribute("aria-checked")).toBe("false");
+      expect(pinLeft.getAttribute("data-state")).toBe("checked");
+      expect(pinRight.getAttribute("data-state")).toBe("unchecked");
     });
 
     it("marks both pin radios unchecked when pinSide is omitted", () => {
@@ -420,12 +453,12 @@ describe("ColumnHeaderMenu", () => {
         <ColumnHeaderMenu label="Status" onPinLeft={vi.fn()} onPinRight={vi.fn()} />,
       );
       openMenu();
-      expect(screen.getByRole("menuitemradio", { name: /Pin left/i }).getAttribute("aria-checked")).toBe(
-        "false",
-      );
-      expect(screen.getByRole("menuitemradio", { name: /Pin right/i }).getAttribute("aria-checked")).toBe(
-        "false",
-      );
+      const pinLeft = screen.getByRole("menuitemradio", { name: /Pin left/i });
+      const pinRight = screen.getByRole("menuitemradio", { name: /Pin right/i });
+      expect(pinLeft.getAttribute("aria-checked")).toBe("false");
+      expect(pinRight.getAttribute("aria-checked")).toBe("false");
+      expect(pinLeft.getAttribute("data-state")).toBe("unchecked");
+      expect(pinRight.getAttribute("data-state")).toBe("unchecked");
     });
 
     it("marks both pin radios unchecked when pinSide is false", () => {
@@ -533,6 +566,23 @@ describe("ColumnHeaderMenu", () => {
       const hide = screen.getByRole("menuitem", { name: /Hide column/i });
       expect(filter.getAttribute("aria-checked")).toBeNull();
       expect(hide.getAttribute("aria-checked")).toBeNull();
+    });
+
+    it("does not nest role=group ancestors for pin menuitemradio items", () => {
+      render(
+        <ColumnHeaderMenu
+          label="Status"
+          sorted="asc"
+          onSort={vi.fn()}
+          onPinLeft={vi.fn()}
+          onPinRight={vi.fn()}
+          pinSide="left"
+        />,
+      );
+      openMenu();
+      for (const radio of screen.getAllByRole("menuitemradio")) {
+        expectSingleGroupAncestor(radio);
+      }
     });
   });
 });

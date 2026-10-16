@@ -102,15 +102,13 @@ function SortItems({
 }) {
   const labelId = useId();
   const groupLabel = label ? labels.sortByColumn(label) : labels.sort;
-  const sortRadioValue = sorted === "asc" || sorted === "desc" ? sorted : undefined;
-
   return (
     <>
       <div id={labelId} className={sectionLabelClass}>
         {groupLabel}
       </div>
       <DropdownMenuPrimitive.RadioGroup
-        value={sortRadioValue}
+        value={sorted === "asc" ? "asc" : sorted === "desc" ? "desc" : undefined}
         aria-labelledby={labelId}
       >
         <DropdownMenuPrimitive.RadioItem
@@ -178,8 +176,6 @@ export function ColumnHeaderMenu({
   const hasFilterOrHide = showFilterItem || showHideItem;
   const showSeparatorAfterSort = isSortable && (hasFilterOrHide || hasPinSection);
   const showSeparatorBeforePin = hasPinSection && hasFilterOrHide;
-  const pinRadioValue = pinSide === "left" || pinSide === "right" ? pinSide : undefined;
-
   const labelContent = isStacked ? (
     <span className="flex flex-col leading-none">
       <span className="inline-flex items-center gap-1 text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--text-primary)]">
@@ -269,7 +265,9 @@ export function ColumnHeaderMenu({
         )}
 
         {(showPinLeftItem || showPinRightItem) && (
-            <DropdownMenuPrimitive.RadioGroup value={pinRadioValue}>
+            <DropdownMenuPrimitive.RadioGroup
+              value={pinSide === "left" ? "left" : pinSide === "right" ? "right" : undefined}
+            >
               {onPinLeft && (
                 <DropdownMenuPrimitive.RadioItem
                   value="left"
