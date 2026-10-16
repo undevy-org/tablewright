@@ -102,19 +102,17 @@ function SortItems({
 }) {
   const labelId = useId();
   const groupLabel = label ? labels.sortByColumn(label) : labels.sort;
-  let radioValue: "" | "asc" | "desc" = "";
-  if (sorted === "asc") {
-    radioValue = "asc";
-  } else if (sorted === "desc") {
-    radioValue = "desc";
-  }
+  const sortRadioValue = sorted === "asc" || sorted === "desc" ? sorted : undefined;
 
   return (
-    <div role="group" aria-labelledby={labelId}>
+    <>
       <div id={labelId} className={sectionLabelClass}>
         {groupLabel}
       </div>
-      <DropdownMenuPrimitive.RadioGroup value={radioValue}>
+      <DropdownMenuPrimitive.RadioGroup
+        value={sortRadioValue}
+        aria-labelledby={labelId}
+      >
         <DropdownMenuPrimitive.RadioItem
           value="asc"
           className={cn(
@@ -142,7 +140,7 @@ function SortItems({
           {sorted === "desc" && <Check className="ml-auto h-3 w-3 text-[var(--text-tertiary)]" />}
         </DropdownMenuPrimitive.RadioItem>
       </DropdownMenuPrimitive.RadioGroup>
-    </div>
+    </>
   );
 }
 
@@ -180,12 +178,7 @@ export function ColumnHeaderMenu({
   const hasFilterOrHide = showFilterItem || showHideItem;
   const showSeparatorAfterSort = isSortable && (hasFilterOrHide || hasPinSection);
   const showSeparatorBeforePin = hasPinSection && hasFilterOrHide;
-  let pinRadioValue: "" | "left" | "right" = "";
-  if (pinSide === "left") {
-    pinRadioValue = "left";
-  } else if (pinSide === "right") {
-    pinRadioValue = "right";
-  }
+  const pinRadioValue = pinSide === "left" || pinSide === "right" ? pinSide : undefined;
 
   const labelContent = isStacked ? (
     <span className="flex flex-col leading-none">
@@ -276,7 +269,6 @@ export function ColumnHeaderMenu({
         )}
 
         {(showPinLeftItem || showPinRightItem) && (
-          <div role="group">
             <DropdownMenuPrimitive.RadioGroup value={pinRadioValue}>
               {onPinLeft && (
                 <DropdownMenuPrimitive.RadioItem
@@ -305,7 +297,6 @@ export function ColumnHeaderMenu({
                 </DropdownMenuPrimitive.RadioItem>
               )}
             </DropdownMenuPrimitive.RadioGroup>
-          </div>
         )}
 
         {showUnpinItem && (
