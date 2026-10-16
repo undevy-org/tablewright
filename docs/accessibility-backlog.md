@@ -112,6 +112,16 @@ Re-verified: full 136-story corpus (both themes) re-ran clean after the changes,
 
 **Fix (release 0.7.5, PR #54):** `transition-[background-color]` on nav rows only; label, icon, and border snap with the theme.
 
+## Fixed (2026-10-16)
+
+### 12. Column header menu — checked sort direction / pin side shown only by a ✓ icon
+
+`src/components/data-table/ColumnHeaderMenu.tsx` — sort direction and pin side were indicated only by a lucide `Check` icon; menu rows were plain `menuitem` with no `aria-checked`.
+
+**Fix:** Each sort set is a `role="group"` labelled by its section heading (`aria-labelledby`); Ascending/Descending are `menuitemradio` with `aria-checked` matching the active direction. Pin left/right share one `role="group"` as `menuitemradio` with `aria-checked` for the active side. Unpin, filter, and hide stay `menuitem`.
+
+**Verified:** `node $T/e2e/repro/2026-10-16-b22-column-menu-checked/repro.mjs "$(node $T/e2e/storybook-repro-static.mjs --checkout . --print-path)"` → `b22-repro: ok`; `pnpm exec vitest run src/components/data-table/ColumnHeaderMenu.test.tsx` → all pass (groups, `aria-checked`, re-activation of checked items, ✓ presence).
+
 ## Fixed (2026-10-08)
 
 ### Sidebar account menu — Theme radio keyboard focus not visible (WCAG 2.4.7)
