@@ -272,10 +272,10 @@ describe("useTableOrchestration unstable callback warnings", () => {
     }
 
     const messages = warnSpy.mock.calls.map((args: unknown[]) => String(args[0]));
-    expect(messages.some((m) => m.includes("getRowId"))).toBe(true);
-    expect(messages.some((m) => m.includes("getSortValue"))).toBe(true);
-    expect(messages.filter((m) => m.includes("getRowId"))).toHaveLength(1);
-    expect(messages.filter((m) => m.includes("getSortValue"))).toHaveLength(1);
+    expect(messages.some((m: string) => m.includes("getRowId"))).toBe(true);
+    expect(messages.some((m: string) => m.includes("getSortValue"))).toBe(true);
+    expect(messages.filter((m: string) => m.includes("getRowId"))).toHaveLength(1);
+    expect(messages.filter((m: string) => m.includes("getSortValue"))).toHaveLength(1);
   });
 
   it("still filters and sorts with inline callbacks (no behaviour change)", () => {
