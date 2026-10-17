@@ -63,12 +63,7 @@ function useUnstableOrchestrationCallbackWarning<TRow extends object>(
     getSortValue: 0,
     getSearchText: 0,
   });
-  const warnedRef = useRef<Record<UnstableCallbackKey, boolean>>({
-    getRowId: false,
-    filterRow: false,
-    getSortValue: false,
-    getSearchText: false,
-  });
+  const warnedRef = useRef(new Set<UnstableCallbackKey>());
 
   useEffect(() => {
     if (!isOrchestrationDevWarningEnabled()) return;
@@ -76,14 +71,13 @@ function useUnstableOrchestrationCallbackWarning<TRow extends object>(
     const latest = callbacksRef.current;
 
     for (const key of UNSTABLE_CALLBACK_KEYS) {
-      if (warnedRef.current[key]) continue;
+      if (warnedRef.current.has(key)) continue;
 
       const current = latest[key];
       const previous = prevRef.current[key];
 
       if (previous === undefined) {
         prevRef.current[key] = current;
-        consecutiveChangesRef.current[key] = 0;
         continue;
       }
 
@@ -92,7 +86,7 @@ function useUnstableOrchestrationCallbackWarning<TRow extends object>(
         consecutiveChangesRef.current[key] = next;
         prevRef.current[key] = current;
         if (next >= 3) {
-          warnedRef.current[key] = true;
+          warnedRef.current.add(key);
           warnUnstableOrchestrationCallback(key);
         }
       } else {

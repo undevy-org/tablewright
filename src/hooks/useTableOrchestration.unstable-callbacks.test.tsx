@@ -110,23 +110,34 @@ describe("useTableOrchestration unstable callback warnings", () => {
 
   for (const prop of UNSTABLE_PROPS) {
     it(`warns once for unstable ${prop} after three consecutive identity changes`, () => {
-      const { result, rerender } = renderHook(() => useInlineUnstableOrchestration(prop));
+      const { result } = renderHook(() => useInlineUnstableOrchestration(prop));
 
       const rerenderTimes = (n: number) => {
         for (let i = 0; i < n; i++) {
           act(() => {
             result.current.bump();
           });
-          rerender();
         }
       };
 
-      rerenderTimes(3);
+      rerenderTimes(2);
+      expect(
+        warnSpy.mock.calls.filter(
+          (args: unknown[]) =>
+            String(args[0]).includes("useTableOrchestration") && String(args[0]).includes(prop),
+        ),
+      ).toHaveLength(0);
+
+      rerenderTimes(1);
       const matching = warnSpy.mock.calls.filter(
         (args: unknown[]) =>
           String(args[0]).includes("useTableOrchestration") && String(args[0]).includes(prop),
       );
       expect(matching).toHaveLength(1);
+      const message = String(matching[0][0]);
+      expect(message).toContain("referentially stable");
+      expect(message).toContain("useCallback");
+      expect(message).toContain("render loop");
 
       rerenderTimes(5);
       expect(
@@ -213,25 +224,67 @@ describe("useTableOrchestration unstable callback warnings", () => {
   it("does not warn in production for inline callbacks", () => {
     vi.stubEnv("NODE_ENV", "production");
 
-    const { result, rerender } = renderHook(() => useInlineUnstableOrchestration("getSortValue"));
+    const { result } = renderHook(() => useInlineUnstableOrchestration("getSortValue"));
     for (let i = 0; i < 6; i++) {
       act(() => {
         result.current.bump();
       });
-      rerender();
     }
 
     expect(warnSpy).not.toHaveBeenCalled();
   });
 
+  it("does not warn when process is undefined (non-bundled browser)", () => {
+    const savedProcess = globalThis.process;
+    vi.stubGlobal("process", undefined);
+
+    try {
+      const { result } = renderHook(() => useInlineUnstableOrchestration("getRowId"));
+      for (let i = 0; i < 6; i++) {
+        act(() => {
+          result.current.bump();
+        });
+      }
+
+      expect(warnSpy).not.toHaveBeenCalled();
+    } finally {
+      vi.stubGlobal("process", savedProcess);
+    }
+  });
+
+  it("warns for each unstable prop independently", () => {
+    function useBothUnstable() {
+      const [, setTick] = useState(0);
+      const config = {
+        ...stableConfig,
+        getRowId: (row: FixtureRow) => row.id,
+        getSortValue: (row: FixtureRow, columnId: string) =>
+          stableConfig.getSortValue(row, columnId),
+      };
+      return { result: useTableOrchestration(config), bump: () => setTick((t) => t + 1) };
+    }
+
+    const { result } = renderHook(() => useBothUnstable());
+    for (let i = 0; i < 3; i++) {
+      act(() => {
+        result.current.bump();
+      });
+    }
+
+    const messages = warnSpy.mock.calls.map((args: unknown[]) => String(args[0]));
+    expect(messages.some((m) => m.includes("getRowId"))).toBe(true);
+    expect(messages.some((m) => m.includes("getSortValue"))).toBe(true);
+    expect(messages.filter((m) => m.includes("getRowId"))).toHaveLength(1);
+    expect(messages.filter((m) => m.includes("getSortValue"))).toHaveLength(1);
+  });
+
   it("still filters and sorts with inline callbacks (no behaviour change)", () => {
-    const { result, rerender } = renderHook(() => useInlineUnstableOrchestration("getSortValue"));
+    const { result } = renderHook(() => useInlineUnstableOrchestration("getSortValue"));
 
     for (let i = 0; i < 4; i++) {
       act(() => {
         result.current.bump();
       });
-      rerender();
     }
 
     act(() => {
