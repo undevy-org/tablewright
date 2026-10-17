@@ -1,5 +1,11 @@
 # @undevy-org/tablewright
 
+## 0.13.0
+
+### Minor Changes
+
+- [#94](https://github.com/undevy-org/tablewright/pull/94) [`d12abf0`](https://github.com/undevy-org/tablewright/commit/d12abf053aa70307f6edb49e51e1eb356f14176e) Thanks [@undevy](https://github.com/undevy)! - Add Tooltip, TooltipTrigger, TooltipContent, and TooltipProvider components.
+
 ## 0.12.4
 
 ### Patch Changes
