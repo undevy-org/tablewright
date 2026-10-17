@@ -1,5 +1,11 @@
 # @undevy-org/tablewright
 
+## 0.12.4
+
+### Patch Changes
+
+- [#92](https://github.com/undevy-org/tablewright/pull/92) [`e07fffa`](https://github.com/undevy-org/tablewright/commit/e07fffa0cb9623344e91ae1420cd5c08cc9df96a) Thanks [@undevy](https://github.com/undevy)! - Dev-only console.warn when useTableOrchestration config callbacks (getRowId, filterRow, getSortValue, getSearchText) change identity on three consecutive commits.
+
 ## 0.12.3
 
 ### Patch Changes
