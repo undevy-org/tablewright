@@ -26,6 +26,82 @@ import { useOrchestrationActions } from "./table-orchestration/use-orchestration
 import { useResponsiveColumns } from "./table-orchestration/use-responsive-columns";
 import { gapColumnId } from "../lib/column-gaps";
 
+declare const process: { env: { NODE_ENV?: string } };
+
+const UNSTABLE_CALLBACK_KEYS = [
+  "getRowId",
+  "filterRow",
+  "getSortValue",
+  "getSearchText",
+] as const;
+
+type UnstableCallbackKey = (typeof UNSTABLE_CALLBACK_KEYS)[number];
+
+function isOrchestrationDevWarningEnabled(): boolean {
+  return typeof process !== "undefined" && process.env.NODE_ENV !== "production";
+}
+
+function warnUnstableOrchestrationCallback(prop: UnstableCallbackKey): void {
+  console.warn(
+    `[tablewright] useTableOrchestration: \`${prop}\` identity changed on every render. ` +
+      "Pass a referentially stable callback (module-level function or `useCallback`); " +
+      "unstable callbacks recompute rows and can cause a render loop.",
+  );
+}
+
+function useUnstableOrchestrationCallbackWarning<TRow extends object>(
+  callbacks: Pick<TableOrchestrationConfig<TRow, string>, UnstableCallbackKey>,
+): void {
+  const callbacksRef = useRef(callbacks);
+  // eslint-disable-next-line react-hooks/refs -- latest callbacks for per-commit effect (no dep array)
+  callbacksRef.current = callbacks;
+
+  const prevRef = useRef<Partial<Record<UnstableCallbackKey, unknown>>>({});
+  const consecutiveChangesRef = useRef<Record<UnstableCallbackKey, number>>({
+    getRowId: 0,
+    filterRow: 0,
+    getSortValue: 0,
+    getSearchText: 0,
+  });
+  const warnedRef = useRef<Record<UnstableCallbackKey, boolean>>({
+    getRowId: false,
+    filterRow: false,
+    getSortValue: false,
+    getSearchText: false,
+  });
+
+  useEffect(() => {
+    if (!isOrchestrationDevWarningEnabled()) return;
+
+    const latest = callbacksRef.current;
+
+    for (const key of UNSTABLE_CALLBACK_KEYS) {
+      if (warnedRef.current[key]) continue;
+
+      const current = latest[key];
+      const previous = prevRef.current[key];
+
+      if (previous === undefined) {
+        prevRef.current[key] = current;
+        consecutiveChangesRef.current[key] = 0;
+        continue;
+      }
+
+      if (current !== previous) {
+        const next = consecutiveChangesRef.current[key] + 1;
+        consecutiveChangesRef.current[key] = next;
+        prevRef.current[key] = current;
+        if (next >= 3) {
+          warnedRef.current[key] = true;
+          warnUnstableOrchestrationCallback(key);
+        }
+      } else {
+        consecutiveChangesRef.current[key] = 0;
+      }
+    }
+  });
+}
+
 /** @internal Exported for unit tests (not re-exported from package entry). */
 export function computeVisibleColumnOrder(input: {
   columnMeta: Record<string, ColumnMetaDef>;
@@ -61,6 +137,7 @@ export interface TableOrchestrationConfig<TRow extends object, TViewKey extends 
    * A new function identity recomputes filtered/sorted rows on every render; feeding that
    * into `useReactTable` with default `autoResetPageIndex` yields a new `data` array each
    * time and can cause an endless render loop after the first sort, pin, or filter action.
+   * In development, `console.warn` is emitted when callback identity is unstable.
    */
   getRowId: (row: TRow) => string;
   /**
@@ -68,6 +145,7 @@ export interface TableOrchestrationConfig<TRow extends object, TViewKey extends 
    * A new function identity recomputes filtered/sorted rows on every render; feeding that
    * into `useReactTable` with default `autoResetPageIndex` yields a new `data` array each
    * time and can cause an endless render loop after the first sort, pin, or filter action.
+   * In development, `console.warn` is emitted when callback identity is unstable.
    */
   filterRow: (row: TRow, filter: ActiveFilter) => boolean;
   /**
@@ -75,6 +153,7 @@ export interface TableOrchestrationConfig<TRow extends object, TViewKey extends 
    * A new function identity recomputes filtered/sorted rows on every render; feeding that
    * into `useReactTable` with default `autoResetPageIndex` yields a new `data` array each
    * time and can cause an endless render loop after the first sort, pin, or filter action.
+   * In development, `console.warn` is emitted when callback identity is unstable.
    */
   getSortValue: (row: TRow, columnId: string) => string | number;
   /**
@@ -82,6 +161,7 @@ export interface TableOrchestrationConfig<TRow extends object, TViewKey extends 
    * A new function identity recomputes filtered/sorted rows on every render; feeding that
    * into `useReactTable` with default `autoResetPageIndex` yields a new `data` array each
    * time and can cause an endless render loop after the first sort, pin, or filter action.
+   * In development, `console.warn` is emitted when callback identity is unstable.
    */
   getSearchText: (row: TRow) => string;
   filterConfigs: Record<string, ColumnFilterConfig>;
@@ -228,6 +308,13 @@ export function useTableOrchestration<TRow extends object, TViewKey extends stri
 
   // Config callbacks — callers MUST provide stable references (useCallback or module-level).
   const { getRowId, filterRow, getSortValue, getSearchText } = config;
+
+  useUnstableOrchestrationCallbackWarning({
+    getRowId,
+    filterRow,
+    getSortValue,
+    getSearchText,
+  });
 
   // ── Store: one instance per hook mount ────────────────────────────────
   // useState's lazy initializer fires exactly once for the lifetime of the
