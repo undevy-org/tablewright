@@ -83,7 +83,7 @@ Tokens resolve from the nearest ancestor carrying `data-theme="light"` or
 `data-theme="dark"`. Set it on `:root` for a whole-application theme, or on any
 wrapper to theme a region.
 
-Radix portals — dropdown, popover, dialog, select — mount outside the React tree
+Radix portals — dropdown, popover, dialog, select, tooltip — mount outside the React tree
 and default to `document.body`. Their content carries the style scope itself, so
 it is always laid out and typeset correctly, but `document.body` sits outside
 your `data-theme` wrapper. To make portalled content follow a theme that is not
