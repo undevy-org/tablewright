@@ -1,5 +1,11 @@
 # @undevy-org/tablewright
 
+## 0.14.0
+
+### Minor Changes
+
+- [#96](https://github.com/undevy-org/tablewright/pull/96) [`1d94811`](https://github.com/undevy-org/tablewright/commit/1d948116fa9121125c4470592ff55dedd261e417) Thanks [@undevy](https://github.com/undevy)! - Add `Toaster` and `toast` for imperative toast notifications.
+
 ## 0.13.0
 
 ### Minor Changes
