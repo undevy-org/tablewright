@@ -1,5 +1,11 @@
 # @undevy-org/tablewright
 
+## 0.15.0
+
+### Minor Changes
+
+- [#98](https://github.com/undevy-org/tablewright/pull/98) [`5820600`](https://github.com/undevy-org/tablewright/commit/582060037b7f11b65dbe6b4366ce054b50a8e880) Thanks [@undevy](https://github.com/undevy)! - Add opt-in `keyboardNavigation` to `DataTableShell`: roving tabindex over body cells with arrow, Home/End and PageUp/PageDown keys.
+
 ## 0.14.0
 
 ### Minor Changes
