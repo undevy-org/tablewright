@@ -23,15 +23,17 @@ function Harness({
   keyboardNavigation,
   status,
   hiddenColumns = {},
+  cols = columns,
 }: {
   rows: Row[];
   keyboardNavigation?: boolean;
   status?: "idle" | "loading" | "error";
   hiddenColumns?: Record<string, boolean>;
+  cols?: ColumnDef<Row>[];
 }) {
   const table = useReactTable({
     data: rows,
-    columns,
+    columns: cols,
     state: { columnVisibility: hiddenColumns },
     getCoreRowModel: getCoreRowModel(),
     getRowId: (row) => row.id,
@@ -132,6 +134,18 @@ describe("DataTableShell keyboardNavigation", () => {
     expect(document.querySelectorAll("[data-grid-row]")).toHaveLength(0);
     const table = screen.getByRole("grid");
     expect(fireEvent.keyDown(table, { key: "ArrowDown" })).toBe(true);
+  });
+
+  it("status=loading: a key press from a gridlike header element is not handled", () => {
+    const probeColumns: ColumnDef<Row>[] = [
+      {
+        id: "a",
+        accessorKey: "a",
+        header: () => <span data-testid="probe" data-grid-row="0" data-grid-col="0" />,
+      },
+    ];
+    render(<Harness rows={makeRows(3)} keyboardNavigation status="loading" cols={probeColumns} />);
+    expect(fireEvent.keyDown(screen.getByTestId("probe"), { key: "ArrowDown" })).toBe(true);
   });
 
   it("zero rows: role=grid but no tabindex or key handling", () => {

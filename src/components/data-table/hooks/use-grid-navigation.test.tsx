@@ -70,10 +70,13 @@ describe("useGridNavigation", () => {
     expect(fireEvent.keyDown(screen.getByTestId("half-col"), { key: "ArrowDown" })).toBe(true);
   });
 
-  it("does not throw when the target cell is not in the DOM", () => {
-    render(<Grid rowCount={3} columnCount={3} renderedRows={1} />);
+  it("still moves the active cell when the target cell is not in the DOM yet", () => {
+    const { rerender } = render(<Grid rowCount={3} columnCount={3} renderedRows={1} />);
     cell(0, 0).focus();
-    expect(() => fireEvent.keyDown(cell(0, 0), { key: "ArrowDown" })).not.toThrow();
+    fireEvent.keyDown(cell(0, 0), { key: "ArrowDown" });
+    rerender(<Grid rowCount={3} columnCount={3} renderedRows={3} />);
+    expect(tabbable()).toHaveLength(1);
+    expect(cell(1, 0).getAttribute("tabindex")).toBe("0");
   });
 
   it("makes only cell 0,0 tabbable initially", () => {
