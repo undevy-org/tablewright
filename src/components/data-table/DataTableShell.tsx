@@ -82,7 +82,7 @@ export function DataTableShell<TData>({
   const dataRows = table.getRowModel().rows;
   const visibleColumnCount = table.getVisibleLeafColumns().length;
   const grid = useGridNavigation({
-    enabled: keyboardNavigation && status === "idle" && dataRows.length > 0,
+    enabled: keyboardNavigation && status === "idle",
     rowCount: dataRows.length,
     columnCount: visibleColumnCount,
   });

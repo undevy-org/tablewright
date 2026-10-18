@@ -1,4 +1,4 @@
-import { cleanup, fireEvent, render, screen } from "@testing-library/react";
+import { cleanup, fireEvent, render, renderHook, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it } from "vitest";
 
 import { useGridNavigation } from "./use-grid-navigation";
@@ -9,16 +9,18 @@ function Grid({
   enabled = true,
   rowCount,
   columnCount,
+  renderedRows = rowCount,
 }: {
   enabled?: boolean;
   rowCount: number;
   columnCount: number;
+  renderedRows?: number;
 }) {
   const grid = useGridNavigation({ enabled, rowCount, columnCount });
   return (
     <table onKeyDown={grid.onKeyDown}>
       <tbody>
-        {Array.from({ length: rowCount }, (_, r) => (
+        {Array.from({ length: renderedRows }, (_, r) => (
           <tr key={r}>
             {Array.from({ length: columnCount }, (_, c) => (
               <td key={c} data-testid={`c-${r}-${c}`} {...grid.getCellProps(r, c)}>
@@ -29,6 +31,14 @@ function Grid({
           </tr>
         ))}
       </tbody>
+      <tfoot>
+        <tr>
+          <td>
+            <div data-testid="half-row" data-grid-row="0" tabIndex={-1} />
+            <div data-testid="half-col" data-grid-col="0" tabIndex={-1} />
+          </td>
+        </tr>
+      </tfoot>
     </table>
   );
 }
@@ -43,6 +53,27 @@ describe("useGridNavigation", () => {
     expect(el.hasAttribute("tabindex")).toBe(false);
     expect(el.hasAttribute("data-grid-row")).toBe(false);
     expect(el.hasAttribute("data-grid-col")).toBe(false);
+  });
+
+  it("returns empty cell props and no key handler when disabled", () => {
+    const { result } = renderHook(() =>
+      useGridNavigation({ enabled: false, rowCount: 2, columnCount: 2 }),
+    );
+    expect(result.current.getCellProps(0, 0)).toEqual({});
+    expect(result.current.onKeyDown).toBeUndefined();
+  });
+
+  it("ignores key presses whose target is not a grid cell", () => {
+    render(<Grid rowCount={3} columnCount={3} />);
+    expect(fireEvent.keyDown(screen.getByRole("table"), { key: "ArrowDown" })).toBe(true);
+    expect(fireEvent.keyDown(screen.getByTestId("half-row"), { key: "ArrowDown" })).toBe(true);
+    expect(fireEvent.keyDown(screen.getByTestId("half-col"), { key: "ArrowDown" })).toBe(true);
+  });
+
+  it("does not throw when the target cell is not in the DOM", () => {
+    render(<Grid rowCount={3} columnCount={3} renderedRows={1} />);
+    cell(0, 0).focus();
+    expect(() => fireEvent.keyDown(cell(0, 0), { key: "ArrowDown" })).not.toThrow();
   });
 
   it("makes only cell 0,0 tabbable initially", () => {
