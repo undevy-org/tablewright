@@ -1,6 +1,5 @@
-import * as React from "react";
-import { createPortal } from "react-dom";
 import { useSyncExternalStore } from "react";
+import { createPortal } from "react-dom";
 import * as ToastPrimitive from "@radix-ui/react-toast";
 import { AlertCircle, Check, X } from "lucide-react";
 
@@ -46,12 +45,12 @@ function ToastRoot({ item }: { item: ToastItem }) {
         />
       ) : null}
       <div className="grid flex-1 gap-1">
-        {item.title != null && item.title !== "" ? (
+        {item.title != null ? (
           <ToastPrimitive.Title className="text-[13px] font-medium text-[var(--text-primary)]">
             {item.title}
           </ToastPrimitive.Title>
         ) : null}
-        {item.description != null && item.description !== "" ? (
+        {item.description != null ? (
           <ToastPrimitive.Description className="text-[12px] text-[var(--text-secondary)]">
             {item.description}
           </ToastPrimitive.Description>
@@ -62,7 +61,7 @@ function ToastRoot({ item }: { item: ToastItem }) {
           altText={item.action.label}
           className="inline-flex h-8 shrink-0 items-center justify-center rounded-md border border-[var(--border-subtle)] bg-transparent px-3 text-[12px] font-medium text-[var(--text-primary)] transition-colors hover:bg-[color-mix(in_srgb,var(--bg-surface)_90%,var(--text-primary))]"
           onClick={() => {
-            item.action?.onClick();
+            item.action!.onClick();
           }}
         >
           {item.action.label}
@@ -78,14 +77,18 @@ function ToastRoot({ item }: { item: ToastItem }) {
   );
 }
 
+function useIsClient() {
+  return useSyncExternalStore(
+    () => () => undefined,
+    () => true,
+    () => false,
+  );
+}
+
 function Toaster() {
-  const [mounted, setMounted] = React.useState(false);
+  const mounted = useIsClient();
   const container = usePortalContainer();
   const items = useSyncExternalStore(subscribe, getSnapshot, getSnapshot);
-
-  React.useEffect(() => {
-    setMounted(true);
-  }, []);
 
   if (!mounted) {
     return null;

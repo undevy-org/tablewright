@@ -45,13 +45,20 @@ export function remove(id: string) {
   emit();
 }
 
+function normalizeContent(value: ReactNode | undefined): ReactNode | undefined {
+  if (value == null || value === "") {
+    return undefined;
+  }
+  return value;
+}
+
 function normalizeInput(input: ToastInput): Omit<ToastItem, "id" | "variant"> {
   if (typeof input === "string") {
-    return { title: input };
+    return { title: normalizeContent(input) };
   }
   return {
-    title: input.title,
-    description: input.description,
+    title: normalizeContent(input.title),
+    description: normalizeContent(input.description),
     action: input.action,
   };
 }
