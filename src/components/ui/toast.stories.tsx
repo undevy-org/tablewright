@@ -1,13 +1,19 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import * as React from "react";
 
+import { getSnapshot, remove } from "../../lib/toast-store";
 import { Toaster, toast } from "./toast";
 
-function FireOnce({ fire }: { fire: () => void }) {
+function ToastDemo({ fire }: { fire: () => void }) {
   React.useEffect(() => {
     fire();
+    return () => {
+      for (const item of [...getSnapshot()]) {
+        remove(item.id);
+      }
+    };
   }, [fire]);
-  return null;
+  return <Toaster />;
 }
 
 const meta: Meta<typeof Toaster> = {
@@ -22,8 +28,7 @@ type Story = StoryObj<typeof Toaster>;
 export const Default: Story = {
   render: () => (
     <>
-      <Toaster />
-      <FireOnce
+      <ToastDemo
         fire={() =>
           toast({
             title: "Report scheduled",
@@ -38,8 +43,7 @@ export const Default: Story = {
 export const Success: Story = {
   render: () => (
     <>
-      <Toaster />
-      <FireOnce fire={() => toast.success("Merchant saved")} />
+      <ToastDemo fire={() => toast.success("Merchant saved")} />
     </>
   ),
 };
@@ -47,8 +51,7 @@ export const Success: Story = {
 const ErrorToast: Story = {
   render: () => (
     <>
-      <Toaster />
-      <FireOnce
+      <ToastDemo
         fire={() =>
           toast.error({
             title: "Sync failed",
@@ -65,8 +68,7 @@ export { ErrorToast as Error };
 export const WithAction: Story = {
   render: () => (
     <>
-      <Toaster />
-      <FireOnce
+      <ToastDemo
         fire={() =>
           toast({
             title: "Row deleted",
@@ -82,8 +84,7 @@ export const Dark: Story = {
   globals: { theme: "dark" },
   render: () => (
     <>
-      <Toaster />
-      <FireOnce
+      <ToastDemo
         fire={() =>
           toast({
             title: "Report scheduled",

@@ -1,3 +1,4 @@
+import * as React from "react";
 import { useSyncExternalStore } from "react";
 import { createPortal } from "react-dom";
 import * as ToastPrimitive from "@radix-ui/react-toast";
@@ -59,7 +60,7 @@ function ToastRoot({ item }: { item: ToastItem }) {
       {item.action ? (
         <ToastPrimitive.Action
           altText={item.action.label}
-          className="inline-flex h-8 shrink-0 items-center justify-center rounded-md border border-[var(--border-subtle)] bg-transparent px-3 text-[12px] font-medium text-[var(--text-primary)] transition-colors hover:bg-[color-mix(in_srgb,var(--bg-surface)_90%,var(--text-primary))]"
+          className="inline-flex h-8 shrink-0 items-center justify-center rounded-md border border-[var(--border-subtle)] bg-[var(--bg-surface)] px-3 text-[12px] font-medium text-[var(--text-secondary)] transition-colors hover:border-[var(--border-focus)] hover:text-[var(--text-primary)]"
           onClick={() => {
             item.action!.onClick();
           }}
@@ -77,18 +78,14 @@ function ToastRoot({ item }: { item: ToastItem }) {
   );
 }
 
-function useIsClient() {
-  return useSyncExternalStore(
-    () => () => undefined,
-    () => true,
-    () => false,
-  );
-}
-
 function Toaster() {
-  const mounted = useIsClient();
+  const [mounted, setMounted] = React.useState(false);
   const container = usePortalContainer();
   const items = useSyncExternalStore(subscribe, getSnapshot, getSnapshot);
+
+  React.useEffect(() => {
+    setMounted(true);
+  }, []);
 
   if (!mounted) {
     return null;
