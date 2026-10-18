@@ -83,9 +83,10 @@ function Toaster() {
   const container = usePortalContainer();
   const items = useSyncExternalStore(subscribe, getSnapshot, getSnapshot);
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- SSR mount guard: no deps array (Stryker)
   React.useEffect(() => {
     setMounted(true);
-  }, []);
+  });
 
   if (!mounted) {
     return null;
