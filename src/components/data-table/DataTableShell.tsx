@@ -8,6 +8,7 @@ import { EmptyState } from "./EmptyState";
 import { TableErrorPanel } from "./TableErrorPanel";
 import { TableLayout } from "./TableLayout";
 import { stickyBorderClass, stickyStyle } from "./sticky-utils";
+import { useGridNavigation } from "./hooks/use-grid-navigation";
 import type { UseRowDragResult } from "./hooks/use-row-drag";
 import type { ColumnMetaDef } from "./types";
 
@@ -44,6 +45,8 @@ export interface DataTableShellProps<TData> {
   onRetry?: () => void;
   /** @default "Retry" */
   retryLabel?: string;
+  /** Roving-tabindex arrow-key navigation over body cells; the table gets `role="grid"`. @default false */
+  keyboardNavigation?: boolean;
 }
 
 export function DataTableShell<TData>({
@@ -64,6 +67,7 @@ export function DataTableShell<TData>({
   errorMessage = "Something went wrong",
   onRetry,
   retryLabel = "Retry",
+  keyboardNavigation = false,
 }: DataTableShellProps<TData>) {
   const visibleTableWidth = table
     .getVisibleLeafColumns()
@@ -77,6 +81,11 @@ export function DataTableShell<TData>({
   const isError = status === "error";
   const dataRows = table.getRowModel().rows;
   const visibleColumnCount = table.getVisibleLeafColumns().length;
+  const grid = useGridNavigation({
+    enabled: keyboardNavigation && status === "idle" && dataRows.length > 0,
+    rowCount: dataRows.length,
+    columnCount: visibleColumnCount,
+  });
 
   return (
     <TableLayout className={cn("min-h-0", className)}>
@@ -85,6 +94,7 @@ export function DataTableShell<TData>({
           className="w-full border-collapse"
           style={{ tableLayout: "fixed", minWidth: `${visibleTableWidth}px` }}
           {...(isLoading ? { "aria-busy": true } : {})}
+          {...(keyboardNavigation ? { role: "grid", onKeyDown: grid.onKeyDown } : {})}
         >
           <thead className="sticky top-0 z-10 bg-[var(--bg-surface)]">
             {table.getHeaderGroups().map((headerGroup) => (
@@ -175,7 +185,7 @@ export function DataTableShell<TData>({
               />
             ) : (
               <>
-                {dataRows.map((row) => {
+                {dataRows.map((row, rowIndex) => {
                   const isActive = getRowIsActive?.(row.original) ?? false;
                   const dragProps = rowDrag?.getDragProps(row.index);
                   const isDragged = rowDrag?.dragRowIdx === row.index;
@@ -220,7 +230,10 @@ export function DataTableShell<TData>({
                                 isActive &&
                                 "relative before:absolute before:bottom-0 before:left-0 before:top-0 before:w-[3px] before:bg-[var(--accent-primary)] before:content-['']",
                               stickyBorderClass(meta),
+                              keyboardNavigation &&
+                                "focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-[var(--border-focus)]",
                             )}
+                            {...grid.getCellProps(rowIndex, cellIndex)}
                             style={{
                               width: columnWidths[cell.column.id],
                               minWidth: meta?.minW ?? 36,
