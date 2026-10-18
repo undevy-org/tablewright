@@ -96,6 +96,7 @@ function DataTableShellDemo({
   errorMessage,
   onRetry,
   retryLabel,
+  keyboardNavigation,
 }: {
   rows: WorkspaceRow[];
   dense: boolean;
@@ -107,6 +108,7 @@ function DataTableShellDemo({
   errorMessage?: ReactNode;
   onRetry?: () => void;
   retryLabel?: string;
+  keyboardNavigation?: boolean;
 }) {
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [selectedWorkspaceId, setSelectedWorkspaceId] = useState<string | null>(
@@ -318,6 +320,7 @@ function DataTableShellDemo({
         errorMessage={errorMessage}
         onRetry={onRetry}
         retryLabel={retryLabel}
+        keyboardNavigation={keyboardNavigation}
         onRowClick={(workspace) =>
           setSelectedWorkspaceId((current) => (current === workspace.id ? null : workspace.id))
         }
@@ -405,6 +408,18 @@ export const Default: Story = {
       dense={false}
       emptyMessage="No workspaces match the current search and filters."
       csvExportFilename="workspaces"
+    />
+  ),
+};
+
+export const WithKeyboardNavigation: Story = {
+  render: () => (
+    <DataTableShellDemo
+      rows={workspaceRows}
+      dense={false}
+      emptyMessage="No workspaces match the current search and filters."
+      csvExportFilename="workspaces"
+      keyboardNavigation
     />
   ),
 };
