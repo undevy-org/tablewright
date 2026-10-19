@@ -149,12 +149,12 @@ describe("useGridNavigation header cells", () => {
     expect(key(h0, "Escape")).toBe(true);
   });
 
-  it("Escape on a control inside a body cell is not handled", () => {
+  it("Escape on a control inside a body cell returns focus to that cell", () => {
     render(<Grid />);
     const btn = screen.getByRole("button", { name: "body-btn" });
     btn.focus();
-    expect(key(btn, "Escape")).toBe(true);
-    expect(document.activeElement).toBe(btn);
+    expect(key(btn, "Escape")).toBe(false);
+    expect(document.activeElement).toBe(btn.closest("[data-grid-row]"));
   });
 
   it("Escape on a body cell is not handled", () => {
