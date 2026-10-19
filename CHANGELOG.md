@@ -1,5 +1,11 @@
 # @undevy-org/tablewright
 
+## 0.17.0
+
+### Minor Changes
+
+- [#102](https://github.com/undevy-org/tablewright/pull/102) [`c9dab00`](https://github.com/undevy-org/tablewright/commit/c9dab00b1022aef9e220879f617aa67a101af8f1) Thanks [@undevy](https://github.com/undevy)! - `DataTableShell` with `keyboardNavigation`: `Enter` on a body cell activates the row (`onRowClick`), `Escape` from a row control returns to its cell, and focus returns to the grid cell after the drawer closes or a `RowActionsMenu` action removes its trigger.
+
 ## 0.16.0
 
 ### Minor Changes
