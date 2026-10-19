@@ -66,7 +66,7 @@ export function useGridNavigation({
       if (row === null || col === null) {
         if (event.key !== "Escape" || event.ctrlKey) return;
         const header = target.closest<HTMLElement>('[data-grid-row="-1"]');
-        if (!header || !table.contains(header)) return;
+        if (!header) return;
         event.preventDefault();
         header.focus();
         setPosition({ row: -1, col: Number(header.getAttribute("data-grid-col")) });
