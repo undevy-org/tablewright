@@ -1,3 +1,4 @@
+import { useRef } from "react";
 import { MoreVertical } from "lucide-react";
 import { Button } from "../ui/button";
 import {
@@ -8,6 +9,7 @@ import {
 } from "../ui/dropdown-menu";
 import { cn } from "../../lib/utils";
 
+import { focusGridCellNear } from "./grid-focus";
 import type { RowActionItem, RowActionSection } from "./types";
 
 interface RowActionsMenuProps {
@@ -30,12 +32,29 @@ export function RowActionsMenu({
 }: RowActionsMenuProps) {
   const resolvedSections =
     sections && sections.length > 0 ? sections : actions.length > 0 ? [{ label: "", actions }] : [];
+  const trigger = useRef<HTMLButtonElement>(null);
+  const gridOrigin = useRef<{ table: Element; row: number; col: number } | null>(null);
   const isGrouped = resolvedSections.some((section) => section.label);
 
   return (
-    <DropdownMenu>
+    <DropdownMenu
+      onOpenChange={(open) => {
+        if (!open) return;
+        const cell = trigger.current?.closest<HTMLElement>("td[data-grid-row][data-grid-col]");
+        const table = cell?.closest("table");
+        gridOrigin.current =
+          cell && table
+            ? {
+                table,
+                row: Number(cell.getAttribute("data-grid-row")),
+                col: Number(cell.getAttribute("data-grid-col")),
+              }
+            : null;
+      }}
+    >
       <DropdownMenuTrigger asChild>
         <Button
+          ref={trigger}
           variant="ghost"
           size="icon"
           aria-label={triggerAriaLabel}
@@ -50,6 +69,12 @@ export function RowActionsMenu({
       </DropdownMenuTrigger>
       <DropdownMenuContent
         align={align}
+        onCloseAutoFocus={(event) => {
+          const origin = gridOrigin.current;
+          if (!origin || trigger.current?.isConnected || !origin.table.isConnected) return;
+          event.preventDefault();
+          focusGridCellNear(origin.table, origin.row, origin.col);
+        }}
         className={cn(isGrouped ? "w-[320px] p-1.5" : "w-40", contentClassName)}
       >
         {resolvedSections.map((section, sectionIndex) => (

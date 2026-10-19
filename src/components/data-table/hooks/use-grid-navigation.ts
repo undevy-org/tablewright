@@ -1,10 +1,18 @@
-import { useState, type FocusEventHandler, type KeyboardEventHandler } from "react";
+import {
+  useEffect,
+  useRef,
+  useState,
+  type FocusEventHandler,
+  type KeyboardEventHandler,
+  type RefObject,
+} from "react";
 
 import {
   clampGridPosition,
   nextGridPosition,
   type GridPosition,
 } from "../grid-navigation";
+import { focusGridCellNear } from "../grid-focus";
 
 export interface GridCellProps {
   tabIndex?: number;
@@ -19,12 +27,19 @@ export interface UseGridNavigationOptions {
   columnCount: number;
   /** Topmost row index; pass -1 to include a header row. @default 0 */
   firstRow?: number;
+  /** Called with the `data-grid-row` index when `Enter` is pressed on a body cell. */
+  onActivateRow?: (row: number) => void;
+  /** An overlay (drawer) is open; when it closes, focus returns to the active cell. */
+  overlayOpen?: boolean;
+  /** Elements of the overlay that count as "focus is still in the overlay" on close. */
+  isOverlayElement?: (element: Element) => boolean;
 }
 
 export interface UseGridNavigationResult {
   getCellProps: (row: number, col: number) => GridCellProps;
   getHeaderCellProps: (col: number, isLeafRow: boolean) => GridCellProps;
   onKeyDown: KeyboardEventHandler<HTMLElement> | undefined;
+  tableRef: RefObject<HTMLTableElement | null>;
 }
 
 const HEADER_CONTROL_SELECTOR =
@@ -35,12 +50,49 @@ export function useGridNavigation({
   rowCount,
   columnCount,
   firstRow = 0,
+  onActivateRow,
+  overlayOpen = false,
+  isOverlayElement,
 }: UseGridNavigationOptions): UseGridNavigationResult {
   const [position, setPosition] = useState<GridPosition>({ row: 0, col: 0 });
   const active = clampGridPosition(position, rowCount, columnCount, firstRow);
+  const tableRef = useRef<HTMLTableElement>(null);
+  const overlayWas = useRef(overlayOpen);
+  const focusWasInside = useRef(false);
+
+  useEffect(() => {
+    const wasOpen = overlayWas.current;
+    overlayWas.current = overlayOpen;
+    if (!enabled) {
+      focusWasInside.current = false;
+      return;
+    }
+    const table = tableRef.current;
+    if (!wasOpen && overlayOpen) {
+      focusWasInside.current = !!table && table.contains(document.activeElement);
+    } else if (wasOpen && !overlayOpen) {
+      const wasInside = focusWasInside.current;
+      focusWasInside.current = false;
+      const focused = document.activeElement;
+      if (
+        wasInside &&
+        table &&
+        (focused === null ||
+          focused === document.body ||
+          (isOverlayElement?.(focused) ?? false))
+      ) {
+        focusGridCellNear(table, active.row, active.col);
+      }
+    }
+  }, [enabled, overlayOpen, isOverlayElement, active.row, active.col]);
 
   if (!enabled) {
-    return { getCellProps: () => ({}), getHeaderCellProps: () => ({}), onKeyDown: undefined };
+    return {
+      getCellProps: () => ({}),
+      getHeaderCellProps: () => ({}),
+      onKeyDown: undefined,
+      tableRef,
+    };
   }
 
   const getCellProps = (row: number, col: number): GridCellProps => ({
@@ -52,6 +104,7 @@ export function useGridNavigation({
 
   return {
     getCellProps,
+    tableRef,
     getHeaderCellProps: (col, isLeafRow) =>
       isLeafRow && rowCount > 0 ? getCellProps(-1, col) : {},
     onKeyDown: (event) => {
@@ -65,11 +118,20 @@ export function useGridNavigation({
 
       if (row === null || col === null) {
         if (event.key !== "Escape" || event.ctrlKey) return;
-        const header = target.closest<HTMLElement>('[data-grid-row="-1"]');
-        if (!header) return;
+        const cell = target.closest<HTMLElement>("[data-grid-row][data-grid-col]");
+        if (!cell) return;
         event.preventDefault();
-        header.focus();
-        setPosition({ row: -1, col: Number(header.getAttribute("data-grid-col")) });
+        cell.focus();
+        setPosition({
+          row: Number(cell.getAttribute("data-grid-row")),
+          col: Number(cell.getAttribute("data-grid-col")),
+        });
+        return;
+      }
+
+      if (row !== "-1" && event.key === "Enter" && !event.ctrlKey && onActivateRow) {
+        event.preventDefault();
+        onActivateRow(Number(row));
         return;
       }
 
