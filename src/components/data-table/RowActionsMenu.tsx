@@ -34,23 +34,21 @@ export function RowActionsMenu({
     sections && sections.length > 0 ? sections : actions.length > 0 ? [{ label: "", actions }] : [];
   const trigger = useRef<HTMLButtonElement>(null);
   const gridOrigin = useRef<{ table: Element; row: number; col: number } | null>(null);
+  const rememberOrigin = () => {
+    const cell = trigger.current!.closest<HTMLElement>("td[data-grid-row][data-grid-col]");
+    const table = cell?.closest("table");
+    gridOrigin.current = table
+      ? {
+          table,
+          row: Number(cell!.getAttribute("data-grid-row")),
+          col: Number(cell!.getAttribute("data-grid-col")),
+        }
+      : null;
+  };
   const isGrouped = resolvedSections.some((section) => section.label);
 
   return (
-    <DropdownMenu
-      onOpenChange={(open) => {
-        if (!open) return;
-        const cell = trigger.current!.closest<HTMLElement>("td[data-grid-row][data-grid-col]");
-        const table = cell?.closest("table");
-        gridOrigin.current = table
-          ? {
-              table,
-              row: Number(cell!.getAttribute("data-grid-row")),
-              col: Number(cell!.getAttribute("data-grid-col")),
-            }
-          : null;
-      }}
-    >
+    <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button
           ref={trigger}
@@ -61,6 +59,8 @@ export function RowActionsMenu({
             "h-7 w-7 rounded-sm p-0 opacity-0 transition-opacity group-hover:opacity-100 data-[state=open]:opacity-100",
             triggerClassName,
           )}
+          onPointerDown={rememberOrigin}
+          onKeyDown={rememberOrigin}
           onClick={(event) => event.stopPropagation()}
         >
           <MoreVertical className="h-4 w-4" />
