@@ -1,5 +1,11 @@
 # @undevy-org/tablewright
 
+## 0.16.0
+
+### Minor Changes
+
+- [#100](https://github.com/undevy-org/tablewright/pull/100) [`fa02134`](https://github.com/undevy-org/tablewright/commit/fa02134b593aceba66446e597a4dee4c26d77a50) Thanks [@undevy](https://github.com/undevy)! - `DataTableShell` with `keyboardNavigation` now includes the header cells in the grid (ArrowUp from the first row reaches them, Enter enters a header control, Escape returns to the cell).
+
 ## 0.15.0
 
 ### Minor Changes
