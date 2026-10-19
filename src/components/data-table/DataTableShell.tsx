@@ -85,6 +85,7 @@ export function DataTableShell<TData>({
     enabled: keyboardNavigation && status === "idle",
     rowCount: dataRows.length,
     columnCount: visibleColumnCount,
+    firstRow: -1,
   });
 
   return (
@@ -97,9 +98,9 @@ export function DataTableShell<TData>({
           {...(keyboardNavigation ? { role: "grid", onKeyDown: grid.onKeyDown } : {})}
         >
           <thead className="sticky top-0 z-10 bg-[var(--bg-surface)]">
-            {table.getHeaderGroups().map((headerGroup) => (
+            {table.getHeaderGroups().map((headerGroup, groupIndex, headerGroups) => (
               <tr key={headerGroup.id}>
-                {headerGroup.headers.map((header) => {
+                {headerGroup.headers.map((header, columnIndex) => {
                   const columnId = header.column.id;
                   const meta = columnMeta[columnId];
                   const isActionsColumn = meta?.sticky === "right";
@@ -114,6 +115,12 @@ export function DataTableShell<TData>({
                         isActionsColumn && "px-3 text-right",
                         isControlColumn && "px-1 text-center",
                         stickyBorderClass(meta),
+                        keyboardNavigation &&
+                          "focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-[var(--border-focus)]",
+                      )}
+                      {...grid.getHeaderCellProps(
+                        columnIndex,
+                        groupIndex === headerGroups.length - 1,
                       )}
                       style={{
                         width: columnWidths[columnId],

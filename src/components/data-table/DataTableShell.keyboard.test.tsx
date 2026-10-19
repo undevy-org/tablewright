@@ -155,14 +155,13 @@ describe("DataTableShell keyboardNavigation", () => {
     expect(fireEvent.keyDown(screen.getByRole("grid"), { key: "ArrowDown" })).toBe(true);
   });
 
-  it("leaves header cells without tabindex or data-grid attributes", () => {
+  it("puts header cells in the grid as row -1 with tabindex -1", () => {
     render(<Harness rows={makeRows(2)} keyboardNavigation />);
     const headers = document.querySelectorAll("thead th");
     expect(headers).toHaveLength(3);
     for (const th of headers) {
-      expect(th.hasAttribute("tabindex")).toBe(false);
-      expect(th.hasAttribute("data-grid-row")).toBe(false);
-      expect(th.hasAttribute("data-grid-col")).toBe(false);
+      expect(th.getAttribute("tabindex")).toBe("-1");
+      expect(th.getAttribute("data-grid-row")).toBe("-1");
     }
   });
 });
