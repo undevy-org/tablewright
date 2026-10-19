@@ -69,14 +69,10 @@ export function useGridNavigation({
       focusWasInside.current = table.contains(document.activeElement);
       return;
     }
-    const focused = document.activeElement;
-    if (
-      focusWasInside.current &&
-      (focused === null || focused === document.body || (isOverlayElement?.(focused) ?? false))
-    ) {
+    const focused = document.activeElement ?? document.body;
+    if (focusWasInside.current && (focused === document.body || (isOverlayElement?.(focused) ?? false))) {
       focusGridCellNear(table, active.row, active.col);
     }
-    focusWasInside.current = false;
   }, [enabled, overlayOpen, isOverlayElement, active.row, active.col]);
 
   if (!enabled) {

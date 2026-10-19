@@ -12,16 +12,23 @@ interface GridProps {
   onActivateRow?: (row: number) => void;
   overlayOpen?: boolean;
   isOverlayElement?: (element: Element) => boolean;
+  /** Keep data-grid-* on the cells even when the hook is disabled. */
+  stickyAttrs?: boolean;
+  /** Do not attach the hook's table ref. */
+  noRef?: boolean;
 }
 
-function Grid({ enabled = true, rowCount = 3, ...rest }: GridProps) {
+function Grid({ enabled = true, rowCount = 3, stickyAttrs, noRef, ...rest }: GridProps) {
   const grid = useGridNavigation({ enabled, rowCount, columnCount: 2, firstRow: -1, ...rest });
   return (
     <>
       <button type="button" data-testid="outside">
         outside
       </button>
-      <table {...{ onKeyDown: grid.onKeyDown, ref: grid.tableRef }}>
+      <table {...{ onKeyDown: grid.onKeyDown, ref: noRef ? undefined : grid.tableRef }}>
+        <caption>
+          <button type="button">caption-btn</button>
+        </caption>
         <thead>
           <tr>
             <th data-testid="h0" {...grid.getHeaderCellProps(0, true)}>
@@ -34,7 +41,7 @@ function Grid({ enabled = true, rowCount = 3, ...rest }: GridProps) {
           {Array.from({ length: rowCount }, (_, r) => (
             <tr key={r}>
               {[0, 1].map((c) => (
-                <td key={c} data-testid={`c-${r}-${c}`} {...grid.getCellProps(r, c)}>
+                <td key={c} data-testid={`c-${r}-${c}`} {...(stickyAttrs && !enabled ? { "data-grid-row": r, "data-grid-col": c } : grid.getCellProps(r, c))}>
                   {c === 1 ? <button type="button">btn-{r}</button> : null}
                 </td>
               ))}
@@ -132,6 +139,11 @@ describe("useGridNavigation row activation", () => {
     expect(press(screen.getByTestId("portal"), "Enter")).toBe(true);
     expect(onActivateRow).not.toHaveBeenCalled();
   });
+
+  it("Escape on a control inside the table but outside any cell is not handled", () => {
+    render(<Grid />);
+    expect(press(screen.getByText("caption-btn"), "Escape")).toBe(true);
+  });
 });
 
 describe("useGridNavigation focus return after an overlay", () => {
@@ -208,5 +220,29 @@ describe("useGridNavigation focus return after an overlay", () => {
     act(() => (document.activeElement as HTMLElement).blur());
     rerenderWith(r, { overlayOpen: false, rowCount: 2 });
     expect(document.activeElement).toBe(cell(1, 1));
+  });
+
+  it("still returns focus after an unrelated rerun of the effect while the overlay is open", () => {
+    const r = render(<Grid isOverlayElement={isOverlay} />);
+    cell(1, 1).focus();
+    rerenderWith(r, { overlayOpen: true });
+    act(() => (document.activeElement as HTMLElement).blur());
+    r.rerender(<Grid isOverlayElement={(el) => isOverlay(el)} overlayOpen />);
+    r.rerender(<Grid isOverlayElement={isOverlay} overlayOpen={false} />);
+    expect(document.activeElement).toBe(cell(1, 1));
+  });
+
+  it("does nothing while disabled even if grid attributes remain on the cells", () => {
+    const r = render(<Grid enabled={false} stickyAttrs isOverlayElement={isOverlay} />);
+    cell(1, 1).focus();
+    rerenderWith(r, { enabled: false, stickyAttrs: true, overlayOpen: true });
+    act(() => (document.activeElement as HTMLElement).blur());
+    rerenderWith(r, { enabled: false, stickyAttrs: true, overlayOpen: false });
+    expect(document.activeElement).toBe(document.body);
+  });
+
+  it("does not throw when the table ref is not attached", () => {
+    const r = render(<Grid noRef isOverlayElement={isOverlay} />);
+    expect(() => rerenderWith(r, { noRef: true, overlayOpen: true })).not.toThrow();
   });
 });

@@ -52,9 +52,12 @@ function useColumns(remove: (id: string) => void, removes: boolean): ColumnDef<R
 function Grid({ removes = true, keyboardNavigation = true }: { removes?: boolean; keyboardNavigation?: boolean }) {
   const [data, setData] = useState(initial);
   const columns = useColumns((id) => setData((rows) => rows.filter((r) => r.id !== id)), removes);
+  const prepend = () => setData((rows) => [{ id: "x", name: "nx" }, ...rows]);
   const table = useReactTable({ data, columns, getCoreRowModel: getCoreRowModel(), getRowId: (r) => r.id });
   return (
-    <DataTableShell
+    <>
+      <output onClick={prepend}>prepend</output>
+      <DataTableShell
       table={table}
       dense={false}
       emptyMessage="No rows"
@@ -62,7 +65,8 @@ function Grid({ removes = true, keyboardNavigation = true }: { removes?: boolean
       columnWidths={{}}
       onColumnResizeStart={() => undefined}
       keyboardNavigation={keyboardNavigation}
-    />
+      />
+    </>
   );
 }
 
@@ -102,6 +106,15 @@ describe("RowActionsMenu focus return in a keyboard grid", () => {
     await activate(await openMenu("r2"));
     await waitFor(() => expect(document.activeElement).toBe(actionCell(1)));
     expect(trigger("r1")).toBe(actionCell(1).querySelector("button"));
+  });
+
+  it("remembers the cell position from the moment the menu opened", async () => {
+    render(<Grid />);
+    const item = await openMenu("r1");
+    fireEvent.click(screen.getByText("prepend"));
+    await activate(item);
+    await waitFor(() => expect(document.activeElement).toBe(actionCell(1)));
+    expect(trigger("r0")).toBe(actionCell(1).querySelector("button"));
   });
 
   it("returns focus to the trigger when the action keeps the row", async () => {
@@ -171,7 +184,7 @@ describe("RowActionsMenu focus return in a keyboard grid", () => {
               ))}
             </tbody>
           </table>
-          <output onClick={() => setData((rows) => rows.slice(1))}>remove</output>
+<output onClick={() => setData((rows) => rows.slice(1))}>remove</output>
         </div>
       );
     }
