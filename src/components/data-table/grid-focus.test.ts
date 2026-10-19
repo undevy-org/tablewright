@@ -81,4 +81,10 @@ describe("focusGridCellNear", () => {
     expect(document.activeElement).toBe(document.body);
     expect(focusGridCellNear(mount([]), 0, 0)).toBe(false);
   });
+
+  it("prefers the lower row when two rows are equally near", () => {
+    const root = mount([[0, 0], [2, 0]]);
+    focusGridCellNear(root, 1, 0);
+    expect(focused()).toEqual(["0", "0"]);
+  });
 });

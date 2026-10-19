@@ -63,27 +63,20 @@ export function useGridNavigation({
   useEffect(() => {
     const wasOpen = overlayWas.current;
     overlayWas.current = overlayOpen;
-    if (!enabled) {
-      focusWasInside.current = false;
+    const table = tableRef.current;
+    if (!enabled || !table || wasOpen === overlayOpen) return;
+    if (overlayOpen) {
+      focusWasInside.current = table.contains(document.activeElement);
       return;
     }
-    const table = tableRef.current;
-    if (!wasOpen && overlayOpen) {
-      focusWasInside.current = !!table && table.contains(document.activeElement);
-    } else if (wasOpen && !overlayOpen) {
-      const wasInside = focusWasInside.current;
-      focusWasInside.current = false;
-      const focused = document.activeElement;
-      if (
-        wasInside &&
-        table &&
-        (focused === null ||
-          focused === document.body ||
-          (isOverlayElement?.(focused) ?? false))
-      ) {
-        focusGridCellNear(table, active.row, active.col);
-      }
+    const focused = document.activeElement;
+    if (
+      focusWasInside.current &&
+      (focused === null || focused === document.body || (isOverlayElement?.(focused) ?? false))
+    ) {
+      focusGridCellNear(table, active.row, active.col);
     }
+    focusWasInside.current = false;
   }, [enabled, overlayOpen, isOverlayElement, active.row, active.col]);
 
   if (!enabled) {

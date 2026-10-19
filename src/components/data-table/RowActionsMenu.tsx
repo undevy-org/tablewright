@@ -40,16 +40,15 @@ export function RowActionsMenu({
     <DropdownMenu
       onOpenChange={(open) => {
         if (!open) return;
-        const cell = trigger.current?.closest<HTMLElement>("td[data-grid-row][data-grid-col]");
+        const cell = trigger.current!.closest<HTMLElement>("td[data-grid-row][data-grid-col]");
         const table = cell?.closest("table");
-        gridOrigin.current =
-          cell && table
-            ? {
-                table,
-                row: Number(cell.getAttribute("data-grid-row")),
-                col: Number(cell.getAttribute("data-grid-col")),
-              }
-            : null;
+        gridOrigin.current = table
+          ? {
+              table,
+              row: Number(cell!.getAttribute("data-grid-row")),
+              col: Number(cell!.getAttribute("data-grid-col")),
+            }
+          : null;
       }}
     >
       <DropdownMenuTrigger asChild>
