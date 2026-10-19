@@ -23,6 +23,9 @@ export interface DataTableDrawer {
   mode?: DrawerMode;
 }
 
+const isDrawerElement = (element: Element) =>
+  element.closest('aside[aria-label="Details panel"]') !== null;
+
 export interface DataTableShellProps<TData> {
   table: Table<TData>;
   dense: boolean;
@@ -86,6 +89,9 @@ export function DataTableShell<TData>({
     rowCount: dataRows.length,
     columnCount: visibleColumnCount,
     firstRow: -1,
+    onActivateRow: onRowClick ? (rowIndex) => onRowClick(dataRows[rowIndex].original) : undefined,
+    overlayOpen: drawer?.open,
+    isOverlayElement: isDrawerElement,
   });
 
   return (
@@ -95,7 +101,9 @@ export function DataTableShell<TData>({
           className="w-full border-collapse"
           style={{ tableLayout: "fixed", minWidth: `${visibleTableWidth}px` }}
           {...(isLoading ? { "aria-busy": true } : {})}
-          {...(keyboardNavigation ? { role: "grid", onKeyDown: grid.onKeyDown } : {})}
+          {...(keyboardNavigation
+            ? { role: "grid", onKeyDown: grid.onKeyDown, ref: grid.tableRef }
+            : {})}
         >
           <thead className="sticky top-0 z-10 bg-[var(--bg-surface)]">
             {table.getHeaderGroups().map((headerGroup, groupIndex, headerGroups) => (
