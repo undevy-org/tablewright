@@ -1,5 +1,11 @@
 # @undevy-org/tablewright
 
+## 0.17.1
+
+### Patch Changes
+
+- [#104](https://github.com/undevy-org/tablewright/pull/104) [`253393a`](https://github.com/undevy-org/tablewright/commit/253393a0c6702ac9105035549761f1e1cd56360a) Thanks [@undevy](https://github.com/undevy)! - `DataTableShell` now moves keyboard focus to the nearest surviving cell (or, without `keyboardNavigation`, the neighbouring header control) when the focused control disappears after a menu action such as "Hide column", sort or pin, instead of letting focus fall to the page.
+
 ## 0.17.0
 
 ### Minor Changes
