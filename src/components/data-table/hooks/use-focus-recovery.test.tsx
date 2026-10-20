@@ -240,6 +240,11 @@ describe("useFocusRecovery tracking", () => {
     expect(observe).not.toHaveBeenCalled();
   });
 
+  it("does nothing while the ref is empty", () => {
+    const empty = { current: null } as RefObject<HTMLTableElement | null>;
+    expect(() => renderHook(() => useFocusRecovery(empty, true)).unmount()).not.toThrow();
+  });
+
   it("rebinds when it is handed a different table ref", async () => {
     const make = () => {
       const table = document.createElement("table");

@@ -107,7 +107,7 @@ export function findNearestHeaderControl(
   const cells = Array.from((rows[position.rowIndex] ?? rows[rows.length - 1]).children);
   const byDistance = cells
     .map((cell, index) => ({ cell, index, distance: Math.abs(index - position.cellIndex) }))
-    .sort((a, b) => a.distance - b.distance || a.index - b.index);
+    .sort((a, b) => a.distance - b.distance); // stable: ties keep the lower index
   for (const { cell } of byDistance) {
     const control = cell.querySelector<HTMLElement>(HEADER_CONTROL_SELECTOR);
     if (control) return control;
