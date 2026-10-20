@@ -8,6 +8,7 @@ import { EmptyState } from "./EmptyState";
 import { TableErrorPanel } from "./TableErrorPanel";
 import { TableLayout } from "./TableLayout";
 import { stickyBorderClass, stickyStyle } from "./sticky-utils";
+import { useFocusRecovery } from "./hooks/use-focus-recovery";
 import { useGridNavigation } from "./hooks/use-grid-navigation";
 import type { UseRowDragResult } from "./hooks/use-row-drag";
 import type { ColumnMetaDef } from "./types";
@@ -84,8 +85,9 @@ export function DataTableShell<TData>({
   const isError = status === "error";
   const dataRows = table.getRowModel().rows;
   const visibleColumnCount = table.getVisibleLeafColumns().length;
+  const gridActive = keyboardNavigation && status === "idle";
   const grid = useGridNavigation({
-    enabled: keyboardNavigation && status === "idle",
+    enabled: gridActive,
     rowCount: dataRows.length,
     columnCount: visibleColumnCount,
     firstRow: -1,
@@ -93,6 +95,7 @@ export function DataTableShell<TData>({
     overlayOpen: drawer?.open,
     isOverlayElement: isDrawerElement,
   });
+  useFocusRecovery(grid.tableRef, gridActive);
 
   return (
     <TableLayout className={cn("min-h-0", className)}>
@@ -101,9 +104,8 @@ export function DataTableShell<TData>({
           className="w-full border-collapse"
           style={{ tableLayout: "fixed", minWidth: `${visibleTableWidth}px` }}
           {...(isLoading ? { "aria-busy": true } : {})}
-          {...(keyboardNavigation
-            ? { role: "grid", onKeyDown: grid.onKeyDown, ref: grid.tableRef }
-            : {})}
+          {...(keyboardNavigation ? { role: "grid", onKeyDown: grid.onKeyDown } : {})}
+          {...{ ref: grid.tableRef }}
         >
           <thead className="sticky top-0 z-10 bg-[var(--bg-surface)]">
             {table.getHeaderGroups().map((headerGroup, groupIndex, headerGroups) => (
