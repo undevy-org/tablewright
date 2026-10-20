@@ -497,7 +497,12 @@ function columnPinningGetSearchText(row: WorkspaceRow) {
   return `${row.name} ${row.id}`.toLowerCase();
 }
 
-function DataTableShellColumnPinningDemo() {
+function DataTableShellColumnPinningDemo({
+  withColumnMenus = false,
+}: {
+  /** Keyboard grid on, no initial pins, columns hideable from their header menus. */
+  withColumnMenus?: boolean;
+}) {
   const orch = useTableOrchestration<WorkspaceRow, WorkspaceViewKey>({
     rows: workspaceRows,
     getRowId: columnPinningGetRowId,
@@ -516,6 +521,9 @@ function DataTableShellColumnPinningDemo() {
     columnPinning,
     sortState,
     handleHeaderSort,
+    handleHideColumn,
+    columnVisibility,
+    setColumnVisibility,
     pinColumn,
     unpinColumn,
     getSelectedIds,
@@ -530,11 +538,11 @@ function DataTableShellColumnPinningDemo() {
 
   const initialPinsApplied = useRef(false);
   useLayoutEffect(() => {
-    if (initialPinsApplied.current) return;
+    if (initialPinsApplied.current || withColumnMenus) return;
     initialPinsApplied.current = true;
     pinColumn('workspace', 'left');
     pinColumn('tier', 'right');
-  }, [pinColumn]);
+  }, [pinColumn, withColumnMenus]);
 
   const columns = useMemo<ColumnDef<WorkspaceRow>[]>(
     () => [
@@ -583,6 +591,7 @@ function DataTableShellColumnPinningDemo() {
             onPinRight={() => pinColumn('status', 'right')}
             onUnpin={() => unpinColumn('status')}
             pinSide={pinSideForColumn('status', columnPinning)}
+            onHide={withColumnMenus ? () => handleHideColumn('status') : undefined}
           />
         ),
         cell: ({ row }) => (
@@ -601,6 +610,7 @@ function DataTableShellColumnPinningDemo() {
             onPinRight={() => pinColumn('tier', 'right')}
             onUnpin={() => unpinColumn('tier')}
             pinSide={pinSideForColumn('tier', columnPinning)}
+            onHide={withColumnMenus ? () => handleHideColumn('tier') : undefined}
           />
         ),
         cell: ({ row }) => <span>{row.original.tier}</span>,
@@ -615,6 +625,7 @@ function DataTableShellColumnPinningDemo() {
             onPinRight={() => pinColumn('updatedAt', 'right')}
             onUnpin={() => unpinColumn('updatedAt')}
             pinSide={pinSideForColumn('updatedAt', columnPinning)}
+            onHide={withColumnMenus ? () => handleHideColumn('updatedAt') : undefined}
           />
         ),
         cell: ({ row }) => <span className="font-mono text-[13px]">{row.original.updatedAt}</span>,
@@ -638,6 +649,8 @@ function DataTableShellColumnPinningDemo() {
       columnPinning,
       sortState,
       handleHeaderSort,
+      handleHideColumn,
+      withColumnMenus,
       pinColumn,
       unpinColumn,
       getSelectedIds,
@@ -652,6 +665,9 @@ function DataTableShellColumnPinningDemo() {
     columns,
     getCoreRowModel: getCoreRowModel(),
     getRowId: (row) => row.id,
+    ...(withColumnMenus
+      ? { onColumnVisibilityChange: setColumnVisibility, state: { columnVisibility } }
+      : {}),
   });
 
   return (
@@ -663,6 +679,7 @@ function DataTableShellColumnPinningDemo() {
         columnMeta={extendedColumnMeta}
         columnWidths={extendedWidths}
         onColumnResizeStart={onPointerDown}
+        keyboardNavigation={withColumnMenus}
       />
     </div>
   );
@@ -670,6 +687,10 @@ function DataTableShellColumnPinningDemo() {
 
 export const WithColumnPinning: Story = {
   render: () => <DataTableShellColumnPinningDemo />,
+};
+
+export const WithColumnMenusKeyboardNavigation: Story = {
+  render: () => <DataTableShellColumnPinningDemo withColumnMenus />,
 };
 
 export const Loading: Story = {

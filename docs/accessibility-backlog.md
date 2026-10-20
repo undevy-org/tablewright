@@ -112,6 +112,16 @@ Re-verified: full 136-story corpus (both themes) re-ran clean after the changes,
 
 **Fix (release 0.7.5, PR #54):** `transition-[background-color]` on nav rows only; label, icon, and border snap with the theme.
 
+## Fixed (2026-10-20)
+
+### 13. Keyboard focus falls to the page when a table control disappears
+
+`src/components/data-table/DataTableShell.tsx` — a menu action (`Hide column`, sort, pin, a consumer's row menu) removed or remounted the focused control, its cell or its column, so `document.activeElement` became `document.body` and the keyboard user restarted from the top of the page.
+
+**Fix:** One shell-level rule (`useFocusRecovery`): when the last element focused inside the table is gone and DOM focus is on the page, focus moves to the nearest surviving grid cell with `keyboardNavigation` on, or to the control of the nearest header cell without it.
+
+**Verified:** `focus-recovery-story.mjs` lines `ok   STORY-ID light|dark` for the three stories and `b30-focus-recovery: ok` (to be filled from the implementer's runs); `pnpm exec vitest run src/components/data-table` — `grid-focus.recovery.test.ts`, `use-focus-recovery.test.tsx`, `DataTableShell.focus-recovery.test.tsx` all pass.
+
 ## Fixed (2026-10-16)
 
 ### 12. Column header menu — checked sort direction / pin side shown only by a ✓ icon
