@@ -1,10 +1,11 @@
-import { act, cleanup, fireEvent, render, screen } from "@testing-library/react";
+import { act, cleanup, fireEvent, render, renderHook, screen } from "@testing-library/react";
 import { Profiler, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { renderToString } from "react-dom/server";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { useFocusRecovery } from "./use-focus-recovery";
+import type { RefObject } from "react";
 import { useGridNavigation } from "./use-grid-navigation";
 
 afterEach(() => {
@@ -20,21 +21,29 @@ interface HarnessProps {
   /** Remounts the header control of a column when its number changes. */
   keys?: Record<string, number>;
   extra?: ReactNode;
+  /** What the hook is told about the grid, when it differs from the DOM. */
+  gridArg?: boolean;
+  caption?: boolean;
 }
 
 /** Columns whose id starts with "plain" have a header cell without a control. */
-function Harness({ cols, rows = 3, grid = false, keys = {}, extra }: HarnessProps) {
+function Harness({ cols, rows = 3, grid = false, keys = {}, extra, gridArg = grid, caption }: HarnessProps) {
   const nav = useGridNavigation({
     enabled: grid,
     rowCount: rows,
     columnCount: cols.length,
     firstRow: -1,
   });
-  useFocusRecovery(nav.tableRef, grid);
+  useFocusRecovery(nav.tableRef, gridArg);
   return (
     <>
       {extra}
       <table {...{ ref: nav.tableRef }}>
+        {caption && (
+          <caption>
+            <button>caption</button>
+          </caption>
+        )}
         <thead>
           <tr>
             {cols.map((col, index) => (
@@ -174,6 +183,85 @@ describe("useFocusRecovery in an active grid", () => {
     await flush();
     expect(document.activeElement).toBe(header("c"));
     expect(document.querySelector("[data-grid-row]")).toBeNull();
+  });
+});
+
+describe("useFocusRecovery and the grid flag", () => {
+  it("follows a flag that changes after mount", async () => {
+    const view = render(<Harness cols={["a", "b", "c"]} />);
+    view.rerender(<Harness cols={["a", "b", "c"]} grid />);
+    header("b").focus();
+    view.rerender(<Harness cols={["a", "c"]} grid />);
+    await flush();
+    expect(document.activeElement).toBe(headerCell(1));
+  });
+
+  it("uses the header-control rule when told the grid is inactive, even if grid cells exist", async () => {
+    const view = render(<Harness cols={["a", "b", "c"]} grid />);
+    header("b").focus();
+    view.rerender(<Harness cols={["a", "c"]} grid gridArg={false} />);
+    await flush();
+    expect(document.activeElement).toBe(header("c"));
+  });
+});
+
+describe("useFocusRecovery tracking", () => {
+  it("ignores focus on an element inside the table but outside any cell", async () => {
+    const errors: ErrorEvent[] = [];
+    const onError = (event: ErrorEvent) => errors.push(event);
+    window.addEventListener("error", onError);
+    const view = render(<Harness cols={["a", "b", "c"]} caption />);
+    header("b").focus();
+    screen.getByRole("button", { name: "caption" }).focus();
+    view.rerender(<Harness cols={["a", "b", "c"]} />);
+    await flush();
+    window.removeEventListener("error", onError);
+    expect(errors).toHaveLength(0);
+    expect(document.activeElement).toBe(document.body);
+  });
+
+  it("keeps a single observer across focus events", () => {
+    const observe = vi.spyOn(MutationObserver.prototype, "observe");
+    render(<Harness cols={["a", "b", "c"]} />);
+    header("a").focus();
+    header("b").focus();
+    header("c").focus();
+    expect(observe).toHaveBeenCalledTimes(1);
+  });
+
+  it("stops listening to the table after unmount", () => {
+    const view = render(<Harness cols={["a", "b", "c"]} />);
+    const button = header("b");
+    const table = document.querySelector("table")!;
+    view.unmount();
+    const observe = vi.spyOn(MutationObserver.prototype, "observe");
+    table.dispatchEvent(new FocusEvent("focusin", { bubbles: true }));
+    button.dispatchEvent(new FocusEvent("focusin", { bubbles: true }));
+    expect(observe).not.toHaveBeenCalled();
+  });
+
+  it("rebinds when it is handed a different table ref", async () => {
+    const make = () => {
+      const table = document.createElement("table");
+      table.innerHTML = "<thead><tr><th><button>x</button></th><th><button>y</button></th></tr></thead>";
+      document.body.append(table);
+      return table;
+    };
+    const first = make();
+    const second = make();
+    const refA = { current: first } as RefObject<HTMLTableElement | null>;
+    const refB = { current: second } as RefObject<HTMLTableElement | null>;
+    const view = renderHook(({ tableRef }) => useFocusRecovery(tableRef, false), {
+      initialProps: { tableRef: refA },
+    });
+    view.rerender({ tableRef: refB });
+    const [x, y] = Array.from(second.querySelectorAll("button"));
+    y.focus();
+    y.remove();
+    await flush();
+    expect(document.activeElement).toBe(x);
+    first.remove();
+    second.remove();
   });
 });
 

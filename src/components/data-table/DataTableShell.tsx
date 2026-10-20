@@ -85,8 +85,9 @@ export function DataTableShell<TData>({
   const isError = status === "error";
   const dataRows = table.getRowModel().rows;
   const visibleColumnCount = table.getVisibleLeafColumns().length;
+  const gridActive = keyboardNavigation && status === "idle";
   const grid = useGridNavigation({
-    enabled: keyboardNavigation && status === "idle",
+    enabled: gridActive,
     rowCount: dataRows.length,
     columnCount: visibleColumnCount,
     firstRow: -1,
@@ -94,7 +95,7 @@ export function DataTableShell<TData>({
     overlayOpen: drawer?.open,
     isOverlayElement: isDrawerElement,
   });
-  useFocusRecovery(grid.tableRef, keyboardNavigation && status === "idle");
+  useFocusRecovery(grid.tableRef, gridActive);
 
   return (
     <TableLayout className={cn("min-h-0", className)}>

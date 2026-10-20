@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useRef, type RefObject } from "react";
+import { useEffect, useRef, type RefObject } from "react";
 
 import {
   findNearestGridCell,
@@ -6,9 +6,6 @@ import {
   getCellPosition,
   type CellPosition,
 } from "../grid-focus";
-
-// Layout effects warn on the server in React 18; nothing runs there anyway.
-const useIsomorphicLayoutEffect = typeof window === "undefined" ? useEffect : useLayoutEffect;
 
 interface Tracked {
   element: Element;
@@ -25,8 +22,7 @@ export function useFocusRecovery(
   gridActive: boolean,
 ): void {
   const gridActiveRef = useRef(gridActive);
-  // Synchronously with the commit, so a mutation callback never sees a stale value.
-  useIsomorphicLayoutEffect(() => {
+  useEffect(() => {
     gridActiveRef.current = gridActive;
   }, [gridActive]);
 
@@ -51,16 +47,15 @@ export function useFocusRecovery(
       if (active && active !== document.body) return;
 
       const { position } = lost;
-      const hasGrid = gridActiveRef.current && table.querySelector("[data-grid-row][data-grid-col]");
       const target =
-        (hasGrid ? findNearestGridCell(table, position) : null) ??
+        (gridActiveRef.current ? findNearestGridCell(table, position) : null) ??
         (position.region === "head" ? findNearestHeaderControl(table, position) : null);
       target?.focus();
     };
 
     const onFocusIn = (event: FocusEvent) => {
-      const element = event.target;
-      if (!(element instanceof Element) || !table.contains(element)) return;
+      // A focusin listener on the table only sees DOM descendants, never a portal's content.
+      const element = event.target as Element;
       const position = getCellPosition(table, element);
       if (!position) return;
       tracked = { element, position };

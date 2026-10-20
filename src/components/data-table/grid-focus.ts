@@ -3,11 +3,9 @@ const HEADER_CONTROL_SELECTOR =
   'button:not([disabled]), a[href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [role="checkbox"]';
 
 const nearest = (values: number[], wanted: number): number =>
-  values.reduce((best, value) => {
-    const distance = Math.abs(value - wanted);
-    const bestDistance = Math.abs(best - wanted);
-    return distance < bestDistance || (distance === bestDistance && value < best) ? value : best;
-  });
+  values.reduce((best, value) =>
+    Math.abs(value - wanted) < Math.abs(best - wanted) ? value : best,
+  );
 
 interface GridCell {
   element: HTMLElement;
@@ -66,18 +64,17 @@ const readNumber = (element: Element, name: string): number | null => {
 };
 
 const indexIn = (element: Element): number =>
-  Array.prototype.indexOf.call(element.parentElement?.children ?? [], element);
+  Array.prototype.indexOf.call(element.parentElement!.children, element);
 
 /** Position of the cell of `root` that contains `element` (or is it); `null` outside any cell. Pure. */
 export function getCellPosition(root: Element, element: Element): CellPosition | null {
-  const cell = element.closest<HTMLTableCellElement>("td, th");
-  const row = cell?.parentElement;
-  if (!cell || !row || !root.contains(cell)) return null;
+  const cell = root.contains(element) ? element.closest("td, th") : null;
+  if (!cell) return null;
   return {
     region: cell.closest("thead") ? "head" : "body",
     gridRow: readNumber(cell, "data-grid-row"),
     gridCol: readNumber(cell, "data-grid-col"),
-    rowIndex: indexIn(row),
+    rowIndex: indexIn(cell.parentElement!),
     cellIndex: indexIn(cell),
   };
 }
