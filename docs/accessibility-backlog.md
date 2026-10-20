@@ -120,7 +120,7 @@ Re-verified: full 136-story corpus (both themes) re-ran clean after the changes,
 
 **Fix:** One shell-level rule (`useFocusRecovery`): when the last element focused inside the table is gone and DOM focus is on the page, focus moves to the nearest surviving grid cell with `keyboardNavigation` on, or to the control of the nearest header cell without it.
 
-**Verified:** `focus-recovery-story.mjs` lines `ok   STORY-ID light|dark` for the three stories and `b30-focus-recovery: ok` (to be filled from the implementer's runs); `pnpm exec vitest run src/components/data-table` — `grid-focus.recovery.test.ts`, `use-focus-recovery.test.tsx`, `DataTableShell.focus-recovery.test.tsx` all pass.
+**Verified:** `node $T/e2e/repro/2026-10-20-b30-focus-recovery/focus-recovery-story.mjs "$(node $T/e2e/storybook-repro-static.mjs --checkout . --print-path)"` → `ok   pages-merchants--default light|dark`, `ok   datatable-datatableshell--with-column-pinning light|dark`, `ok   datatable-datatableshell--with-column-menus-keyboard-navigation light|dark`, `b30-focus-recovery: ok` (3 of 3 runs); `pnpm exec vitest run src/components/data-table` → `grid-focus.recovery.test.ts`, `use-focus-recovery.test.tsx`, `DataTableShell.focus-recovery.test.tsx` all pass.
 
 ## Fixed (2026-10-16)
 
